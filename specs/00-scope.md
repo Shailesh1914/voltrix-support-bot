@@ -19,9 +19,12 @@ Answer, or escalate. (keep it to one.)
 ## Out of scope
 - Calculations or drive sizing for a user's application → escalate.
 - Pricing, ordering, delivery questions → escalate.
-- Multi-turn conversation memory (beyond one escalation handoff).
+- Multi-turn conversation memory. There is no conversation memory;
+  "one escalation handoff" means only the handoff record passed to
+  the human.
 - Safety-critical live-electrical work instructions beyond what the
   knowledge base states → escalate.
+- Questions about other manufacturers' products → escalate.
 
 ## Data rules
 - All data synthetic. No personal data of any kind in tickets
