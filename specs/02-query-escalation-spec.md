@@ -1,6 +1,6 @@
 # Query and Escalation Spec — Voltrix VX-200 Support Bot
 
-Status: Version 1.1, approved by Shailesh on 2026-10-06
+Status: Version 1.2, approved by Shailesh on 2026-10-07
 
 ## Goal
 Given one user question, retrieve relevant chunks, generate an answer
@@ -29,10 +29,11 @@ ONLY place an escalation decision is made.
    index files directly. The score scale and the output of search()
    are defined in specs/03-retrieval-contract.md (Step 5).
 3. Unknown fault codes (after retrieval): at startup, build the set
-   of known fault codes from the E-xx codes in article titles in the
-   index metadata. If the normalised question contains an E-xx code
-   not in that set, escalate (reason: "insufficient_context") without
-   calling the model. The handoff record includes the retrieved
+   of known fault codes from the E-xx codes in the article titles
+   returned by kb_info() (specs/03-retrieval-contract.md). If the
+   normalised question contains an E-xx code not in that set,
+   escalate (reason: "insufficient_context") without calling the
+   model. The handoff record includes the retrieved
    chunks.
 4. Escalation decision (ONE decision, two signals):
    a. Retrieval check: if the highest single chunk similarity_score
