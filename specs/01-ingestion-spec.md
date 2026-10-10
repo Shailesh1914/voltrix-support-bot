@@ -1,6 +1,6 @@
 # Ingestion Spec — Voltrix VX-200 Support Bot
 
-Status: Version 1.2, approved by Shailesh on 2026-10-10
+Status: Version 1.3, approved by Shailesh on 2026-10-10
 
 ## Goal
 Turn the knowledge base (Markdown articles in data/kb_v1/ or
@@ -25,6 +25,14 @@ It NEVER runs in the request path a user waits on.
   above) makes ingestion FAIL loudly (no silent skipping).
 - "Fail loudly" means: non-zero exit code, a clear message naming
   the file, and no partial output left behind.
+- A folder with no articles (after excluding README.md) makes
+  ingestion fail loudly.
+- Extra header fields beyond the four required ones are allowed
+  and ignored.
+- Duplicate keys in a header block (e.g. two "title:" lines) make
+  ingestion fail loudly.
+- A UTF-8 byte-order mark at the start of a file is removed during
+  normalisation, like CRLF line endings.
 
 ## Constraints (stated explicitly, not library defaults)
 - Embedding model: BAAI/bge-small-en-v1.5, run locally with
