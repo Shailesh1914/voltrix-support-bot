@@ -20,3 +20,12 @@ ARTICLE_ID_PATTERN = re.compile(r"KB-[0-9]{3}")
 KB_FOLDER_PATTERN = re.compile(r"kb_(v[0-9]+)")
 
 EXCLUDED_FILENAMES = frozenset({"README.md"})
+
+# Embedding model, pinned to an exact Hugging Face commit (spec 01).
+MODEL_NAME = "BAAI/bge-small-en-v1.5"
+MODEL_REVISION = "5c38ec7c405ec4b44b94cc5a9bb96e735b38267a"
+
+# Token limits, counted with the model's own tokenizer.
+MODEL_TOKEN_LIMIT = 512
+MAX_CHUNK_TOKENS = 300  # including special tokens
+MAX_OVERLAP_TOKENS = 50

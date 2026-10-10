@@ -1,6 +1,6 @@
 # Ingestion Spec — Voltrix VX-200 Support Bot
 
-Status: Version 1.3, approved by Shailesh on 2026-10-10
+Status: Version 1.4, approved by Shailesh on 2026-10-10
 
 ## Goal
 Turn the knowledge base (Markdown articles in data/kb_v1/ or
@@ -53,6 +53,8 @@ It NEVER runs in the request path a user waits on.
     The chunk for text before the first "##" uses the prefix
     "<Title> — Overview".
   - Markdown formatting (backticks, bold) is kept as written.
+  - Code fences (```) are not supported: an article containing one
+  makes ingestion fail loudly.
   - If a section is longer than the maximum, split it further.
     - Split only at paragraph or list-item boundaries, never
       mid-sentence.

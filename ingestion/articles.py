@@ -20,6 +20,22 @@ from ingestion.config import (
 from ingestion.errors import IngestionError
 
 HEADER_DELIMITER = "---"
+BYTE_ORDER_MARK = "\ufeff"
+
+
+class _StrictLoader(yaml.SafeLoader):
+    """SafeLoader that rejects duplicate keys instead of keeping the last."""
+
+    def construct_mapping(self, node, deep=False):
+        seen = set()
+        for key_node, _ in node.value:
+            key = self.construct_object(key_node, deep=deep)
+            if key in seen:
+                raise yaml.constructor.ConstructorError(
+                    None, None, f"duplicate key {key!r}", key_node.start_mark
+                )
+            seen.add(key)
+        return super().construct_mapping(node, deep=deep)
 
 
 @dataclass(frozen=True)
@@ -57,7 +73,8 @@ def list_article_files(folder: Path) -> list[Path]:
 
 
 def normalise_text(text: str) -> str:
-    """"\n" line endings, then Unicode NFC."""
+    """No byte-order mark, "\n" line endings, then Unicode NFC."""
+    text = text.removeprefix(BYTE_ORDER_MARK)
     text = text.replace("\r\n", "\n").replace("\r", "\n")
     return unicodedata.normalize("NFC", text)
 
@@ -78,7 +95,7 @@ def _split_header(path: Path, text: str) -> tuple[str, str]:
 
 def _parse_header(path: Path, header_text: str) -> dict:
     try:
-        header = yaml.safe_load(header_text)
+        header = yaml.load(header_text, Loader=_StrictLoader)
     except yaml.YAMLError as error:
         raise IngestionError(path, f"header block is not valid YAML: {error}")
     if not isinstance(header, dict):

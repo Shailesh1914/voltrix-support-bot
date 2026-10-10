@@ -43,3 +43,11 @@ def make_kb(tmp_path):
         return folder
 
     return _make
+
+
+@pytest.fixture(scope="session")
+def token_counter():
+    """The pinned model's real tokenizer (downloaded once, then cached)."""
+    from ingestion.embedding import load_token_counter
+
+    return load_token_counter()

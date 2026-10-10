@@ -128,6 +128,37 @@ def test_crlf_and_cr_become_lf(make_kb):
         assert "line one\nline two" in article.body
 
 
+def test_byte_order_mark_is_removed(make_kb):
+    folder = make_kb({"a.md": b"\xef\xbb\xbf" + article_text().encode("utf-8")})
+    article = load_articles(folder)[0]
+    assert article.article_id == "KB-001"
+    assert "\ufeff" not in article.body
+
+
+def test_byte_order_mark_with_crlf_is_removed(make_kb):
+    text = article_text().replace("\n", "\r\n")
+    folder = make_kb({"a.md": b"\xef\xbb\xbf" + text.encode("utf-8")})
+    assert load_articles(folder)[0].article_id == "KB-001"
+
+
+def test_byte_order_mark_inside_text_is_kept(make_kb):
+    body = "## S\n\nA\ufeffB\n"
+    folder = make_kb({"a.md": article_text(body=body)})
+    assert "A\ufeffB" in load_articles(folder)[0].body
+
+
+def test_duplicate_key_error_names_the_key(make_kb):
+    folder = make_kb({"a.md": INVALID_FILES["duplicate_key_title"]})
+    with pytest.raises(IngestionError, match="duplicate key 'title'"):
+        load_articles(folder)
+
+
+def test_extra_header_fields_are_allowed(make_kb):
+    text = article_text().replace("---\n\n", "owner: x\nreviewed: true\n---\n\n", 1)
+    folder = make_kb({"a.md": text})
+    assert load_articles(folder)[0].article_id == "KB-001"
+
+
 def test_text_is_nfc_normalised(make_kb):
     decomposed = unicodedata.normalize("NFD", "Café")
     folder = make_kb(
@@ -176,6 +207,12 @@ INVALID_FILES = {
     "article_id_lowercase": article_text(article_id="kb-001"),
     "article_id_non_ascii_digits": article_text(article_id="KB-١٢٣"),
     "article_id_number": article_text(article_id="1"),
+    "duplicate_key_title": "---\narticle_id: KB-001\ntitle: A\ntitle: B\n"
+    "category: fault\nkb_version: v1\n---\n",
+    "duplicate_key_same_value": "---\narticle_id: KB-001\ntitle: T\n"
+    "category: fault\ncategory: fault\nkb_version: v1\n---\n",
+    "duplicate_key_extra_field": article_text().replace(
+        "---\n\n", "owner: x\nowner: y\n---\n\n", 1),
 }
 
 
