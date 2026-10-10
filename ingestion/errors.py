@@ -13,3 +13,7 @@ class IngestionError(Exception):
         self.path = Path(path)
         self.reason = reason
         super().__init__(f"{self.path}: {reason}")
+
+
+class RetrievalError(Exception):
+    """open_retrieval() startup check failed (spec 03, "fail loudly")."""

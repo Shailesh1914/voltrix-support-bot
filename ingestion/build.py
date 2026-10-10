@@ -15,7 +15,6 @@ partial output and an existing index is left untouched.
 """
 
 import argparse
-import hashlib
 import json
 import shutil
 import sys
@@ -40,9 +39,7 @@ from ingestion.config import (
 )
 from ingestion.embedding import embed, load_model, load_token_counter
 from ingestion.errors import IngestionError
-
-# Field order of each chunks.jsonl record (spec 01, "Output").
-METADATA_FIELDS = ("chunk_id", "article_id", "title", "category", "kb_version", "text")
+from ingestion.index_files import METADATA_FIELDS, sha256_file
 
 # Library versions recorded in the manifest (they affect the vectors).
 RECORDED_LIBRARIES = (
@@ -55,14 +52,6 @@ RECORDED_LIBRARIES = (
 
 NORM_TOLERANCE = 1e-3
 INDEX_DIR_MODE = 0o755
-
-
-def sha256_file(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for block in iter(lambda: handle.read(1 << 20), b""):
-            digest.update(block)
-    return digest.hexdigest()
 
 
 def _check_vectors(kb_folder: Path, vectors: np.ndarray, chunk_count: int) -> None:
