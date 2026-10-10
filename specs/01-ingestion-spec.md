@@ -1,6 +1,6 @@
 # Ingestion Spec — Voltrix VX-200 Support Bot
 
-Status: Version 1.4, approved by Shailesh on 2026-10-10
+Status: Version 1.5, approved by Shailesh on 2026-10-10
 
 ## Goal
 Turn the knowledge base (Markdown articles in data/kb_v1/ or
@@ -92,6 +92,9 @@ It NEVER runs in the request path a user waits on.
   SHA-256 hash of the index and metadata files.
 - The manifest contains no timestamps.
 - Index files are generated, never committed to Git.
+- If a build fails, any existing complete index for that KB version
+  is left untouched. A new index replaces the old one only when it
+  is completely written.
 
 ## Acceptance criteria
 1. Every source article produces at least one chunk.

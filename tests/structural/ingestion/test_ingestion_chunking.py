@@ -138,6 +138,26 @@ def test_heading_without_text_fails_loudly(make_kb):
         chunks_for(make_kb, "# T\n\n##   \n\nText.\n")
 
 
+@pytest.mark.parametrize(
+    "body",
+    [
+        "# T\n\n## S\n\nText.\n\n```\nP-05 = 10\n```\n",
+        "# T\n\n## S\n\n```python\nx = 1\n```\n",
+        "# T\n\nIntro.\n\n   ```\n   indented\n   ```\n\n## S\n\nText.\n",
+        "# T\n\n## S\n\nInline ```code``` in a sentence.\n",
+    ],
+)
+def test_code_fence_fails_loudly(make_kb, body):
+    with pytest.raises(IngestionError, match="code fences") as excinfo:
+        chunks_for(make_kb, body)
+    assert excinfo.value.path.name == "a.md"
+
+
+def test_single_backticks_are_allowed(make_kb):
+    chunks = chunks_for(make_kb, "# T\n\n## S\n\nSet `P-05` and ``P-06``.\n")
+    assert chunks[0].text == "T — S\n\nSet `P-05` and ``P-06``."
+
+
 def test_article_with_no_text_fails_loudly(make_kb):
     with pytest.raises(IngestionError, match="no text to chunk"):
         chunks_for(make_kb, "# T\n\n")

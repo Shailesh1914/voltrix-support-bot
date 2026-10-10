@@ -5,6 +5,7 @@ spec change first.
 """
 
 import re
+from pathlib import Path
 
 # Required header fields, in the order spec 01 lists them.
 REQUIRED_HEADER_FIELDS = ("article_id", "title", "category", "kb_version")
@@ -29,3 +30,11 @@ MODEL_REVISION = "5c38ec7c405ec4b44b94cc5a9bb96e735b38267a"
 MODEL_TOKEN_LIMIT = 512
 MAX_CHUNK_TOKENS = 300  # including special tokens
 MAX_OVERLAP_TOKENS = 50
+
+# Index layout: <index root>/<kb_version>/{vectors, metadata, manifest}.
+# Index files are generated and never committed (indexes/ is ignored).
+REPO_ROOT = Path(__file__).resolve().parents[1]
+DEFAULT_INDEX_ROOT = REPO_ROOT / "indexes"
+VECTORS_FILE = "vectors.npy"
+METADATA_FILE = "chunks.jsonl"
+MANIFEST_FILE = "manifest.json"

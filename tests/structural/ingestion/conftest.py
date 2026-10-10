@@ -51,3 +51,11 @@ def token_counter():
     from ingestion.embedding import load_token_counter
 
     return load_token_counter()
+
+
+@pytest.fixture(scope="session")
+def embedding_model():
+    """The pinned embedding model (loaded once per test run)."""
+    from ingestion.embedding import load_model
+
+    return load_model()

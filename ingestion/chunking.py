@@ -24,6 +24,7 @@ from ingestion.errors import IngestionError
 PREFIX_SEPARATOR = " — "
 PREFIX_BODY_SEPARATOR = "\n\n"
 OVERVIEW_HEADING = "Overview"
+CODE_FENCE = "```"
 
 TITLE_LINE = re.compile(r"# ")
 SECTION_LINE = re.compile(r"## ")
@@ -71,6 +72,12 @@ class Section:
 
 def split_sections(article: Article) -> list[Section]:
     """The "Overview" text (if any) and each "##" section, in order."""
+    for number, line in enumerate(article.body.split("\n"), start=1):
+        if CODE_FENCE in line:
+            raise IngestionError(
+                article.path,
+                f"code fences (```) are not supported (body line {number})",
+            )
     lines = article.body.split("\n")
 
     # Drop the "# Title" line if it is the first non-blank line.
