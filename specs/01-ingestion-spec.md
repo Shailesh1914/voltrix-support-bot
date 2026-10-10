@@ -1,6 +1,6 @@
 # Ingestion Spec — Voltrix VX-200 Support Bot
 
-Status: Version 1.1, approved by Shailesh on 2026-10-03
+Status: Version 1.2, approved by Shailesh on 2026-10-10
 
 ## Goal
 Turn the knowledge base (Markdown articles in data/kb_v1/ or
@@ -65,6 +65,10 @@ It NEVER runs in the request path a user waits on.
 - Chunk ID format: <article_id>#c<number>, e.g. KB-001#c1.
   Chunk numbers run straight through each article starting at 1,
   including pieces of a split section: KB-001#c1, KB-001#c2, ...
+- If a single paragraph or list item is longer than 300 tokens,
+  ingestion fails loudly (same as an oversized table).
+- A "##" heading with no body text makes ingestion fail loudly.
+- Duplicate article_id within a folder makes ingestion fail loudly.
 
 ## Output
 - Output folder: indexes/<kb_version>/.

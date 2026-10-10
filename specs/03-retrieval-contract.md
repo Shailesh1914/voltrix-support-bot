@@ -1,6 +1,6 @@
 # Retrieval Contract — Voltrix VX-200 Support Bot
 
-Status: Version 1.0, approved by Shailesh on 2026-10-07
+Status: Version 1.1, approved by Shailesh on 2026-10-10
 
 ## Purpose
 This contract is the ONLY interface between the ingestion side and
@@ -25,6 +25,9 @@ open_retrieval(kb_version: str) -> Retriever
   always passed in.
 - The startup checks (below) run inside open_retrieval().
 - The returned Retriever provides search() and kb_info().
+- Signature: open_retrieval(kb_version, *, index_root=None).
+  index_root is a TEST-ONLY parameter for pointing at temporary
+  indexes. The query side never passes it.
 
 ## Function 1: search
 

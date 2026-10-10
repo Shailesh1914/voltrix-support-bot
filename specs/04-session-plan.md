@@ -1,6 +1,6 @@
 # Session Plan — Voltrix VX-200 Support Bot
 
-Status: Version 1.0, approved by Shailesh on 2026-10-07
+Status: Version 1.1, approved by Shailesh on 2026-10-10
 
 ## Principle (Section 1.5)
 Ingestion and query share no evolving state once the retrieval
@@ -11,8 +11,8 @@ belong to the query side and the human approver only.
 ## Sessions and ownership
 | Session | Owns (may edit) | Implements |
 |---|---|---|
-| I: Ingestion | ingestion/, tests/structural/test_ingestion*.py, tests/fixtures/ | specs 01 and 03 |
-| Q: Query | query/, tests/structural/test_query*.py | spec 02, using spec 03 |
+| I: Ingestion | ingestion/, tests/structural/ingestion/ (incl. its conftest.py), tests/fixtures/ | specs 01 and 03 |
+| Q: Query | query/, tests/structural/query/ (incl. its conftest.py) | spec 02, using spec 03 |
 | E: Evaluation | evals/*.py, evals/reports/ | eval runner, threshold calibration report |
 | D: Delivery | .github/, deployment files | CI, index promotion, AWS deployment |
 
