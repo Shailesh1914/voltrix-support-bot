@@ -8,3 +8,5 @@
   three, 0.73. Threshold alone cannot catch it.
 - All scores in a narrow band: 0.59-0.73.
 - My view after reading KB-001: <your expert opinion>
+- CI note: full ingestion suite takes ~3.5 min (idempotence test is
+  the slowest). Consider fast/slow split in Step 11.
