@@ -10,3 +10,7 @@
 - My view after reading KB-001: <your expert opinion>
 - CI note: full ingestion suite takes ~3.5 min (idempotence test is
   the slowest). Consider fast/slow split in Step 11.
+- KB content improvement for a future version: real drive manuals
+  mark hazards with WARNING / DANGER / CAUTION lines; our KB has
+  none. Consider adding them (with symptom wording for fault
+  articles) in a kb_v3.

@@ -1,6 +1,6 @@
 # Query and Escalation Spec — Voltrix VX-200 Support Bot
 
-Status: Version 1.2, approved by Shailesh on 2026-10-07
+Status: Version 1.3, approved by Shailesh on 2026-10-11
 
 ## Goal
 Given one user question, retrieve relevant chunks, generate an answer
@@ -80,7 +80,7 @@ A response object with:
 - citations: list of article_id and title of the articles in
   used_article_ids (empty if escalated)
 - escalation_reason: "low_similarity" | "insufficient_context" |
-  "out_of_scope" (empty if answered)
+  "out_of_scope" (empty if answered) | "service_error"
 - handoff_id: the handoff_id of the handoff record (empty if
   answered)
 
@@ -169,3 +169,36 @@ will be measured by an evaluation designed at Step 9.
 ## Out of scope for the query flow
 - Building or changing the index (ingestion side).
 - Multi-turn conversation memory.
+
+## Implementation decisions (Version 1.3)
+1. ESCALATION_THRESHOLD is a constant in query/config.py, never in
+   .env. When set, this spec records it as a line "Value: <number>",
+   and a test checks the two match.
+2. The model ID is also a constant in query/config.py, checked
+   against this spec by a test. Provisional:
+   global.anthropic.claude-haiku-4-5-20251001-v1:0. Final ID
+   pinned after the first live Bedrock test (India profile
+   preferred if available).
+3. Personal data masking (emails, phone numbers) is applied FIRST,
+   before normalisation. The masked text is used everywhere:
+   retrieval, the model, and the handoff record.
+4. If the grounding check (criterion 7) fails, escalate with
+   reason "insufficient_context". The answer text is never edited.
+5. Safety warnings: a line starting with WARNING, DANGER or
+   CAUTION (case-sensitive) in any retrieved chunk of a used
+   article. If the answer lacks it, the code appends it word for
+   word. Heading-based detection is not used (it would depend on
+   ingestion's chunk format). The prompt also instructs the model
+   to include safety precautions from the chunks.
+6. Malformed model output -> escalate, reason "insufficient_context".
+   Bedrock API errors -> escalate with a handoff, new reason
+   "service_error". The evaluation treats service_error as a run
+   failure, never as a correct escalation.
+7. decision="answer" with empty used_article_ids -> escalate,
+   reason "insufficient_context".
+8. Handoff records go to HANDOFF_PATH (default
+   handoffs/handoffs.jsonl). handoff_id is a uuid4. Each record
+   includes created_at (UTC).
+9. Units for criterion 7: V, kV, A, mA, Hz, kHz, W, kW, hp, ms, s,
+   sec, min, minutes, h, hours, °C, %, mm, mm², m, Nm, rpm, Ω, kΩ,
+   µF, VAC, VDC, tolerant of spacing and aliases.
