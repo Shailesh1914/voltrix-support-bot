@@ -1,6 +1,6 @@
 # Retrieval Contract — Voltrix VX-200 Support Bot
 
-Status: Version 1.1, approved by Shailesh on 2026-10-10
+Status: Version 1.2, approved by Shailesh on 2026-10-10
 
 ## Purpose
 This contract is the ONLY interface between the ingestion side and
@@ -10,6 +10,9 @@ the query side.
 - The ingestion side never knows how its output is used.
 - If ingestion changes its chunking strategy, the query flow does
   not change, as long as this contract holds.
+- The contract's public names are: open_retrieval, Retriever, Chunk,
+  KBInfo and RetrievalError. The query side may import only these
+  from ingestion.
 
 ## Ownership
 The ingestion side implements this contract (in ingestion/), because
