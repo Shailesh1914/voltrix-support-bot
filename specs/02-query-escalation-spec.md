@@ -1,6 +1,6 @@
 # Query and Escalation Spec — Voltrix VX-200 Support Bot
 
-Status: Version 1.3, approved by Shailesh on 2026-10-11
+Status: Version 1.4, approved by Shailesh on 2026-10-11
 
 ## Goal
 Given one user question, retrieve relevant chunks, generate an answer
@@ -69,8 +69,7 @@ ONLY place an escalation decision is made.
    - Every factual statement must come from the retrieved chunks.
      No outside knowledge. Never invent numbers, codes or settings.
    - Safety warning = any line starting with WARNING, DANGER or
-     CAUTION, or any section whose heading contains "Safety" or
-     "Warning". If a used chunk contains one, the answer includes it.
+   CAUTION (case-sensitive). See Implementation decision 5.
 
 ## Output
 A response object with:
@@ -80,7 +79,7 @@ A response object with:
 - citations: list of article_id and title of the articles in
   used_article_ids (empty if escalated)
 - escalation_reason: "low_similarity" | "insufficient_context" |
-  "out_of_scope" (empty if answered) | "service_error"
+  "out_of_scope" | "service_error" (empty if answered)
 - handoff_id: the handoff_id of the handoff record (empty if
   answered)
 

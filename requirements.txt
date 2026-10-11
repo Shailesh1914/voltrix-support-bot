@@ -10,3 +10,6 @@ PyYAML==6.0.3
 pytest==9.1.1
 # Embedding model (not pip-installable, pinned in ingestion/config.py):
 # BAAI/bge-small-en-v1.5 @ 5c38ec7c405ec4b44b94cc5a9bb96e735b38267a
+boto3==1.43.111
+botocore==1.43.111
+python-dotenv==1.2.4
