@@ -177,3 +177,56 @@ def test_jsonl_store_end_to_end(make_flow, tmp_path):
     (stored,) = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
     assert stored["handoff_id"] == response.handoff_id
     assert missing_fields(stored) == []
+
+
+# --- Step 4b: generator outcomes (stage c; decision 6) ---------------------------
+
+
+@pytest.fixture
+def flow_with(make_flow, fake_retriever):
+    def _make(response, store):
+        from query.generator import FakeGenerator
+
+        generator = FakeGenerator(response)
+        retriever = fake_retriever(scores=(0.8, 0.7))
+        return make_flow(threshold=0.5, retriever=retriever, generator=generator, store=store), generator, retriever
+
+    return _make
+
+
+@pytest.mark.parametrize("decision", ["insufficient_context", "out_of_scope"])
+def test_model_escalation_decision(flow_with, memory_store, decision):
+    flow, generator, retriever = flow_with({"decision": decision, "answer": "", "used_article_ids": []}, memory_store)
+    response = flow.ask("e2 when stopping, call 020 7946 0958")
+    record = assert_complete_escalation(response, memory_store, decision)
+    assert generator.calls == [("E-02 when stopping, call [PHONE]", retriever.chunks)]
+    assert [c.chunk_id for c in record.retrieved_chunks] == ["KB-001#c1", "KB-001#c2"]
+
+
+def test_malformed_output_escalates_insufficient_context(flow_with, memory_store):
+    flow, generator, _ = flow_with({"decision": "maybe", "answer": "x", "used_article_ids": []}, memory_store)
+    assert_complete_escalation(flow.ask("q"), memory_store, "insufficient_context")
+    assert len(generator.calls) == 1
+
+
+def test_service_error_escalates_with_handoff(flow_with, memory_store):
+    from query.generator import GeneratorServiceError
+
+    flow, generator, _ = flow_with(GeneratorServiceError("Bedrock ThrottlingException"), memory_store)
+    record = assert_complete_escalation(flow.ask("q"), memory_store, "service_error")
+    assert len(record.retrieved_chunks) == 2
+    assert len(generator.calls) == 1
+
+
+def test_other_generator_errors_are_not_hidden(flow_with, memory_store):
+    # Only the two known failures become escalations; a bug must fail loudly.
+    flow, _, _ = flow_with(RuntimeError("bug"), memory_store)
+    with pytest.raises(RuntimeError, match="bug"):
+        flow.ask("q")
+    assert memory_store.records == []
+
+
+def test_answer_path_is_not_built_yet(flow_with, memory_store):
+    flow, _, _ = flow_with({"decision": "answer", "answer": "x", "used_article_ids": ["KB-001"]}, memory_store)
+    with pytest.raises(NotImplementedError, match="stage d"):
+        flow.ask("q")

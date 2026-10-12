@@ -19,3 +19,6 @@
 - Step 13 note: an empty or whitespace-only question raises an
   error (no handoff). The user interface must show a friendly
   "Please type a question" message instead of an error.
+- Step 9 prompt experiments: (a) whether to allow answering from
+  a clearly matching symptom description (T-102 style);
+  (b) schema field order: decision first vs answer first.

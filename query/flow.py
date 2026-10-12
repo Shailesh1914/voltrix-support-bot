@@ -6,8 +6,11 @@ Order for one question:
 3. unknown fault code -> escalate "insufficient_context", no model call
 4a. highest similarity_score below the threshold -> escalate
     "low_similarity", no model call
-4b. one generator call (stage c), then the checks of 4c and decisions
-    4-7 (stage d)
+4b. one generator call:
+    - service error -> escalate "service_error" (decision 6)
+    - malformed output -> escalate "insufficient_context" (decision 6)
+    - decision insufficient_context / out_of_scope -> escalate with it
+    - decision answer -> checks of 4c and decisions 4, 5 and 7 (stage d)
 """
 
 from collections.abc import Callable
@@ -17,6 +20,7 @@ from typing import Protocol
 from ingestion import Chunk, KBInfo
 from query.config import SEARCH_K, ConfigError, require_threshold
 from query.fault_codes import known_fault_codes, unknown_fault_codes
+from query.generator import Generator, GeneratorServiceError, MalformedOutput
 from query.handoff import HandoffStore, build_handoff, utc_now
 from query.masking import mask_personal_data
 from query.normalise import normalise_codes
@@ -28,10 +32,6 @@ class Retriever(Protocol):
 
     def search(self, query: str, k: int) -> list[Chunk]: ...
     def kb_info(self) -> KBInfo: ...
-
-
-class Generator(Protocol):
-    def generate(self, question: str, chunks: list[Chunk]): ...
 
 
 class QueryFlow:
@@ -77,8 +77,16 @@ class QueryFlow:
         if top_score is None or top_score < self._threshold:
             return escalate("low_similarity")
 
-        self._generator.generate(normalised, chunks)
-        raise NotImplementedError("answer path: stages c and d")
+        try:
+            output = self._generator.generate(normalised, chunks)
+        except GeneratorServiceError:
+            return escalate("service_error")
+        except MalformedOutput:
+            return escalate("insufficient_context")
+        if output.decision != "answer":
+            return escalate(output.decision)
+
+        raise NotImplementedError("answer path: stage d")
 
     def _escalate(
         self, received: str, normalised: str, chunks: list[Chunk], reason: str

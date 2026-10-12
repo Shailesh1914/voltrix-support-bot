@@ -28,6 +28,12 @@ ESCALATION_THRESHOLD: float | None = None
 # until the first live Bedrock test.
 BEDROCK_MODEL_ID = "global.anthropic.claude-haiku-4-5-20251001-v1:0"
 
+# Generation settings (spec 02, Processing step 6: temperature 0).
+# MAX_OUTPUT_TOKENS bounds one answer; a reply cut off at this limit is
+# treated as malformed output (decision 6).
+GENERATION_TEMPERATURE = 0
+MAX_OUTPUT_TOKENS = 2048
+
 # Chunks retrieved per question (spec 02, Processing step 2).
 SEARCH_K = 5
 

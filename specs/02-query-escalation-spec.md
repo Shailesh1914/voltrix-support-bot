@@ -1,6 +1,6 @@
 # Query and Escalation Spec — Voltrix VX-200 Support Bot
 
-Status: Version 1.4, approved by Shailesh on 2026-10-11
+Status: Version 1.5, approved by Shailesh on 2026-10-12
 
 ## Goal
 Given one user question, retrieve relevant chunks, generate an answer
@@ -201,3 +201,6 @@ will be measured by an evaluation designed at Step 9.
 9. Units for criterion 7: V, kV, A, mA, Hz, kHz, W, kW, hp, ms, s,
    sec, min, minutes, h, hours, °C, %, mm, mm², m, Nm, rpm, Ω, kΩ,
    µF, VAC, VDC, tolerant of spacing and aliases.
+10. The system prompt in query/prompt.py is product behaviour.
+    Any change to it requires Shailesh's approval, like a spec
+    change, and is recorded in the commit message.

@@ -10,11 +10,27 @@ import pytest
 QUERY_DIR = Path(__file__).resolve().parents[3] / "query"
 MODULES = sorted(QUERY_DIR.rglob("*.py"))
 
-# The contract's entry point plus the types its functions return.
-ALLOWED_FROM_INGESTION = {"open_retrieval", "Chunk", "KBInfo", "RetrievalError"}
+SPEC_03 = Path(__file__).resolve().parents[3] / "specs" / "03-retrieval-contract.md"
+
+
+def contract_public_names() -> set[str]:
+    """The names listed in spec 03: "The contract's public names are: ..."."""
+    text = " ".join(SPEC_03.read_text(encoding="utf-8").split())
+    match = re.search(r"The contract's public names are: (.+?)\. ", text)
+    assert match, "spec 03 must list the contract's public names"
+    names = {n.strip() for n in re.split(r",| and ", match.group(1))}
+    assert all(n.isidentifier() for n in names), names
+    return names
+
+
+ALLOWED_FROM_INGESTION = contract_public_names()
 
 # Index, metadata, manifest and knowledge-base file and folder names.
 FORBIDDEN = re.compile(r"indexes|chunks\.jsonl|vectors\.npy|manifest\.json|kb_v[0-9]|data/")
+
+
+def test_contract_names_read_from_spec_03():
+    assert ALLOWED_FROM_INGESTION == {"open_retrieval", "Retriever", "Chunk", "KBInfo", "RetrievalError"}
 
 
 def test_there_are_modules_to_check():
