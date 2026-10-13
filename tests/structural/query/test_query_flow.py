@@ -226,7 +226,158 @@ def test_other_generator_errors_are_not_hidden(flow_with, memory_store):
     assert memory_store.records == []
 
 
-def test_answer_path_is_not_built_yet(flow_with, memory_store):
-    flow, _, _ = flow_with({"decision": "answer", "answer": "x", "used_article_ids": ["KB-001"]}, memory_store)
-    with pytest.raises(NotImplementedError, match="stage d"):
-        flow.ask("q")
+
+# --- Answer path (stage d): step 4c, criteria 4, 6, 7, decisions 4, 5, 7 ----------
+
+
+SAFE_TEXT = (
+    "Safe isolation — Steps\n\n"
+    "WARNING: The DC bus stays charged for 5 minutes after switch-off.\n"
+    "1. Switch off and lock the isolator. Wait 5 minutes."
+)
+
+
+@pytest.fixture
+def answer_chunks(make_chunk):
+    return [
+        make_chunk("KB-002", n=1, score=0.8, text="E-02 fixes — Lengthen P-06 (0.1–600.0 s) or set P-08 to coast."),
+        make_chunk("KB-034", n=2, score=0.7, text=SAFE_TEXT),
+        make_chunk("KB-002", n=3, score=0.6, text="E-02 — Stopping\n\nCAUTION: The motor may coast for 30 s."),
+    ]
+
+
+@pytest.fixture
+def answer_flow(make_flow, fake_retriever, memory_store, answer_chunks):
+    from query.generator import FakeGenerator
+
+    def _make(answer, used):
+        generator = FakeGenerator({"decision": "answer", "answer": answer, "used_article_ids": used})
+        flow = make_flow(threshold=0.5, retriever=fake_retriever(chunks=answer_chunks), generator=generator)
+        return flow, generator
+
+    return _make
+
+
+def assert_answered(response, store):
+    """Criterion 6 for an answered response."""
+    assert response.status == "answered"
+    assert response.escalation_reason == ""
+    assert response.handoff_id == ""
+    assert store.records == []
+
+
+def test_answered_with_citations_in_model_order(answer_flow, memory_store):
+    flow, generator = answer_flow("Lengthen P-06, up to 600 s.", ["KB-002"])
+    response = flow.ask("e2 on stop")
+    assert_answered(response, memory_store)
+    assert response.answer == "Lengthen P-06, up to 600 s.\n\nCAUTION: The motor may coast for 30 s."
+    assert [(c.article_id, c.title) for c in response.citations] == [
+        ("KB-002", "E-02 Overcurrent during deceleration")
+    ]
+    assert len(generator.calls) == 1
+
+
+def test_two_cited_articles(answer_flow, memory_store):
+    answer = "WARNING: The DC bus stays charged for 5 minutes after switch-off.\nThen lengthen P-06."
+    flow, _ = answer_flow(answer, ["KB-034", "KB-002"])
+    response = flow.ask("q")
+    assert_answered(response, memory_store)
+    assert [c.article_id for c in response.citations] == ["KB-034", "KB-002"]
+
+
+def test_decision_7_answer_without_citations_escalates(answer_flow, memory_store):
+    flow, _ = answer_flow("Lengthen P-06.", [])
+    assert_complete_escalation(flow.ask("q"), memory_store, "insufficient_context")
+
+
+@pytest.mark.parametrize("used", [["KB-036"], ["KB-002", "KB-036"]])
+def test_criterion_4_citation_of_unretrieved_article_escalates(answer_flow, memory_store, used):
+    flow, _ = answer_flow("Lengthen P-06.", used)
+    response = flow.ask("q")
+    assert_complete_escalation(response, memory_store, "insufficient_context")
+    assert response.citations == []
+
+
+@pytest.mark.parametrize(
+    "answer",
+    ["Set P-09 instead.", "E-05 may also appear.", "Lengthen P-06 to 900 s.", "Wait 10 minutes.", "Use 565 V DC."],
+)
+def test_criterion_7_ungrounded_answer_escalates_and_is_never_edited(answer_flow, memory_store, answer):
+    flow, _ = answer_flow(answer, ["KB-002"])
+    response = flow.ask("q")
+    record = assert_complete_escalation(response, memory_store, "insufficient_context")
+    assert answer not in response.answer
+    assert answer not in str(record.to_dict())
+
+
+def test_decision_5_warnings_of_every_chunk_of_used_article(answer_flow, memory_store):
+    flow, _ = answer_flow("Switch off and lock the isolator.", ["KB-034"])
+    response = flow.ask("q")
+    assert_answered(response, memory_store)
+    assert response.answer == (
+        "Switch off and lock the isolator.\n\n"
+        "WARNING: The DC bus stays charged for 5 minutes after switch-off."
+    )
+
+
+def test_decision_5_warning_already_given_is_not_repeated(answer_flow, memory_store):
+    answer = "WARNING: The DC bus stays charged for 5 minutes after switch-off.\n1. Switch off."
+    flow, _ = answer_flow(answer, ["KB-034"])
+    assert flow.ask("q").answer == answer
+
+
+def test_decision_5_unused_article_warnings_not_added(answer_flow, memory_store):
+    flow, _ = answer_flow("Lengthen P-06.", ["KB-002"])
+    assert "DC bus stays charged" not in flow.ask("q").answer
+
+
+# --- Every route, one table (criteria 3, 6; spec 02 steps 3-4) ------------------------
+
+
+ANSWER = {"decision": "answer", "answer": "Lengthen P-06.", "used_article_ids": ["KB-002"]}
+ROUTES = [
+    # (id, question, top score, generator response, status, reason, model called)
+    ("unknown_code", "E-33 on stop", 0.9, ANSWER, "escalated", "insufficient_context", False),
+    ("low_similarity", "q", 0.4, ANSWER, "escalated", "low_similarity", False),
+    ("service_error", "q", 0.9, "service_error", "escalated", "service_error", True),
+    ("malformed", "q", 0.9, {"decision": "answer"}, "escalated", "insufficient_context", True),
+    ("model_insufficient", "q", 0.9, {**ANSWER, "decision": "insufficient_context"}, "escalated", "insufficient_context", True),
+    ("model_out_of_scope", "q", 0.9, {**ANSWER, "decision": "out_of_scope"}, "escalated", "out_of_scope", True),
+    ("no_citations", "q", 0.9, {**ANSWER, "used_article_ids": []}, "escalated", "insufficient_context", True),
+    ("not_retrieved", "q", 0.9, {**ANSWER, "used_article_ids": ["KB-036"]}, "escalated", "insufficient_context", True),
+    ("ungrounded", "q", 0.9, {**ANSWER, "answer": "Set P-09."}, "escalated", "insufficient_context", True),
+    ("answered", "E2 on stop", 0.9, ANSWER, "answered", "", True),
+]
+
+
+@pytest.mark.parametrize("route", ROUTES, ids=[r[0] for r in ROUTES])
+def test_every_route(route, make_flow, make_chunk, fake_retriever, memory_store):
+    from query.generator import FakeGenerator, GeneratorServiceError
+
+    _, question, score, reply, status, reason, model_called = route
+    reply = GeneratorServiceError("down") if reply == "service_error" else reply
+    generator = FakeGenerator(reply)
+    chunks = [make_chunk("KB-002", n=1, score=score, text="E-02 — Lengthen P-06.")]
+    flow = make_flow(threshold=0.5, retriever=fake_retriever(chunks=chunks), generator=generator)
+
+    response = flow.ask(question)
+
+    assert response.status in ("answered", "escalated")
+    assert response.escalation_reason == reason
+    assert bool(generator.calls) == model_called
+    if status == "escalated":
+        assert_complete_escalation(response, memory_store, reason)
+        assert [c.chunk_id for c in memory_store.records[0].retrieved_chunks] == ["KB-002#c1"]
+    else:
+        assert_answered(response, memory_store)
+        # Criteria 4 and 7 on what the user actually receives.
+        assert {c.article_id for c in response.citations} <= {c.article_id for c in chunks}
+        from query.checks import ungrounded
+
+        assert ungrounded(response.answer, chunks) == []
+
+
+def test_routes_cover_every_escalation_reason():
+    from query.handoff import ESCALATION_REASONS
+
+    assert {r[5] for r in ROUTES if r[4] == "escalated"} == ESCALATION_REASONS

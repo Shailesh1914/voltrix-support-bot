@@ -1,6 +1,6 @@
 # Query and Escalation Spec — Voltrix VX-200 Support Bot
 
-Status: Version 1.5, approved by Shailesh on 2026-10-12
+Status: Version 1.6, approved by Shailesh on 2026-10-13
 
 ## Goal
 Given one user question, retrieve relevant chunks, generate an answer
@@ -155,7 +155,7 @@ Structural (must hold 100% of the time):
    an escalation_reason, a handoff_id, and an answer containing the
    fixed escalation message with that handoff_id.
 7. Every E-xx code, P-xx code and number with a unit in an answer
-   must appear in the retrieved chunks.
+   must appear in the chunks of the CITED articles.
 8. Unknown fault codes (Processing step 3) always escalate without
    a model call, and their handoff record includes the retrieved
    chunks.
@@ -185,8 +185,7 @@ will be measured by an evaluation designed at Step 9.
    reason "insufficient_context". The answer text is never edited.
 5. Safety warnings: a line starting with WARNING, DANGER or
    CAUTION (case-sensitive) in any retrieved chunk of a used
-   article. If the answer lacks it, the code appends it word for
-   word. Heading-based detection is not used (it would depend on
+   article. If the answer lacks it, the code adds it word for word at the START of the answer. Heading-based detection is not used (it would depend on
    ingestion's chunk format). The prompt also instructs the model
    to include safety precautions from the chunks.
 6. Malformed model output -> escalate, reason "insufficient_context".
@@ -204,3 +203,10 @@ will be measured by an evaluation designed at Step 9.
 10. The system prompt in query/prompt.py is product behaviour.
     Any change to it requires Shailesh's approval, like a spec
     change, and is recorded in the commit message.
+11. When a check stops an answer (no_citations, citation, grounding),
+    the handoff record also stores rejected_answer (the model's
+    draft, never shown to the user) and failed_check (the name of
+    the check). Both are empty for other escalations.
+12. A test stores a SHA-256 fingerprint of the system prompt. Any
+    change to the prompt fails this test until Shailesh approves it
+    and the fingerprint is updated in the same commit.

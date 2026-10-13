@@ -2,6 +2,8 @@
 
 from dataclasses import dataclass, field
 
+from ingestion import Chunk
+
 ESCALATION_MESSAGE = (
     "I can't answer this reliably. Your question has been passed to a "
     "support engineer with the details found so far. Reference: {handoff_id}."
@@ -30,3 +32,18 @@ def escalated_response(escalation_reason: str, handoff_id: str) -> QueryResponse
         escalation_reason=escalation_reason,
         handoff_id=handoff_id,
     )
+
+
+def answered_response(answer: str, citations: list[Citation]) -> QueryResponse:
+    return QueryResponse(status="answered", answer=answer, citations=citations)
+
+
+def citations_for(used_article_ids, chunks: list[Chunk]) -> list[Citation]:
+    """article_id and title of each used article, in the model's order.
+
+    Every used article must be among the chunks (citation check first).
+    """
+    titles = {}
+    for c in chunks:
+        titles.setdefault(c.article_id, c.title)
+    return [Citation(a, titles[a]) for a in used_article_ids]

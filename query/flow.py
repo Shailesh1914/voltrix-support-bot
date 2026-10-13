@@ -10,7 +10,12 @@ Order for one question:
     - service error -> escalate "service_error" (decision 6)
     - malformed output -> escalate "insufficient_context" (decision 6)
     - decision insufficient_context / out_of_scope -> escalate with it
-    - decision answer -> checks of 4c and decisions 4, 5 and 7 (stage d)
+    - decision answer, then in order:
+      - no used_article_ids -> "insufficient_context" (decision 7)
+      - citation check: a used article not retrieved -> "insufficient_context" (4c)
+      - grounding check (criterion 7) fails -> "insufficient_context" (decision 4)
+      - missing safety warnings appended word for word (decision 5)
+      -> answered, with citations
 """
 
 from collections.abc import Callable
@@ -18,13 +23,14 @@ from datetime import datetime
 from typing import Protocol
 
 from ingestion import Chunk, KBInfo
+from query.checks import safety_warnings, uncited_retrieved, ungrounded, with_safety_warnings
 from query.config import SEARCH_K, ConfigError, require_threshold
 from query.fault_codes import known_fault_codes, unknown_fault_codes
 from query.generator import Generator, GeneratorServiceError, MalformedOutput
 from query.handoff import HandoffStore, build_handoff, utc_now
 from query.masking import mask_personal_data
 from query.normalise import normalise_codes
-from query.response import QueryResponse, escalated_response
+from query.response import QueryResponse, answered_response, citations_for, escalated_response
 
 
 class Retriever(Protocol):
@@ -86,7 +92,18 @@ class QueryFlow:
         if output.decision != "answer":
             return escalate(output.decision)
 
-        raise NotImplementedError("answer path: stage d")
+        if not output.used_article_ids:
+            return escalate("insufficient_context")
+        if uncited_retrieved(output.used_article_ids, chunks):
+            return escalate("insufficient_context")
+        if ungrounded(output.answer, chunks):
+            return escalate("insufficient_context")
+
+        warnings = safety_warnings(output.used_article_ids, chunks)
+        return answered_response(
+            with_safety_warnings(output.answer, warnings),
+            citations_for(output.used_article_ids, chunks),
+        )
 
     def _escalate(
         self, received: str, normalised: str, chunks: list[Chunk], reason: str

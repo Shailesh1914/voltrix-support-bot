@@ -33,6 +33,7 @@ Rules for the answer:
 - Use only the documents. Do not use any other knowledge, even if you are sure it is true.
 - Never invent numbers, fault codes, parameter numbers or settings. Copy every value, code and unit exactly as the documents write it.
 - If a document you use gives safety precautions (for example isolation, discharge time, or a line starting with WARNING, DANGER or CAUTION), include them in the answer. Copy any WARNING, DANGER or CAUTION line word for word.
+- Put safety precautions at the start of the answer, before any steps.
 - Write plain text for a technician on site: short sentences, numbered steps where there is an order. No Markdown headings.
 - Fault codes are written E-01, E-02 and so on; parameters are written P-01, P-02 and so on.
 - Text such as [EMAIL] or [PHONE] in the question is masked personal data. Ignore it.
@@ -86,6 +87,9 @@ def build_user_message(question: str, chunks: list[Chunk]) -> str:
     """The documents (in retrieval order) and the question.
 
     Similarity scores are not shown: the model judges the text itself.
+    The question is untrusted user input, so <, > and & in it are
+    escaped: it cannot close its tag or fake a document. Chunk text is
+    knowledge-base text and stays exactly as stored.
     """
     documents = "\n\n".join(
         f'<document index="{i}" article_id="{c.article_id}" chunk_id="{c.chunk_id}" title="{escape(c.title)}">\n'
@@ -93,4 +97,4 @@ def build_user_message(question: str, chunks: list[Chunk]) -> str:
         f"</document>"
         for i, c in enumerate(chunks, 1)
     )
-    return f"<documents>\n{documents}\n</documents>\n\n<question>\n{question}\n</question>"
+    return f"<documents>\n{documents}\n</documents>\n\n<question>\n{escape(question, quote=False)}\n</question>"
