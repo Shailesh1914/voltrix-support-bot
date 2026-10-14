@@ -1,6 +1,8 @@
 """Stage c: system prompt, tool schema and user message (spec 02, steps
 4b, 5 and 6; decision 5)."""
 
+import hashlib
+
 import pytest
 
 from query.generator import DECISIONS, OUTPUT_FIELDS
@@ -93,3 +95,21 @@ def test_question_is_escaped_and_cannot_fake_a_document(make_chunk):
 def test_chunk_text_is_not_escaped(make_chunk):
     text = "Ramp < 3 s & check P-06 <b>"
     assert f"\n{text}\n" in build_user_message("q", [make_chunk(text=text)])
+
+
+# --- Decision 12: the system prompt is product behaviour -------------------------------
+
+# SHA-256 of SYSTEM_PROMPT (UTF-8) as approved by Shailesh (spec 02 v1.6,
+# commit 5c546dd, with the "Put safety precautions at the start" line).
+# Any change to the
+# prompt fails this test until Shailesh approves it and this value is
+# updated in the same commit.
+APPROVED_SYSTEM_PROMPT_SHA256 = "57a9ae57e9648952a933b60d9785122fb3e5d356b2445ce97bca4da1b09f2ac8"
+
+
+def test_decision_12_system_prompt_fingerprint():
+    actual = hashlib.sha256(SYSTEM_PROMPT.encode("utf-8")).hexdigest()
+    assert actual == APPROVED_SYSTEM_PROMPT_SHA256, (
+        "SYSTEM_PROMPT changed. Prompt changes need Shailesh's approval "
+        "(spec 02, decisions 10 and 12); update the fingerprint only then."
+    )

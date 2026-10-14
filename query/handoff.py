@@ -1,5 +1,5 @@
 """Escalation handoff record and local store (spec 02, "Escalation
-handoff", decision 8, criterion 3).
+handoff", decisions 8 and 11, criterion 3).
 
 Questions reach this module already masked (decision 3). Nothing else
 about the person asking is stored.
@@ -27,8 +27,13 @@ HANDOFF_FIELDS = (
     "retrieved_chunks",
     "escalation_reason",
     "kb_version",
+    "rejected_answer",
+    "failed_check",
 )
 CHUNK_FIELDS = ("chunk_id", "article_id", "text", "similarity_score")
+
+# Checks that can stop a drafted answer (decision 11).
+FAILED_CHECKS = frozenset({"no_citations", "citation", "grounding"})
 
 
 @dataclass(frozen=True)
@@ -48,6 +53,10 @@ class HandoffRecord:
     retrieved_chunks: tuple[HandoffChunk, ...]
     escalation_reason: str
     kb_version: str
+    # Decision 11: set only when a check stopped a drafted answer; the
+    # draft is never shown to the user.
+    rejected_answer: str = ""
+    failed_check: str = ""
 
     def to_dict(self) -> dict:
         record = asdict(self)
@@ -72,9 +81,15 @@ def build_handoff(
     kb_version: str,
     created_at: datetime,
     handoff_id: str | None = None,
+    rejected_answer: str = "",
+    failed_check: str = "",
 ) -> HandoffRecord:
     if escalation_reason not in ESCALATION_REASONS:
         raise ValueError(f"unknown escalation_reason {escalation_reason!r}")
+    if failed_check and failed_check not in FAILED_CHECKS:
+        raise ValueError(f"unknown failed_check {failed_check!r}")
+    if bool(failed_check) != bool(rejected_answer):
+        raise ValueError("rejected_answer and failed_check are set together or not at all")
     if created_at.utcoffset() is None:
         raise ValueError("created_at must be timezone-aware (UTC)")
     return HandoffRecord(
@@ -87,6 +102,8 @@ def build_handoff(
         ),
         escalation_reason=escalation_reason,
         kb_version=kb_version,
+        rejected_answer=rejected_answer,
+        failed_check=failed_check,
     )
 
 

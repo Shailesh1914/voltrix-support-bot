@@ -270,7 +270,7 @@ def test_answered_with_citations_in_model_order(answer_flow, memory_store):
     flow, generator = answer_flow("Lengthen P-06, up to 600 s.", ["KB-002"])
     response = flow.ask("e2 on stop")
     assert_answered(response, memory_store)
-    assert response.answer == "Lengthen P-06, up to 600 s.\n\nCAUTION: The motor may coast for 30 s."
+    assert response.answer == "CAUTION: The motor may coast for 30 s.\n\nLengthen P-06, up to 600 s."
     assert [(c.article_id, c.title) for c in response.citations] == [
         ("KB-002", "E-02 Overcurrent during deceleration")
     ]
@@ -287,15 +287,17 @@ def test_two_cited_articles(answer_flow, memory_store):
 
 def test_decision_7_answer_without_citations_escalates(answer_flow, memory_store):
     flow, _ = answer_flow("Lengthen P-06.", [])
-    assert_complete_escalation(flow.ask("q"), memory_store, "insufficient_context")
+    record = assert_complete_escalation(flow.ask("q"), memory_store, "insufficient_context")
+    assert (record.rejected_answer, record.failed_check) == ("Lengthen P-06.", "no_citations")
 
 
 @pytest.mark.parametrize("used", [["KB-036"], ["KB-002", "KB-036"]])
 def test_criterion_4_citation_of_unretrieved_article_escalates(answer_flow, memory_store, used):
     flow, _ = answer_flow("Lengthen P-06.", used)
     response = flow.ask("q")
-    assert_complete_escalation(response, memory_store, "insufficient_context")
+    record = assert_complete_escalation(response, memory_store, "insufficient_context")
     assert response.citations == []
+    assert (record.rejected_answer, record.failed_check) == ("Lengthen P-06.", "citation")
 
 
 @pytest.mark.parametrize(
@@ -306,8 +308,18 @@ def test_criterion_7_ungrounded_answer_escalates_and_is_never_edited(answer_flow
     flow, _ = answer_flow(answer, ["KB-002"])
     response = flow.ask("q")
     record = assert_complete_escalation(response, memory_store, "insufficient_context")
+    # Never shown to the user; kept unedited for the engineer (decision 11).
     assert answer not in response.answer
-    assert answer not in str(record.to_dict())
+    assert (record.rejected_answer, record.failed_check) == (answer, "grounding")
+
+
+def test_criterion_7_value_from_retrieved_but_uncited_article_escalates(answer_flow, memory_store):
+    # "5 minutes" is only in the KB-034 chunk, which the answer does not cite.
+    flow, _ = answer_flow("Lengthen P-06 and wait 5 minutes.", ["KB-002"])
+    record = assert_complete_escalation(flow.ask("q"), memory_store, "insufficient_context")
+    assert record.failed_check == "grounding"
+    flow, _ = answer_flow("Lengthen P-06 and wait 5 minutes.", ["KB-002", "KB-034"])
+    assert flow.ask("q").status == "answered"
 
 
 def test_decision_5_warnings_of_every_chunk_of_used_article(answer_flow, memory_store):
@@ -315,8 +327,8 @@ def test_decision_5_warnings_of_every_chunk_of_used_article(answer_flow, memory_
     response = flow.ask("q")
     assert_answered(response, memory_store)
     assert response.answer == (
-        "Switch off and lock the isolator.\n\n"
-        "WARNING: The DC bus stays charged for 5 minutes after switch-off."
+        "WARNING: The DC bus stays charged for 5 minutes after switch-off.\n\n"
+        "Switch off and lock the isolator."
     )
 
 
@@ -336,17 +348,17 @@ def test_decision_5_unused_article_warnings_not_added(answer_flow, memory_store)
 
 ANSWER = {"decision": "answer", "answer": "Lengthen P-06.", "used_article_ids": ["KB-002"]}
 ROUTES = [
-    # (id, question, top score, generator response, status, reason, model called)
-    ("unknown_code", "E-33 on stop", 0.9, ANSWER, "escalated", "insufficient_context", False),
-    ("low_similarity", "q", 0.4, ANSWER, "escalated", "low_similarity", False),
-    ("service_error", "q", 0.9, "service_error", "escalated", "service_error", True),
-    ("malformed", "q", 0.9, {"decision": "answer"}, "escalated", "insufficient_context", True),
-    ("model_insufficient", "q", 0.9, {**ANSWER, "decision": "insufficient_context"}, "escalated", "insufficient_context", True),
-    ("model_out_of_scope", "q", 0.9, {**ANSWER, "decision": "out_of_scope"}, "escalated", "out_of_scope", True),
-    ("no_citations", "q", 0.9, {**ANSWER, "used_article_ids": []}, "escalated", "insufficient_context", True),
-    ("not_retrieved", "q", 0.9, {**ANSWER, "used_article_ids": ["KB-036"]}, "escalated", "insufficient_context", True),
-    ("ungrounded", "q", 0.9, {**ANSWER, "answer": "Set P-09."}, "escalated", "insufficient_context", True),
-    ("answered", "E2 on stop", 0.9, ANSWER, "answered", "", True),
+    # (id, question, top score, generator response, status, reason, model called, failed_check)
+    ("unknown_code", "E-33 on stop", 0.9, ANSWER, "escalated", "insufficient_context", False, ""),
+    ("low_similarity", "q", 0.4, ANSWER, "escalated", "low_similarity", False, ""),
+    ("service_error", "q", 0.9, "service_error", "escalated", "service_error", True, ""),
+    ("malformed", "q", 0.9, {"decision": "answer"}, "escalated", "insufficient_context", True, ""),
+    ("model_insufficient", "q", 0.9, {**ANSWER, "decision": "insufficient_context"}, "escalated", "insufficient_context", True, ""),
+    ("model_out_of_scope", "q", 0.9, {**ANSWER, "decision": "out_of_scope"}, "escalated", "out_of_scope", True, ""),
+    ("no_citations", "q", 0.9, {**ANSWER, "used_article_ids": []}, "escalated", "insufficient_context", True, "no_citations"),
+    ("not_retrieved", "q", 0.9, {**ANSWER, "used_article_ids": ["KB-036"]}, "escalated", "insufficient_context", True, "citation"),
+    ("ungrounded", "q", 0.9, {**ANSWER, "answer": "Set P-09."}, "escalated", "insufficient_context", True, "grounding"),
+    ("answered", "E2 on stop", 0.9, ANSWER, "answered", "", True, ""),
 ]
 
 
@@ -354,7 +366,7 @@ ROUTES = [
 def test_every_route(route, make_flow, make_chunk, fake_retriever, memory_store):
     from query.generator import FakeGenerator, GeneratorServiceError
 
-    _, question, score, reply, status, reason, model_called = route
+    _, question, score, reply, status, reason, model_called, failed_check = route
     reply = GeneratorServiceError("down") if reply == "service_error" else reply
     generator = FakeGenerator(reply)
     chunks = [make_chunk("KB-002", n=1, score=score, text="E-02 — Lengthen P-06.")]
@@ -366,15 +378,18 @@ def test_every_route(route, make_flow, make_chunk, fake_retriever, memory_store)
     assert response.escalation_reason == reason
     assert bool(generator.calls) == model_called
     if status == "escalated":
-        assert_complete_escalation(response, memory_store, reason)
-        assert [c.chunk_id for c in memory_store.records[0].retrieved_chunks] == ["KB-002#c1"]
+        record = assert_complete_escalation(response, memory_store, reason)
+        assert [c.chunk_id for c in record.retrieved_chunks] == ["KB-002#c1"]
+        # Decision 11: draft and check name only when a check stopped an answer.
+        assert record.failed_check == failed_check
+        assert record.rejected_answer == (reply["answer"] if failed_check else "")
     else:
         assert_answered(response, memory_store)
         # Criteria 4 and 7 on what the user actually receives.
         assert {c.article_id for c in response.citations} <= {c.article_id for c in chunks}
         from query.checks import ungrounded
 
-        assert ungrounded(response.answer, chunks) == []
+        assert ungrounded(response.answer, [c.article_id for c in response.citations], chunks) == []
 
 
 def test_routes_cover_every_escalation_reason():

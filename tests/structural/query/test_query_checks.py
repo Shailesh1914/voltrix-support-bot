@@ -1,5 +1,6 @@
-"""Stage d: citation check, grounding check and safety warnings (spec 02,
-step 4c, criterion 7, decisions 4, 5 and 9)."""
+"""Citation check, grounding check and safety warnings (spec 02, step
+4c, criterion 7, decisions 4, 5 and 9; v1.6: grounding on cited
+articles only, warnings at the start)."""
 
 import pytest
 
@@ -113,7 +114,7 @@ def chunks(make_chunk):
     ],
 )
 def test_grounded_answers(chunks, answer):
-    assert ungrounded(answer, chunks) == []
+    assert ungrounded(answer, ["KB-002", "KB-020"], chunks) == []
 
 
 @pytest.mark.parametrize(
@@ -129,13 +130,20 @@ def test_grounded_answers(chunks, answer):
     ],
 )
 def test_ungrounded_answers(chunks, answer, missing):
-    assert ungrounded(answer, chunks) == missing
+    assert ungrounded(answer, ["KB-002", "KB-020"], chunks) == missing
 
 
-def test_grounding_uses_all_retrieved_chunks_not_only_cited(chunks):
-    # Criterion 7 says "in the retrieved chunks".
-    assert ungrounded("P-07: 10 s", chunks[:1]) == ["P-07", "10 s"]
-    assert ungrounded("P-07: 10 s", chunks) == []
+def test_grounding_uses_only_chunks_of_cited_articles(chunks):
+    # Criterion 7 (v1.6): "in the chunks of the CITED articles". P-07 and
+    # 10 s are only in the KB-020 chunk.
+    assert ungrounded("P-07: 10 s", ["KB-002"], chunks) == ["P-07", "10 s"]
+    assert ungrounded("P-07: 10 s", ["KB-020"], chunks) == []
+    assert ungrounded("P-07: 10 s", [], chunks) == ["P-07", "10 s"]
+
+
+def test_grounding_uses_every_chunk_of_a_cited_article(make_chunk):
+    chunks = [make_chunk("KB-002", n=1, text="Set P-06."), make_chunk("KB-002", n=4, text="Up to 600 s.")]
+    assert ungrounded("Set P-06 up to 600 s.", ["KB-002"], chunks) == []
 
 
 # --- Safety warnings (decision 5) -------------------------------------------------------
@@ -172,16 +180,16 @@ def test_only_used_articles_and_every_chunk_of_them(make_chunk):
     assert safety_warnings(["KB-034"], chunks) == ["WARNING: first chunk.", "CAUTION: second chunk."]
 
 
-def test_missing_warnings_appended_word_for_word():
+def test_missing_warnings_added_at_start_word_for_word():
     warnings = ["WARNING: A.", "CAUTION: B."]
-    assert with_safety_warnings("Do X.\n", warnings) == "Do X.\n\nWARNING: A.\nCAUTION: B."
+    assert with_safety_warnings("\nDo X.\n", warnings) == "WARNING: A.\nCAUTION: B.\n\nDo X.\n"
 
 
 def test_warning_already_in_answer_not_repeated():
-    answer = "WARNING: A.\n\n1. Do X."
-    assert with_safety_warnings(answer, ["WARNING: A.", "CAUTION: B."]) == answer + "\n\nCAUTION: B."
+    answer = "1. Do X.\nWARNING: A."
+    assert with_safety_warnings(answer, ["WARNING: A.", "CAUTION: B."]) == "CAUTION: B.\n\n" + answer
     assert with_safety_warnings(answer, ["WARNING: A."]) == answer
 
 
-def test_paraphrased_warning_still_appended():
-    assert with_safety_warnings("Warning: a", ["WARNING: A."]) == "Warning: a\n\nWARNING: A."
+def test_paraphrased_warning_still_added():
+    assert with_safety_warnings("Warning: a", ["WARNING: A."]) == "WARNING: A.\n\nWarning: a"

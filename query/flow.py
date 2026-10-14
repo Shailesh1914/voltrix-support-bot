@@ -14,7 +14,9 @@ Order for one question:
       - no used_article_ids -> "insufficient_context" (decision 7)
       - citation check: a used article not retrieved -> "insufficient_context" (4c)
       - grounding check (criterion 7) fails -> "insufficient_context" (decision 4)
-      - missing safety warnings appended word for word (decision 5)
+      each of these three stores the draft and the check's name in the
+      handoff (decision 11)
+      - missing safety warnings added word for word at the start (decision 5)
       -> answered, with citations
 """
 
@@ -73,8 +75,8 @@ class QueryFlow:
         normalised = normalise_codes(received)
         chunks = self._retriever.search(normalised, k=SEARCH_K)
 
-        def escalate(reason: str) -> QueryResponse:
-            return self._escalate(received, normalised, chunks, reason)
+        def escalate(reason: str, rejected_answer: str = "", failed_check: str = "") -> QueryResponse:
+            return self._escalate(received, normalised, chunks, reason, rejected_answer, failed_check)
 
         if unknown_fault_codes(normalised, self.known_fault_codes):
             return escalate("insufficient_context")
@@ -92,12 +94,14 @@ class QueryFlow:
         if output.decision != "answer":
             return escalate(output.decision)
 
-        if not output.used_article_ids:
-            return escalate("insufficient_context")
-        if uncited_retrieved(output.used_article_ids, chunks):
-            return escalate("insufficient_context")
-        if ungrounded(output.answer, chunks):
-            return escalate("insufficient_context")
+        failed_check = (
+            "no_citations" if not output.used_article_ids
+            else "citation" if uncited_retrieved(output.used_article_ids, chunks)
+            else "grounding" if ungrounded(output.answer, output.used_article_ids, chunks)
+            else ""
+        )
+        if failed_check:
+            return escalate("insufficient_context", output.answer, failed_check)
 
         warnings = safety_warnings(output.used_article_ids, chunks)
         return answered_response(
@@ -106,7 +110,13 @@ class QueryFlow:
         )
 
     def _escalate(
-        self, received: str, normalised: str, chunks: list[Chunk], reason: str
+        self,
+        received: str,
+        normalised: str,
+        chunks: list[Chunk],
+        reason: str,
+        rejected_answer: str = "",
+        failed_check: str = "",
     ) -> QueryResponse:
         record = build_handoff(
             question_received=received,
@@ -115,6 +125,8 @@ class QueryFlow:
             escalation_reason=reason,
             kb_version=self._kb_version,
             created_at=self._clock(),
+            rejected_answer=rejected_answer,
+            failed_check=failed_check,
         )
         # Stored before the user is told; a failed write raises, so no
         # reference is ever given for a handoff that does not exist.

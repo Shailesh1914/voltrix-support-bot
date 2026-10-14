@@ -45,6 +45,8 @@ def test_field_lists_match_spec_02():
         "retrieved_chunks",
         "escalation_reason",
         "kb_version",
+        "rejected_answer",  # decision 11
+        "failed_check",  # decision 11
     }
     assert set(CHUNK_FIELDS) == {"chunk_id", "article_id", "text", "similarity_score"}
 
@@ -128,3 +130,44 @@ def test_non_ascii_text_stored_readably(tmp_path, make_chunk, record):
     path = tmp_path / "h.jsonl"
     JsonlHandoffStore(path).append(record(chunks=[make_chunk(text="85 °C, 10 kΩ, 4700 µF")]))
     assert "85 °C, 10 kΩ, 4700 µF" in path.read_text(encoding="utf-8")
+
+
+# --- Decision 11: rejected_answer and failed_check ------------------------------------
+
+
+def test_rejected_answer_and_failed_check_default_empty(record):
+    data = record().to_dict()
+    assert (data["rejected_answer"], data["failed_check"]) == ("", "")
+
+
+@pytest.mark.parametrize("check", ["no_citations", "citation", "grounding"])
+def test_rejected_answer_stored_with_its_check(make_chunk, check):
+    stored = build_handoff(
+        question_received="q",
+        question_normalised="q",
+        chunks=[make_chunk()],
+        escalation_reason="insufficient_context",
+        kb_version="v1",
+        created_at=TIME,
+        rejected_answer="Set P-09.",
+        failed_check=check,
+    ).to_dict()
+    assert (stored["rejected_answer"], stored["failed_check"]) == ("Set P-09.", check)
+
+
+@pytest.mark.parametrize(
+    "rejected_answer, failed_check",
+    [("draft", ""), ("", "grounding"), ("draft", "safety")],
+)
+def test_invalid_rejected_answer_and_failed_check(make_chunk, rejected_answer, failed_check):
+    with pytest.raises(ValueError):
+        build_handoff(
+            question_received="q",
+            question_normalised="q",
+            chunks=[make_chunk()],
+            escalation_reason="insufficient_context",
+            kb_version="v1",
+            created_at=TIME,
+            rejected_answer=rejected_answer,
+            failed_check=failed_check,
+        )

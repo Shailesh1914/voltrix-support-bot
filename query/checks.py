@@ -3,10 +3,11 @@ decisions 4, 5 and 7).
 
 - Citation check: every used_article_id is among the retrieved chunks.
 - Grounding check: every E-xx code, P-xx code and number with a unit in
-  the answer appears in the retrieved chunks. Never edits the answer.
+  the answer appears in the chunks of the CITED articles. Never edits
+  the answer.
 - Safety warnings: WARNING / DANGER / CAUTION lines in the retrieved
-  chunks of used articles, appended word for word if the answer lacks
-  them.
+  chunks of used articles, added word for word at the START of the
+  answer if the answer lacks them.
 """
 
 import re
@@ -86,12 +87,12 @@ def codes_in(text: str) -> set[str]:
     return set(CODE_PATTERN.findall(normalise_codes(text)))
 
 
-def ungrounded(answer: str, chunks: list[Chunk]) -> list[str]:
-    """Codes and quantities in the answer that no retrieved chunk has.
-
-    Empty list = criterion 7 holds.
+def ungrounded(answer: str, used_article_ids, chunks: list[Chunk]) -> list[str]:
+    """Codes and quantities in the answer that no chunk of a cited
+    article has. Empty list = criterion 7 holds.
     """
-    chunk_text = "\n".join(c.text for c in chunks)
+    used = set(used_article_ids)
+    chunk_text = "\n".join(c.text for c in chunks if c.article_id in used)
     chunk_codes = codes_in(chunk_text)
     chunk_quantities = quantities_in(chunk_text)
 
@@ -125,8 +126,9 @@ def safety_warnings(used_article_ids, chunks: list[Chunk]) -> list[str]:
 
 
 def with_safety_warnings(answer: str, warnings: list[str]) -> str:
-    """answer, plus each warning it does not already contain word for word."""
+    """answer, preceded by each warning it does not already contain word
+    for word (decision 5: at the START)."""
     missing = [w for w in warnings if w not in answer]
     if not missing:
         return answer
-    return answer.rstrip() + "\n\n" + "\n".join(missing)
+    return "\n".join(missing) + "\n\n" + answer.lstrip()
