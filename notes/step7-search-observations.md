@@ -15,7 +15,7 @@
   none. Consider adding them (with symptom wording for fault
   articles) in a kb_v3.
 - Step 13 note: config requires AWS_PROFILE; on AWS the bot will
-  use an IAM role instead, so this must be relaxed then.
+  use an IAM role instead, so this must be relaxed then. This is done
 - Step 13 note: an empty or whitespace-only question raises an
   error (no handoff). The user interface must show a friendly
   "Please type a question" message instead of an error.

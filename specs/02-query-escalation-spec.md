@@ -1,6 +1,6 @@
 # Query and Escalation Spec — Voltrix VX-200 Support Bot
 
-Status: Version 1.7, approved by Shailesh on 2026-10-14
+Status: Version 1.8, approved by Shailesh on 2026-10-14
 
 ## Goal
 Given one user question, retrieve relevant chunks, generate an answer
@@ -16,6 +16,8 @@ ONLY place an escalation decision is made.
 - ACTIVE_KB_VERSION: the KB version served (default v1). The handoff
   records it. Index promotion (Step 12) changes it.
 - ESCALATION_THRESHOLD: see below.
+- AWS_PROFILE and AWS_REGION are optional. They are needed only if
+  the (currently unused) Bedrock generator is selected.
 
 ## Processing
 1. Personal data masking: emails and phone numbers in the question
@@ -76,23 +78,24 @@ ONLY place an escalation decision is made.
      answered.
    - The escalation reason is recorded for the human agent but is
      NOT graded in the evaluation.
-7. Generation rules (apply to the model call in step 4b):
+7. Generation rules (apply to the model call in step 5b):
    - Generation model: Claude Haiku 4.5 via the Anthropic API
      (Claude Console). Amazon Bedrock is not available on this AWS
      account (AWS declined access, case 179169048500913).
      Model ID: claude-haiku-4-5-20251001. Temperature 0.
    - The API key is read from VOLTRIX_ANTHROPIC_API_KEY, loaded from
-  ~/.config/voltrix/secrets.env (outside the project). It is never 
-  named ANTHROPIC_API_KEY, and the bot refuses to start if 
-  ANTHROPIC_API_KEY is set in its environment.
-   - The Bedrock generator is kept but unused. Switching back to 
-   Bedrock is a spec change and requires re-running the evaluation.
+     ~/.config/voltrix/secrets.env (outside the project). It is never
+     named ANTHROPIC_API_KEY, and the bot refuses to start if
+     ANTHROPIC_API_KEY is set in its environment.
+   - The Bedrock generator is kept but unused. Switching back to
+     Bedrock is a spec change and requires re-running the evaluation.
    - Structural tests use a fake generator (fixed responses, no model
-     calls). The real model is called only in evaluation runs and manual smoke tests.
+     calls). The real model is called only in evaluation runs and
+     manual smoke tests.
    - Every factual statement must come from the retrieved chunks.
      No outside knowledge. Never invent numbers, codes or settings.
    - Safety warning = any line starting with WARNING, DANGER or
-   CAUTION (case-sensitive). See Implementation decision 5.
+     CAUTION (case-sensitive). See Implementation decision 5.
 
 ## Output
 A response object with:
