@@ -1,6 +1,6 @@
 # Query and Escalation Spec — Voltrix VX-200 Support Bot
 
-Status: Version 1.6, approved by Shailesh on 2026-10-13
+Status: Version 1.7, approved by Shailesh on 2026-10-14
 
 ## Goal
 Given one user question, retrieve relevant chunks, generate an answer
@@ -18,24 +18,29 @@ ONLY place an escalation decision is made.
 - ESCALATION_THRESHOLD: see below.
 
 ## Processing
-1. Query normalisation: the letter E or P (any case), an optional
+1. Personal data masking: emails and phone numbers in the question
+   are replaced with [EMAIL] and [PHONE]. The masked text is used
+   in every later step: retrieval, the model call and the handoff
+   record. See Implementation decision 3.
+2. Query normalisation: the letter E or P (any case), an optional
    space or hyphen, then 1-3 digits, is converted to "E-" or "P-"
    plus the number zero-padded to 2 digits.
    Examples: E1, e-1, E 01, E-001 -> E-01; P5 -> P-05.
    The normalised text replaces the original in the retrieval query.
-   The original question is kept for the handoff record.
-2. Retrieval: call search(query, k=5) from the retrieval contract
+   The masked question as received is also kept for the handoff
+   record.
+3. Retrieval: call search(query, k=5) from the retrieval contract
    (specs/03-retrieval-contract.md). The query flow never reads
    index files directly. The score scale and the output of search()
    are defined in specs/03-retrieval-contract.md (Step 5).
-3. Unknown fault codes (after retrieval): at startup, build the set
+4. Unknown fault codes (after retrieval): at startup, build the set
    of known fault codes from the E-xx codes in the article titles
    returned by kb_info() (specs/03-retrieval-contract.md). If the
    normalised question contains an E-xx code not in that set,
    escalate (reason: "insufficient_context") without calling the
    model. The handoff record includes the retrieved
    chunks.
-4. Escalation decision (ONE decision, two signals):
+5. Escalation decision (ONE decision, two signals):
    a. Retrieval check: if the highest single chunk similarity_score
       is below ESCALATION_THRESHOLD, escalate (reason: "low_similarity").
    b. Answerability check and generation: otherwise, ONE model call.
@@ -49,7 +54,18 @@ ONLY place an escalation decision is made.
    c. Citation check: the code checks that every used_article_id is
       among the retrieved chunks. If not, escalate
       (reason: "insufficient_context").
-5. Escalation reasons:
+   d. Empty citations: if the decision is "answer" but
+      used_article_ids is empty, escalate (reason:
+      "insufficient_context"). See Implementation decision 7.
+   e. Grounding check: every E-xx code, P-xx code and number with a
+      unit in the answer must appear in the chunks of the cited
+      articles (criterion 7). If not, escalate (reason:
+      "insufficient_context").
+   f. Safety warnings: missing warning lines from the cited
+      articles are added at the start of the answer (decision 5).
+   The first check that fails decides the escalation. Order:
+   d, c, e, then f.
+6. Escalation reasons:
    - out_of_scope = the out-of-scope list in specs/00-scope.md.
    - Everything else not answered by the chunks = insufficient_context.
    - Partial questions: if any part of the question is not answered
@@ -60,12 +76,19 @@ ONLY place an escalation decision is made.
      answered.
    - The escalation reason is recorded for the human agent but is
      NOT graded in the evaluation.
-6. Generation rules (apply to the model call in step 4b):
-   - Generation model: a Claude model on Amazon Bedrock, used both
-     when running locally and when deployed on AWS (same model ID).
-     Exact model ID pinned at Step 8. Temperature 0.
+7. Generation rules (apply to the model call in step 4b):
+   - Generation model: Claude Haiku 4.5 via the Anthropic API
+     (Claude Console). Amazon Bedrock is not available on this AWS
+     account (AWS declined access, case 179169048500913).
+     Model ID: claude-haiku-4-5-20251001. Temperature 0.
+   - The API key is read from VOLTRIX_ANTHROPIC_API_KEY, loaded from
+  ~/.config/voltrix/secrets.env (outside the project). It is never 
+  named ANTHROPIC_API_KEY, and the bot refuses to start if 
+  ANTHROPIC_API_KEY is set in its environment.
+   - The Bedrock generator is kept but unused. Switching back to 
+   Bedrock is a spec change and requires re-running the evaluation.
    - Structural tests use a fake generator (fixed responses, no model
-     calls). The real model is called only in evaluation runs.
+     calls). The real model is called only in evaluation runs and manual smoke tests.
    - Every factual statement must come from the retrieved chunks.
      No outside knowledge. Never invent numbers, codes or settings.
    - Safety warning = any line starting with WARNING, DANGER or
@@ -90,17 +113,18 @@ support engineer with the details found so far. Reference: <handoff_id>."
 ## Escalation handoff
 Every escalation creates a handoff record for the human queue with:
 - a unique handoff_id
-- the question (as received, and after normalisation), with
-  personal data masked (see below)
+- created_at (UTC)
+- the question (as received, and after normalisation), masked
 - all retrieved chunks: chunk_id, article_id, text, similarity_score
 - the escalation_reason
 - the kb_version used (ACTIVE_KB_VERSION)
+- rejected_answer and failed_check (filled only when a check stops
+  an answer; see Implementation decision 11)
 So the human agent never starts cold.
 Locally: appended to a JSONL file. On AWS: decided at Step 13.
 No data beyond the question text is stored about the person asking.
-Personal data: before a handoff record is stored, emails and phone
-numbers in the question are masked (e.g. [EMAIL], [PHONE]). The
-handoff stores only the masked text.
+Personal data: masking happens first (Processing step 1), so the
+handoff only ever contains masked text.
 
 ## ESCALATION_THRESHOLD (the most important number in this spec)
 This number trades off two costs:
@@ -156,7 +180,7 @@ Structural (must hold 100% of the time):
    fixed escalation message with that handoff_id.
 7. Every E-xx code, P-xx code and number with a unit in an answer
    must appear in the chunks of the CITED articles.
-8. Unknown fault codes (Processing step 3) always escalate without
+8. Unknown fault codes (Processing step 4) always escalate without
    a model call, and their handoff record includes the retrieved
    chunks.
 9. The ESCALATION_THRESHOLD in config equals the value written in
@@ -169,15 +193,13 @@ will be measured by an evaluation designed at Step 9.
 - Building or changing the index (ingestion side).
 - Multi-turn conversation memory.
 
-## Implementation decisions (Version 1.3)
+## Implementation decisions (Version 1.3-1.7)
 1. ESCALATION_THRESHOLD is a constant in query/config.py, never in
    .env. When set, this spec records it as a line "Value: <number>",
    and a test checks the two match.
 2. The model ID is also a constant in query/config.py, checked
-   against this spec by a test. Provisional:
-   global.anthropic.claude-haiku-4-5-20251001-v1:0. Final ID
-   pinned after the first live Bedrock test (India profile
-   preferred if available).
+   against this spec by a test. Pinned model ID (Anthropic API):
+   claude-haiku-4-5-20251001.
 3. Personal data masking (emails, phone numbers) is applied FIRST,
    before normalisation. The masked text is used everywhere:
    retrieval, the model, and the handoff record.
@@ -189,9 +211,9 @@ will be measured by an evaluation designed at Step 9.
    ingestion's chunk format). The prompt also instructs the model
    to include safety precautions from the chunks.
 6. Malformed model output -> escalate, reason "insufficient_context".
-   Bedrock API errors -> escalate with a handoff, new reason
-   "service_error". The evaluation treats service_error as a run
-   failure, never as a correct escalation.
+   Model API errors (Anthropic API, or Bedrock if used) -> escalate
+   with a handoff, reason "service_error". The evaluation treats
+   service_error as a run failure, never as a correct escalation.
 7. decision="answer" with empty used_article_ids -> escalate,
    reason "insufficient_context".
 8. Handoff records go to HANDOFF_PATH (default

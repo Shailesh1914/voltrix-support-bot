@@ -22,3 +22,9 @@
 - Step 9 prompt experiments: (a) whether to allow answering from
   a clearly matching symptom description (T-102 style);
   (b) schema field order: decision first vs answer first.
+
+## Notes for later steps
+- Step 9 experiment: compare Claude Haiku 4.5 (pinned) with
+  Claude Haiku 5.5 (newer, cheaper, adaptive thinking) on the same
+  70 tickets. Check whether Haiku 5.5's ID is a fixed snapshot and
+  how thinking interacts with forced tool use and temperature 0.
