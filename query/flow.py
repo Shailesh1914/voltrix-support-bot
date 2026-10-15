@@ -1,22 +1,23 @@
 """The query flow (spec 02, "Processing").
 
 Order for one question:
-1. mask personal data (decision 3), then normalise fault codes
-2. search(k=5) through the retrieval contract
-3. unknown fault code -> escalate "insufficient_context", no model call
-4a. highest similarity_score below the threshold -> escalate
+1. mask personal data (decision 3)
+2. normalise fault codes
+3. search(k=5) through the retrieval contract
+4. unknown fault code -> escalate "insufficient_context", no model call
+5a. highest similarity_score below the threshold -> escalate
     "low_similarity", no model call
-4b. one generator call:
+5b. one generator call:
     - service error -> escalate "service_error" (decision 6)
     - malformed output -> escalate "insufficient_context" (decision 6)
     - decision insufficient_context / out_of_scope -> escalate with it
-    - decision answer, then in order:
-      - no used_article_ids -> "insufficient_context" (decision 7)
-      - citation check: a used article not retrieved -> "insufficient_context" (4c)
-      - grounding check (criterion 7) fails -> "insufficient_context" (decision 4)
+    - decision answer, then in the order of spec 02 (d, c, e, then f):
+      5d. no used_article_ids -> "insufficient_context" (decision 7)
+      5c. citation check: a used article not retrieved -> "insufficient_context"
+      5e. grounding check (criterion 7) fails -> "insufficient_context" (decision 4)
       each of these three stores the draft and the check's name in the
       handoff (decision 11)
-      - missing safety warnings added word for word at the start (decision 5)
+      5f. missing safety warnings added word for word at the start (decision 5)
       -> answered, with citations
 """
 
@@ -64,7 +65,7 @@ class QueryFlow:
         self._handoff_store = handoff_store
         self._kb_version = kb_version
         self._clock = clock
-        # Built once at startup (step 3).
+        # Built once at startup (step 4).
         self.known_fault_codes = known_fault_codes(info)
 
     def ask(self, question: str) -> QueryResponse:

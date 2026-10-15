@@ -1,5 +1,5 @@
 """Stage c: system prompt, tool schema and user message (spec 02, steps
-4b, 5 and 6; decision 5)."""
+5b, 6 and 7; decision 5)."""
 
 import hashlib
 
@@ -30,7 +30,7 @@ def test_tool_is_forced():
         '"answer"',
         '"insufficient_context"',
         '"out_of_scope"',
-        # partial questions (step 5)
+        # partial questions (step 6)
         "If one part is missing",
         # out-of-scope list (spec 00)
         "drive sizing",
@@ -38,7 +38,7 @@ def test_tool_is_forced():
         "energised (live) drive or motor",
         "other manufacturers' products",
         "safe isolation and the DC bus discharge time",
-        # generation rules (step 6, decision 5)
+        # generation rules (step 7, decision 5)
         "Use only the documents",
         "Never invent numbers, fault codes, parameter numbers or settings",
         "WARNING, DANGER or CAUTION line word for word",

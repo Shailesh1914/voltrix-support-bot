@@ -19,6 +19,8 @@ from query.response import ESCALATION_MESSAGE
 
 ANSWER = {"decision": "answer", "answer": "Lengthen P-06.", "used_article_ids": ["KB-001"]}
 
+pytestmark = pytest.mark.usefixtures("no_network")
+
 
 @pytest.fixture
 def fake_build(fake_retriever, make_chunk, tmp_path):
@@ -47,7 +49,12 @@ def test_real_command_fails_loudly_while_threshold_unset(tmp_path):
     result = subprocess.run(
         [sys.executable, "-m", "query.ask", "E1 when the motor ramps up"],
         cwd=config.REPO_ROOT,
-        env={**os.environ, "HANDOFF_PATH": str(handoffs)},
+        # The shell's Anthropic variables are left out: the result must not
+        # depend on them.
+        env={
+            **{k: v for k, v in os.environ.items() if not k.startswith(("ANTHROPIC_", "VOLTRIX_"))},
+            "HANDOFF_PATH": str(handoffs),
+        },
         capture_output=True,
         text=True,
         timeout=60,
@@ -66,7 +73,7 @@ def test_threshold_checked_before_anything_is_loaded(monkeypatch):
     monkeypatch.setattr(config, "ESCALATION_THRESHOLD", None)
     monkeypatch.setattr(ask, "load_settings", must_not_run)
     monkeypatch.setattr(ask, "open_retrieval", must_not_run)
-    monkeypatch.setattr(ask.BedrockGenerator, "from_settings", must_not_run)
+    monkeypatch.setattr(ask.AnthropicGenerator, "from_environment", must_not_run)
     with pytest.raises(ConfigError, match="NOT YET SET"):
         ask.build_flow()
 
@@ -74,13 +81,13 @@ def test_threshold_checked_before_anything_is_loaded(monkeypatch):
 # --- build_flow wiring (no network, no index) ------------------------------------------
 
 
-def test_build_flow_wires_config_settings_index_and_bedrock(monkeypatch, tmp_path, fake_retriever):
-    settings = Settings("my-profile", "ap-south-1", "v2", tmp_path / "h.jsonl")
+def test_build_flow_wires_config_settings_index_and_anthropic(monkeypatch, tmp_path, fake_retriever):
+    settings = Settings("v2", tmp_path / "h.jsonl")  # no AWS settings needed
     opened, generators = [], []
     fake_generator = FakeGenerator(ANSWER)
 
-    def fake_from_settings(s):
-        generators.append(s)
+    def fake_from_environment():
+        generators.append("anthropic")
         return fake_generator
 
     def fake_open(version):
@@ -90,15 +97,35 @@ def test_build_flow_wires_config_settings_index_and_bedrock(monkeypatch, tmp_pat
     monkeypatch.setattr(config, "ESCALATION_THRESHOLD", 0.42)  # test value only
     monkeypatch.setattr(ask, "load_settings", lambda: settings)
     monkeypatch.setattr(ask, "open_retrieval", fake_open)
-    monkeypatch.setattr(ask.BedrockGenerator, "from_settings", fake_from_settings)
+    monkeypatch.setattr(ask.AnthropicGenerator, "from_environment", fake_from_environment)
 
     flow = ask.build_flow()
 
-    assert opened == ["v2"] and generators == [settings]
+    assert opened == ["v2"] and generators == ["anthropic"]
     assert flow._threshold == 0.42
     assert flow._generator is fake_generator
     assert flow._handoff_store.path == settings.handoff_path
     assert flow._kb_version == "v2"
+
+
+def test_api_key_checked_before_index_is_opened(monkeypatch, tmp_path):
+    def no_key():
+        raise ConfigError("VOLTRIX_ANTHROPIC_API_KEY is not set")
+
+    def must_not_run(*args, **kwargs):
+        raise AssertionError("index opened before the key check")
+
+    monkeypatch.setattr(config, "ESCALATION_THRESHOLD", 0.42)  # test value only
+    monkeypatch.setattr(ask, "load_settings", lambda: Settings("v1", tmp_path / "h.jsonl"))
+    monkeypatch.setattr(ask, "open_retrieval", must_not_run)
+    monkeypatch.setattr(ask.AnthropicGenerator, "from_environment", no_key)
+    with pytest.raises(ConfigError, match="VOLTRIX_ANTHROPIC_API_KEY"):
+        ask.build_flow()
+
+
+def test_cli_never_imports_bedrock():
+    source = open(ask.__file__, encoding="utf-8").read()
+    assert "bedrock" not in source.lower() and "botocore" not in source
 
 
 # --- main() with fakes -------------------------------------------------------------------
@@ -131,9 +158,9 @@ def test_escalated_response_printed_and_handoff_stored(fake_build, tmp_path, cap
 @pytest.mark.parametrize(
     "error",
     [
-        ConfigError("AWS_PROFILE is not set (add it to .env)"),
+        ConfigError("VOLTRIX_ANTHROPIC_API_KEY is not set"),
+        ConfigError("ANTHROPIC_BASE_URL must not be set in the bot's environment"),
         ask.RetrievalError("indexes/v3: index folder does not exist"),
-        ask.ProfileNotFound(profile="nope"),
     ],
     ids=lambda e: type(e).__name__,
 )

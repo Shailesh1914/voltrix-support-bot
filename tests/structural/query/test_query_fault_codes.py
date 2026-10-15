@@ -1,4 +1,4 @@
-"""Stage b: known and unknown fault codes (spec 02, step 3)."""
+"""Stage b: known and unknown fault codes (spec 02, step 4)."""
 
 from ingestion import KBInfo
 from query.fault_codes import fault_codes_in, known_fault_codes, unknown_fault_codes

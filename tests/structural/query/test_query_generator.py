@@ -1,5 +1,5 @@
-"""Stage c: validate_output() and FakeGenerator (spec 02, steps 4b and
-6; decision 6)."""
+"""Stage c: validate_output() and FakeGenerator (spec 02, steps 5b and
+7; decision 6)."""
 
 import pytest
 

@@ -13,3 +13,5 @@ pytest==9.1.1
 boto3==1.43.111
 botocore==1.43.111
 python-dotenv==1.2.4
+anthropic==1.11.0
+httpx2==2.13.1

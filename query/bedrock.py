@@ -1,9 +1,12 @@
-"""The real generator: a Claude model on Amazon Bedrock (spec 02,
-Processing step 6; decisions 2 and 6).
+"""A generator for a Claude model on Amazon Bedrock: kept but UNUSED
+(spec 02, Processing step 7). The bot uses query/anthropic_api.py.
+Switching back to Bedrock is a spec change and requires re-running the
+evaluation.
 
-Converse API, temperature 0, the submit_response tool forced, model ID
-from query/config.py. Credentials come from AWS_PROFILE through boto3;
-this module never reads keys.
+Converse API, temperature 0, the submit_response tool forced. Credentials
+come from AWS_PROFILE through boto3; this module never reads keys.
+AWS_PROFILE and AWS_REGION are required only here (spec 02,
+"Configuration").
 
 Never called by structural tests: they use FakeGenerator, or this class
 with a botocore Stubber (no network).
@@ -15,11 +18,16 @@ from botocore.config import Config
 from botocore.exceptions import BotoCoreError, ClientError
 
 from ingestion import Chunk
-from query.config import BEDROCK_MODEL_ID, GENERATION_TEMPERATURE, MAX_OUTPUT_TOKENS, Settings
+from query.config import GENERATION_TEMPERATURE, MAX_OUTPUT_TOKENS, ConfigError, Settings
 from query.generator import GeneratorOutput, GeneratorServiceError, MalformedOutput, validate_output
 from query.prompt import SYSTEM_PROMPT, TOOL_CONFIG, TOOL_NAME, build_user_message
 
 log = logging.getLogger(__name__)
+
+# The Bedrock form of the model ID. No longer pinned by spec 02 (decision 2
+# pins the Anthropic API ID in query/config.py), so no test checks it
+# against the spec; it must be pinned again before Bedrock is ever used.
+BEDROCK_MODEL_ID = "global.anthropic.claude-haiku-4-5-20251001-v1:0"
 
 # Throttling and transient errors are retried by botocore (3 attempts in
 # total, the first included); whatever still fails becomes "service_error".
@@ -38,7 +46,10 @@ class BedrockGenerator:
     @classmethod
     def from_settings(cls, settings: Settings) -> "BedrockGenerator":
         """Client for AWS_PROFILE and AWS_REGION. Fails loudly at startup
-        if the profile does not exist."""
+        if either is not set, or if the profile does not exist."""
+        for name, value in (("AWS_PROFILE", settings.aws_profile), ("AWS_REGION", settings.aws_region)):
+            if not value:
+                raise ConfigError(f"{name} is not set (add it to .env); the Bedrock generator needs it")
         import boto3  # noqa: PLC0415 (only the real bot needs boto3 loaded)
 
         session = boto3.Session(profile_name=settings.aws_profile, region_name=settings.aws_region)

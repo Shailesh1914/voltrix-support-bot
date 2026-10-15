@@ -1,5 +1,5 @@
-"""Citation check, grounding check and safety warnings (spec 02, step
-4c, criterion 7, decisions 4, 5 and 9; v1.6: grounding on cited
+"""Citation check, grounding check and safety warnings (spec 02, steps
+5c, 5e and 5f, criterion 7, decisions 4, 5 and 9; v1.6: grounding on cited
 articles only, warnings at the start)."""
 
 import pytest

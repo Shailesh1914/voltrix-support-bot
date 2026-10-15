@@ -24,17 +24,17 @@ from dotenv import dotenv_values
 # in spec 02 as "Value: <number>". Never choose or change it here alone.
 ESCALATION_THRESHOLD: float | None = None
 
-# Generation model on Amazon Bedrock (spec 02, decision 2). Provisional
-# until the first live Bedrock test.
-BEDROCK_MODEL_ID = "global.anthropic.claude-haiku-4-5-20251001-v1:0"
+# Generation model via the Anthropic API (spec 02, Processing step 7 and
+# decision 2).
+MODEL_ID = "claude-haiku-4-5-20251001"
 
-# Generation settings (spec 02, Processing step 6: temperature 0).
+# Generation settings (spec 02, Processing step 7: temperature 0).
 # MAX_OUTPUT_TOKENS bounds one answer; a reply cut off at this limit is
 # treated as malformed output (decision 6).
 GENERATION_TEMPERATURE = 0
 MAX_OUTPUT_TOKENS = 2048
 
-# Chunks retrieved per question (spec 02, Processing step 2).
+# Chunks retrieved per question (spec 02, Processing step 3).
 SEARCH_K = 5
 
 # Units for the grounding check of criterion 7 (spec 02, decision 9).
@@ -54,7 +54,7 @@ DEFAULT_HANDOFF_PATH = REPO_ROOT / "handoffs" / "handoffs.jsonl"
 KB_VERSION_PATTERN = re.compile(r"v[0-9]+")
 
 # Spec values that must never come from .env (one place only).
-SPEC_ONLY_NAMES = ("ESCALATION_THRESHOLD", "BEDROCK_MODEL_ID")
+SPEC_ONLY_NAMES = ("ESCALATION_THRESHOLD", "MODEL_ID")
 
 
 class ConfigError(Exception):
@@ -63,10 +63,12 @@ class ConfigError(Exception):
 
 @dataclass(frozen=True)
 class Settings:
-    aws_profile: str
-    aws_region: str
     active_kb_version: str
     handoff_path: Path
+    # Optional: needed only if the Bedrock generator is selected (spec 02,
+    # "Configuration"); BedrockGenerator.from_settings() checks them.
+    aws_profile: str | None = None
+    aws_region: str | None = None
 
 
 def load_settings(
@@ -76,7 +78,8 @@ def load_settings(
     """Read local settings from env_file, overridden by environ.
 
     environ defaults to os.environ. Neither is modified. AWS keys are
-    never read: boto3 finds them through AWS_PROFILE.
+    never read: boto3 finds them through AWS_PROFILE. The Anthropic API
+    key is never read here either (query/anthropic_api.py).
     """
     values: dict[str, str] = {}
     if env_file is not None and Path(env_file).is_file():
@@ -90,11 +93,8 @@ def load_settings(
                 "constant in query/config.py, checked against spec 02"
             )
 
-    def required(name: str) -> str:
-        value = values.get(name, "").strip()
-        if not value:
-            raise ConfigError(f"{name} is not set (add it to .env)")
-        return value
+    def optional(name: str) -> str | None:
+        return values.get(name, "").strip() or None
 
     kb_version = values.get("ACTIVE_KB_VERSION", "").strip() or DEFAULT_KB_VERSION
     if not KB_VERSION_PATTERN.fullmatch(kb_version):
@@ -107,10 +107,10 @@ def load_settings(
         handoff_path = REPO_ROOT / handoff_path
 
     return Settings(
-        aws_profile=required("AWS_PROFILE"),
-        aws_region=required("AWS_REGION"),
         active_kb_version=kb_version,
         handoff_path=handoff_path,
+        aws_profile=optional("AWS_PROFILE"),
+        aws_region=optional("AWS_REGION"),
     )
 
 

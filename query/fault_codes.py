@@ -1,4 +1,4 @@
-"""Unknown fault codes (spec 02, Processing step 3, criterion 8).
+"""Unknown fault codes (spec 02, Processing step 4, criterion 8).
 
 The known codes are the E-xx codes in the article titles returned by
 kb_info(). Titles are normalised the same way as questions, so both

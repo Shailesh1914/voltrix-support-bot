@@ -1,4 +1,4 @@
-"""Stage b: flow skeleton over fakes (spec 02, steps 1-4a; criteria 3,
+"""Stage b: flow skeleton over fakes (spec 02, steps 1-5a; criteria 3,
 6 and 8 for the escalations that need no model call).
 
 The generator is a stub that fails if called, so every test that
@@ -50,7 +50,7 @@ def test_empty_question_is_rejected(make_flow, question):
         make_flow().ask(question)
 
 
-# --- Steps 1 and 2: masked, normalised query, k=5 ------------------------------
+# --- Steps 1-3: masked, normalised query, k=5 ----------------------------------
 
 
 def test_search_gets_masked_normalised_question_and_k_5(make_flow, fake_retriever, stub_generator):
@@ -63,7 +63,7 @@ def test_search_gets_masked_normalised_question_and_k_5(make_flow, fake_retrieve
     assert stub_generator.calls[0][0] == "E-01 when ramping, mail [EMAIL]"
 
 
-# --- Step 3: unknown fault code (criterion 8) ----------------------------------
+# --- Step 4: unknown fault code (criterion 8) ----------------------------------
 
 
 @pytest.mark.parametrize("question", ["E33 on the display", "e-47 after power up", "E-01 and E 99 together"])
@@ -89,7 +89,7 @@ def test_known_code_goes_on_to_the_model(make_flow, stub_generator):
     assert len(stub_generator.calls) == 1
 
 
-# --- Step 4a: low similarity -----------------------------------------------------
+# --- Step 5a: low similarity -----------------------------------------------------
 
 
 def test_low_similarity_escalates_without_model_call(make_flow, fake_retriever, stub_generator, memory_store):
@@ -179,7 +179,7 @@ def test_jsonl_store_end_to_end(make_flow, tmp_path):
     assert missing_fields(stored) == []
 
 
-# --- Step 4b: generator outcomes (stage c; decision 6) ---------------------------
+# --- Step 5b: generator outcomes (stage c; decision 6) ---------------------------
 
 
 @pytest.fixture
@@ -227,7 +227,7 @@ def test_other_generator_errors_are_not_hidden(flow_with, memory_store):
 
 
 
-# --- Answer path (stage d): step 4c, criteria 4, 6, 7, decisions 4, 5, 7 ----------
+# --- Answer path (stage d): steps 5c-5f, criteria 4, 6, 7, decisions 4, 5, 7 -------
 
 
 SAFE_TEXT = (
@@ -343,7 +343,37 @@ def test_decision_5_unused_article_warnings_not_added(answer_flow, memory_store)
     assert "DC bus stays charged" not in flow.ask("q").answer
 
 
-# --- Every route, one table (criteria 3, 6; spec 02 steps 3-4) ------------------------
+# --- Answer-path order (spec 02 v1.7, step 5: "The first check that fails decides
+# the escalation. Order: d, c, e, then f.") -------------------------------------------
+# Each case fails several checks at once; only the first in spec order may be named.
+# d and c cannot fail together (an empty list cites nothing unretrieved).
+
+
+@pytest.mark.parametrize(
+    "answer, used, first",
+    [
+        ("Set P-09 instead.", [], "no_citations"),  # d and e fail -> d
+        ("Set P-09 instead.", ["KB-036"], "citation"),  # c and e fail -> c
+        ("Set P-09 instead.", ["KB-002", "KB-036"], "citation"),  # c and e fail -> c
+    ],
+)
+def test_first_failing_check_in_spec_order_decides(answer_flow, memory_store, answer, used, first):
+    flow, _ = answer_flow(answer, used)
+    record = assert_complete_escalation(flow.ask("q"), memory_store, "insufficient_context")
+    assert (record.failed_check, record.rejected_answer) == (first, answer)
+
+
+def test_safety_warnings_only_after_every_check_passed(answer_flow, memory_store):
+    # e fails on an answer citing KB-034, whose chunk has a WARNING line: f
+    # must not run, so the stored draft is exactly the model's text.
+    answer = "Switch off and wait 10 minutes."
+    flow, _ = answer_flow(answer, ["KB-034"])
+    record = assert_complete_escalation(flow.ask("q"), memory_store, "insufficient_context")
+    assert record.failed_check == "grounding"
+    assert record.rejected_answer == answer
+
+
+# --- Every route, one table (criteria 3, 6; spec 02 steps 4-5) ------------------------
 
 
 ANSWER = {"decision": "answer", "answer": "Lengthen P-06.", "used_article_ids": ["KB-002"]}

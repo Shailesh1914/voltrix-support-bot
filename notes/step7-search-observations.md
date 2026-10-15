@@ -28,3 +28,6 @@
   Claude Haiku 5.5 (newer, cheaper, adaptive thinking) on the same
   70 tickets. Check whether Haiku 5.5's ID is a fixed snapshot and
   how thinking interacts with forced tool use and temperature 0.
+- Step 9 note: the anthropic SDK 1.x sends temperature via
+  extra_body. Haiku 5.5 rejects any non-default temperature, so a
+  Haiku 5.5 comparison needs a spec decision on temperature first.

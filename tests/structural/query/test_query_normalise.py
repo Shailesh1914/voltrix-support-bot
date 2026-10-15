@@ -1,4 +1,4 @@
-"""Stage a: fault-code normalisation (spec 02, step 1, criterion 5)."""
+"""Stage a: fault-code normalisation (spec 02, step 2, criterion 5)."""
 
 import pytest
 

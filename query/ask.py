@@ -6,8 +6,8 @@ Prints the response object (spec 02, "Output") as JSON. Escalations are
 appended to HANDOFF_PATH.
 
 Fails loudly (message on stderr, exit code 2, no model call) while
-ESCALATION_THRESHOLD is not set, or if the settings, index or AWS
-profile are wrong.
+ESCALATION_THRESHOLD is not set, or if the settings, API key or index
+are wrong.
 """
 
 import argparse
@@ -16,11 +16,9 @@ import sys
 from collections.abc import Callable
 from dataclasses import asdict
 
-from botocore.exceptions import ProfileNotFound
-
 from ingestion import RetrievalError, open_retrieval
 from query import config
-from query.bedrock import BedrockGenerator
+from query.anthropic_api import AnthropicGenerator
 from query.config import ConfigError, load_settings, require_threshold
 from query.flow import QueryFlow
 from query.handoff import JsonlHandoffStore
@@ -29,15 +27,17 @@ EXIT_STARTUP_FAILED = 2
 
 
 def build_flow() -> QueryFlow:
-    """The real bot: config threshold, ACTIVE_KB_VERSION index, Bedrock.
+    """The real bot: config threshold, ACTIVE_KB_VERSION index, Anthropic API.
 
     The threshold is checked first, so nothing is loaded while it is unset.
+    The API key is checked before the (slower) index is opened.
     """
     threshold = require_threshold(config.ESCALATION_THRESHOLD)
     settings = load_settings()
+    generator = AnthropicGenerator.from_environment()
     return QueryFlow(
         open_retrieval(settings.active_kb_version),
-        BedrockGenerator.from_settings(settings),
+        generator,
         threshold=threshold,
         handoff_store=JsonlHandoffStore(settings.handoff_path),
         kb_version=settings.active_kb_version,
@@ -57,7 +57,7 @@ def main(argv: list[str] | None = None, build: Callable[[], QueryFlow] = build_f
 
     try:
         flow = build()
-    except (ConfigError, RetrievalError, ProfileNotFound) as e:
+    except (ConfigError, RetrievalError) as e:
         print(f"error: {e}", file=sys.stderr)
         return EXIT_STARTUP_FAILED
 

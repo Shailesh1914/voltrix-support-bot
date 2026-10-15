@@ -1,4 +1,4 @@
-"""The generator interface (spec 02, Processing steps 4b and 6).
+"""The generator interface (spec 02, Processing steps 5b and 7).
 
 One model call per question returns structured output: decision,
 answer and used_article_ids. Whatever produced it (the real model or
@@ -24,7 +24,7 @@ class MalformedOutput(Exception):
 
 
 class GeneratorServiceError(Exception):
-    """The model service failed (e.g. Bedrock API error)."""
+    """The model service failed (e.g. an Anthropic API error)."""
 
 
 @dataclass(frozen=True)
@@ -44,7 +44,7 @@ def validate_output(raw: object) -> GeneratorOutput:
     """Check raw structured output; raise MalformedOutput if invalid.
 
     Structure only. Whether the cited articles were retrieved, and
-    whether an answer cites anything at all, are flow checks (step 4c,
+    whether an answer cites anything at all, are flow checks (steps 5c and 5d,
     decision 7).
     """
     if not isinstance(raw, dict):
@@ -70,7 +70,7 @@ FakeResponse = GeneratorOutput | dict | BaseException
 
 
 class FakeGenerator:
-    """Fixed responses, no model calls (spec 02, Processing step 6).
+    """Fixed responses, no model calls (spec 02, Processing step 7).
 
     response is one of:
     - a GeneratorOutput, returned as is

@@ -4,6 +4,7 @@ Helpers are fixtures, not importable names, so this conftest never
 clashes with the ingestion one when both suites run together.
 """
 
+import socket
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -22,6 +23,39 @@ FAKE_ARTICLES = [
     ("KB-003", "E-03 Overcurrent at constant speed"),
     ("KB-020", "Setting acceleration and deceleration ramp times"),
 ]
+
+
+@pytest.fixture(autouse=True)
+def clean_sdk_environment(monkeypatch):
+    """No test depends on the shell that runs it: the Anthropic key and
+    every variable the SDK reads by itself are removed from the real
+    process environment. Tests that need them pass environ explicitly."""
+    for name in (
+        "VOLTRIX_ANTHROPIC_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "ANTHROPIC_AUTH_TOKEN",
+        "ANTHROPIC_BASE_URL",
+        "ANTHROPIC_CUSTOM_HEADERS",
+        "ANTHROPIC_LOG",
+        "ANTHROPIC_PROFILE",
+        "ANTHROPIC_CONFIG_DIR",
+        "ANTHROPIC_IDENTITY_TOKEN",
+        "ANTHROPIC_IDENTITY_TOKEN_FILE",
+        "ANTHROPIC_FEDERATION_RULE_ID",
+        "ANTHROPIC_ORGANIZATION_ID",
+    ):
+        monkeypatch.delenv(name, raising=False)
+
+
+@pytest.fixture
+def no_network(monkeypatch):
+    """Every socket connection fails (generator tests use it)."""
+
+    def refuse(*args, **kwargs):
+        raise AssertionError("network access in a structural test")
+
+    monkeypatch.setattr(socket.socket, "connect", refuse)
+    monkeypatch.setattr(socket, "create_connection", refuse)
 
 
 @pytest.fixture

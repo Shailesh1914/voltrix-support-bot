@@ -1,4 +1,4 @@
-"""Checks on the model's answer (spec 02, step 4c, criterion 7,
+"""Checks on the model's answer (spec 02, steps 5c, 5e and 5f, criterion 7,
 decisions 4, 5 and 7).
 
 - Citation check: every used_article_id is among the retrieved chunks.
@@ -16,7 +16,7 @@ from decimal import Decimal
 from ingestion import Chunk
 from query.normalise import normalise_codes
 
-# --- Citation check (step 4c) -----------------------------------------------------
+# --- Citation check (step 5c) -----------------------------------------------------
 
 
 def uncited_retrieved(used_article_ids, chunks: list[Chunk]) -> list[str]:

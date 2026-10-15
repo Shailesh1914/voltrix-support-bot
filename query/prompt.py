@@ -1,5 +1,5 @@
 """System prompt, user message and tool schema for the one model call
-(spec 02, Processing steps 4b, 5 and 6; decision 5).
+(spec 02, Processing steps 5b, 6 and 7; decision 5).
 
 The prompt asks; the code checks. Every rule here that matters for
 safety is also enforced in code after the call (citation check,

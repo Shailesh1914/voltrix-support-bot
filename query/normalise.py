@@ -1,4 +1,4 @@
-"""Fault-code normalisation (spec 02, Processing step 1, criterion 5).
+"""Fault-code normalisation (spec 02, Processing step 2, criterion 5).
 
 The letter E or P (any case), an optional space or hyphen, then 1-3
 digits becomes "E-" or "P-" plus the number zero-padded to 2 digits:

@@ -11,8 +11,10 @@ from query.config import ConfigError, load_settings, require_threshold
 
 GOOD_ENV = {"AWS_PROFILE": "test-profile", "AWS_REGION": "ap-south-1", "ACTIVE_KB_VERSION": "v2"}
 
-# Bedrock model IDs and inference profile IDs for Anthropic models.
-MODEL_ID_PATTERN = re.compile(r"\b(?:[a-z]+\.)?anthropic\.claude-[A-Za-z0-9.:-]*[A-Za-z0-9]")
+# Any Claude model ID: Anthropic API IDs (claude-haiku-4-5-20251001) and,
+# inside Bedrock IDs (global.anthropic.claude-...-v1:0), their claude- part,
+# so a Bedrock ID in the spec also fails the comparison.
+MODEL_ID_PATTERN = re.compile(r"\bclaude-[A-Za-z0-9-]*[A-Za-z0-9]")
 
 
 def spec_threshold_line(spec_text: str) -> str:
@@ -36,7 +38,19 @@ def test_criterion_9_threshold_in_config_equals_spec(spec_02_text):
 
 def test_model_id_in_config_equals_spec(spec_02_text):
     ids_in_spec = set(MODEL_ID_PATTERN.findall(spec_02_text))
-    assert ids_in_spec == {config.BEDROCK_MODEL_ID}
+    assert ids_in_spec == {config.MODEL_ID}
+
+
+@pytest.mark.parametrize(
+    "text, found",
+    [
+        ("Model ID: claude-haiku-4-5-20251001. Temperature 0.", {"claude-haiku-4-5-20251001"}),
+        ("global.anthropic.claude-haiku-4-5-20251001-v1:0", {"claude-haiku-4-5-20251001-v1"}),
+        ("Claude Haiku 4.5 via the Anthropic API (Claude Console).", set()),
+    ],
+)
+def test_model_id_pattern(text, found):
+    assert set(MODEL_ID_PATTERN.findall(text)) == found
 
 
 def test_threshold_is_assigned_only_in_config(query_dir):
@@ -128,10 +142,16 @@ def test_absolute_handoff_path_kept(tmp_path):
 
 
 @pytest.mark.parametrize("name", ["AWS_PROFILE", "AWS_REGION"])
-def test_missing_aws_setting_fails(name):
+def test_aws_settings_are_optional(name):
+    # spec 02 "Configuration": needed only if Bedrock is selected.
     env = {k: v for k, v in GOOD_ENV.items() if k != name}
-    with pytest.raises(ConfigError, match=name):
-        load_settings(env_file=None, environ=env)
+    settings = load_settings(env_file=None, environ=env)
+    assert getattr(settings, name.lower()) is None
+
+
+def test_settings_with_no_aws_values_at_all():
+    settings = load_settings(env_file=None, environ={"AWS_PROFILE": "  "})
+    assert (settings.aws_profile, settings.aws_region, settings.active_kb_version) == (None, None, "v1")
 
 
 @pytest.mark.parametrize("version", ["1", "kb_v1", "v", "V1", "v1.0"])
@@ -140,7 +160,7 @@ def test_invalid_kb_version_fails(version):
         load_settings(env_file=None, environ={**GOOD_ENV, "ACTIVE_KB_VERSION": version})
 
 
-@pytest.mark.parametrize("name", ["ESCALATION_THRESHOLD", "BEDROCK_MODEL_ID"])
+@pytest.mark.parametrize("name", ["ESCALATION_THRESHOLD", "MODEL_ID"])
 def test_spec_values_in_env_fail_loudly(name, tmp_path):
     env_file = tmp_path / ".env"
     env_file.write_text(f"{name}=0.5\nAWS_PROFILE=p\nAWS_REGION=r\n", encoding="utf-8")

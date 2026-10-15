@@ -1,4 +1,4 @@
-"""Personal data masking (spec 02, "Escalation handoff", decision 3).
+"""Personal data masking (spec 02, Processing step 1, decision 3).
 
 Applied FIRST, before normalisation. The masked text is used
 everywhere: retrieval, the model call and the handoff record.

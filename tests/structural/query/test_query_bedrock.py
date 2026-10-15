@@ -1,7 +1,6 @@
-"""Stage c: BedrockGenerator with a botocore Stubber (spec 02, step 6;
-decisions 2 and 6). No network: every socket connection fails."""
-
-import socket
+"""Stage c: BedrockGenerator with a botocore Stubber (spec 02, step 7;
+decisions 2 and 6). Kept but unused since spec 02 v1.7. No network:
+every socket connection fails."""
 
 import boto3
 import pytest
@@ -11,19 +10,13 @@ from botocore.exceptions import EndpointConnectionError, NoCredentialsError, Rea
 from botocore.stub import Stubber
 
 from query import bedrock
-from query.bedrock import CLIENT_CONFIG, BedrockGenerator, parse_response
-from query.config import BEDROCK_MODEL_ID, Settings
+from query.bedrock import BEDROCK_MODEL_ID, CLIENT_CONFIG, BedrockGenerator, parse_response
+from query.config import ConfigError, Settings
 from query.generator import GeneratorOutput, GeneratorServiceError, MalformedOutput
 from query.prompt import SYSTEM_PROMPT, TOOL_CONFIG, build_user_message
 
 
-@pytest.fixture(autouse=True)
-def no_network(monkeypatch):
-    def refuse(*args, **kwargs):
-        raise AssertionError("network access in a structural test")
-
-    monkeypatch.setattr(socket.socket, "connect", refuse)
-    monkeypatch.setattr(socket, "create_connection", refuse)
+pytestmark = pytest.mark.usefixtures("no_network")
 
 
 @pytest.fixture
@@ -201,10 +194,24 @@ def test_client_uses_profile_and_region(monkeypatch, tmp_path):
             return "client"
 
     monkeypatch.setattr(boto3, "Session", FakeSession)
-    generator = BedrockGenerator.from_settings(Settings("my-profile", "ap-south-1", "v1", tmp_path / "h.jsonl"))
+    settings = Settings("v1", tmp_path / "h.jsonl", aws_profile="my-profile", aws_region="ap-south-1")
+    generator = BedrockGenerator.from_settings(settings)
     assert created["session"] == {"profile_name": "my-profile", "region_name": "ap-south-1"}
     assert created["client"] == ("bedrock-runtime", CLIENT_CONFIG)
     assert generator.model_id == BEDROCK_MODEL_ID
+
+
+@pytest.mark.parametrize("missing", ["AWS_PROFILE", "AWS_REGION"])
+def test_aws_settings_required_only_when_bedrock_is_selected(monkeypatch, tmp_path, missing):
+    # spec 02 "Configuration": optional for the bot, required for Bedrock.
+    def must_not_run(**kwargs):
+        raise AssertionError("session created without AWS settings")
+
+    monkeypatch.setattr(boto3, "Session", must_not_run)
+    values = {"aws_profile": "my-profile", "aws_region": "ap-south-1"}
+    values["aws_profile" if missing == "AWS_PROFILE" else "aws_region"] = None
+    with pytest.raises(ConfigError, match=missing):
+        BedrockGenerator.from_settings(Settings("v1", tmp_path / "h.jsonl", **values))
 
 
 def test_retries_and_timeouts():
