@@ -1,6 +1,6 @@
 # Query and Escalation Spec — Voltrix VX-200 Support Bot
 
-Status: Version 1.8, approved by Shailesh on 2026-10-14
+Status: Version 1.9, approved by Shailesh on 2026-10-15
 
 ## Goal
 Given one user question, retrieve relevant chunks, generate an answer
@@ -85,8 +85,11 @@ ONLY place an escalation decision is made.
      Model ID: claude-haiku-4-5-20251001. Temperature 0.
    - The API key is read from VOLTRIX_ANTHROPIC_API_KEY, loaded from
      ~/.config/voltrix/secrets.env (outside the project). It is never
-     named ANTHROPIC_API_KEY, and the bot refuses to start if
-     ANTHROPIC_API_KEY is set in its environment.
+     named ANTHROPIC_API_KEY.
+   - The bot refuses to start if any of ANTHROPIC_API_KEY,
+     ANTHROPIC_AUTH_TOKEN, ANTHROPIC_BASE_URL or
+     ANTHROPIC_CUSTOM_HEADERS is set in its environment, and the
+     API address is fixed explicitly to https://api.anthropic.com.
    - The Bedrock generator is kept but unused. Switching back to
      Bedrock is a spec change and requires re-running the evaluation.
    - Structural tests use a fake generator (fixed responses, no model
