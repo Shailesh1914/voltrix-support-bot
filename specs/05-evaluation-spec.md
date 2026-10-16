@@ -1,6 +1,6 @@
 # Evaluation Spec — Voltrix VX-200 Support Bot
 
-Status: Version 1.0, approved by Shailesh on 2026-10-16
+Status: Version 1.1, approved by Shailesh on 2026-10-16
 
 ## Purpose
 Measure spec 02 acceptance criteria 1-2 and metrics, and produce
@@ -62,6 +62,24 @@ For every ticket, using kb_v1 and search(k=5):
   failed_check values, total tokens and estimated cost.
 - Answer quality beyond criterion 7 is not scored automatically.
   All answers are saved for human review in Step 10.
+
+## Clarifications (Version 1.1)
+1. WORST result: for each metric, the lowest value across the 3
+   runs. For the sweep, each run is simulated separately and the
+   lowest value per threshold is reported. Also reported (not a
+   gate): the number of tickets that passed in all 3 runs.
+2. Tickets with "article_match": "any" (e.g. T-101): any one
+   expected article counts as correct. They are excluded from the
+   both-articles-cited metric and reported separately.
+3. Part A searches the flow's own masked and normalised query, so
+   its scores equal the scores used by the sweep.
+4. Unstable ticket: its status, or its AC pass/fail, differs between
+   runs. Different answer wording alone does not count.
+5. All outputs are committed: summary reports, per-run .json files
+   and handoff .jsonl files (all data is synthetic).
+6. On the calibration set, AC2 effectively requires 11/11. A failing
+   escalate ticket is investigated, not explained away by lowering
+   the target.
 
 ## Cost control
 - The runner shows the number of planned model calls and the

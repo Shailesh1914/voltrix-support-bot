@@ -1,6 +1,6 @@
 # Query and Escalation Spec — Voltrix VX-200 Support Bot
 
-Status: Version 1.10, approved by Shailesh on 2026-10-15
+Status: Version 1.11, approved by Shailesh on 2026-10-16
 
 ## Goal
 Given one user question, retrieve relevant chunks, generate an answer
@@ -144,18 +144,13 @@ This number trades off two costs:
 Given the safety risk in industrial equipment, wrong answers are
 treated as more costly than extra escalations.
 
-Value: NOT YET SET. To be set by Shailesh at Step 9 using this method:
-1. Run retrieval for every ticket in evals/support_questions.jsonl
-   against kb_v1.
-2. Record the highest similarity_score for each ticket.
-3. Compare the scores of "answer" tickets with "escalate" tickets.
-4. Choose the value that meets the targets below.
-5. Record here: the value, the date, and a short reason.
+Value: NOT YET SET. To be set by Shailesh at Step 9, using the
+method in specs/05-evaluation-spec.md (threshold chosen on the
+calibration set only; holdout set measured, never used to choose).
+Record here: the value, the date, and a short reason.
 The value lives in this spec and in ONE config setting.
 It must never be changed in code without updating this spec.
 
-Note: tuning and measuring on the same tickets can flatter the
-results. To be reviewed at Step 9.
 
 ## Acceptance criteria
 Evaluation (measured on evals/support_questions.jsonl):
