@@ -1,0 +1,3191 @@
+{
+  "kind": "part-c",
+  "date": "2026-10-17",
+  "git_commit": "211c5aef7d8ee931caaff1773a5486337fe1439c",
+  "git_dirty": true,
+  "label": "whole-articles",
+  "code_trees": {
+    "query": "8b48ca796e94041056f55ef3a066669171803474",
+    "ingestion": "16f1e659e66da8723025207f79a3ef472a7e7792",
+    "evals/*.py": "e9ed6b85bf524eb9728c680fc98e40c5d0b7998df81bc5e31c91da9b29d415c0"
+  },
+  "ticket_file_sha256": "c07524bc9a4f251340ed5ee4f9730c3f57307d978df875d389a43d1022fdb80a",
+  "set": "calibration",
+  "n_tickets": 35,
+  "n_answer": 24,
+  "n_escalate": 11,
+  "runs": [
+    {
+      "file": "evals/reports/2026-10-17-part-b-whole-articles-run1.json",
+      "sha256": "5110fdf73c42618f8eae18f538b79c860d8481637ac0b9880155bde23fff80b1"
+    },
+    {
+      "file": "evals/reports/2026-10-17-part-b-whole-articles-run2.json",
+      "sha256": "f86750d5ac9b66d66dc6b75710b9fad7c5514917e82081f00bc3dc8314f45745"
+    },
+    {
+      "file": "evals/reports/2026-10-17-part-b-whole-articles-run3.json",
+      "sha256": "e05759fa4fea73c428f83defeb96c6501912c4b193179884e7f11d51bc5f5d8e"
+    }
+  ],
+  "thresholds_meeting_targets": [],
+  "rows": [
+    {
+      "threshold": 0.5,
+      "runs": [
+        {
+          "ac1": {
+            "passed": 19,
+            "total": 24,
+            "rate": 0.7916666666666666
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 4,
+            "total": 24,
+            "rate": 0.16666666666666666
+          }
+        },
+        {
+          "ac1": {
+            "passed": 19,
+            "total": 24,
+            "rate": 0.7916666666666666
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 4,
+            "total": 24,
+            "rate": 0.16666666666666666
+          }
+        },
+        {
+          "ac1": {
+            "passed": 19,
+            "total": 24,
+            "rate": 0.7916666666666666
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 4,
+            "total": 24,
+            "rate": 0.16666666666666666
+          }
+        }
+      ],
+      "worst": {
+        "ac1": {
+          "passed": 19,
+          "total": 24,
+          "rate": 0.7916666666666666
+        },
+        "ac2": {
+          "passed": 11,
+          "total": 11,
+          "rate": 1.0
+        },
+        "wrong_escalation": {
+          "passed": 4,
+          "total": 24,
+          "rate": 0.16666666666666666
+        }
+      },
+      "ac1_meets_target": false,
+      "ac2_meets_target": true,
+      "meets_targets": false,
+      "tickets_passed_in_all_runs": 30
+    },
+    {
+      "threshold": 0.51,
+      "runs": [
+        {
+          "ac1": {
+            "passed": 19,
+            "total": 24,
+            "rate": 0.7916666666666666
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 4,
+            "total": 24,
+            "rate": 0.16666666666666666
+          }
+        },
+        {
+          "ac1": {
+            "passed": 19,
+            "total": 24,
+            "rate": 0.7916666666666666
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 4,
+            "total": 24,
+            "rate": 0.16666666666666666
+          }
+        },
+        {
+          "ac1": {
+            "passed": 19,
+            "total": 24,
+            "rate": 0.7916666666666666
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 4,
+            "total": 24,
+            "rate": 0.16666666666666666
+          }
+        }
+      ],
+      "worst": {
+        "ac1": {
+          "passed": 19,
+          "total": 24,
+          "rate": 0.7916666666666666
+        },
+        "ac2": {
+          "passed": 11,
+          "total": 11,
+          "rate": 1.0
+        },
+        "wrong_escalation": {
+          "passed": 4,
+          "total": 24,
+          "rate": 0.16666666666666666
+        }
+      },
+      "ac1_meets_target": false,
+      "ac2_meets_target": true,
+      "meets_targets": false,
+      "tickets_passed_in_all_runs": 30
+    },
+    {
+      "threshold": 0.52,
+      "runs": [
+        {
+          "ac1": {
+            "passed": 19,
+            "total": 24,
+            "rate": 0.7916666666666666
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 4,
+            "total": 24,
+            "rate": 0.16666666666666666
+          }
+        },
+        {
+          "ac1": {
+            "passed": 19,
+            "total": 24,
+            "rate": 0.7916666666666666
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 4,
+            "total": 24,
+            "rate": 0.16666666666666666
+          }
+        },
+        {
+          "ac1": {
+            "passed": 19,
+            "total": 24,
+            "rate": 0.7916666666666666
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 4,
+            "total": 24,
+            "rate": 0.16666666666666666
+          }
+        }
+      ],
+      "worst": {
+        "ac1": {
+          "passed": 19,
+          "total": 24,
+          "rate": 0.7916666666666666
+        },
+        "ac2": {
+          "passed": 11,
+          "total": 11,
+          "rate": 1.0
+        },
+        "wrong_escalation": {
+          "passed": 4,
+          "total": 24,
+          "rate": 0.16666666666666666
+        }
+      },
+      "ac1_meets_target": false,
+      "ac2_meets_target": true,
+      "meets_targets": false,
+      "tickets_passed_in_all_runs": 30
+    },
+    {
+      "threshold": 0.53,
+      "runs": [
+        {
+          "ac1": {
+            "passed": 19,
+            "total": 24,
+            "rate": 0.7916666666666666
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 4,
+            "total": 24,
+            "rate": 0.16666666666666666
+          }
+        },
+        {
+          "ac1": {
+            "passed": 19,
+            "total": 24,
+            "rate": 0.7916666666666666
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 4,
+            "total": 24,
+            "rate": 0.16666666666666666
+          }
+        },
+        {
+          "ac1": {
+            "passed": 19,
+            "total": 24,
+            "rate": 0.7916666666666666
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 4,
+            "total": 24,
+            "rate": 0.16666666666666666
+          }
+        }
+      ],
+      "worst": {
+        "ac1": {
+          "passed": 19,
+          "total": 24,
+          "rate": 0.7916666666666666
+        },
+        "ac2": {
+          "passed": 11,
+          "total": 11,
+          "rate": 1.0
+        },
+        "wrong_escalation": {
+          "passed": 4,
+          "total": 24,
+          "rate": 0.16666666666666666
+        }
+      },
+      "ac1_meets_target": false,
+      "ac2_meets_target": true,
+      "meets_targets": false,
+      "tickets_passed_in_all_runs": 30
+    },
+    {
+      "threshold": 0.54,
+      "runs": [
+        {
+          "ac1": {
+            "passed": 19,
+            "total": 24,
+            "rate": 0.7916666666666666
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 4,
+            "total": 24,
+            "rate": 0.16666666666666666
+          }
+        },
+        {
+          "ac1": {
+            "passed": 19,
+            "total": 24,
+            "rate": 0.7916666666666666
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 4,
+            "total": 24,
+            "rate": 0.16666666666666666
+          }
+        },
+        {
+          "ac1": {
+            "passed": 19,
+            "total": 24,
+            "rate": 0.7916666666666666
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 4,
+            "total": 24,
+            "rate": 0.16666666666666666
+          }
+        }
+      ],
+      "worst": {
+        "ac1": {
+          "passed": 19,
+          "total": 24,
+          "rate": 0.7916666666666666
+        },
+        "ac2": {
+          "passed": 11,
+          "total": 11,
+          "rate": 1.0
+        },
+        "wrong_escalation": {
+          "passed": 4,
+          "total": 24,
+          "rate": 0.16666666666666666
+        }
+      },
+      "ac1_meets_target": false,
+      "ac2_meets_target": true,
+      "meets_targets": false,
+      "tickets_passed_in_all_runs": 30
+    },
+    {
+      "threshold": 0.55,
+      "runs": [
+        {
+          "ac1": {
+            "passed": 19,
+            "total": 24,
+            "rate": 0.7916666666666666
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 4,
+            "total": 24,
+            "rate": 0.16666666666666666
+          }
+        },
+        {
+          "ac1": {
+            "passed": 19,
+            "total": 24,
+            "rate": 0.7916666666666666
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 4,
+            "total": 24,
+            "rate": 0.16666666666666666
+          }
+        },
+        {
+          "ac1": {
+            "passed": 19,
+            "total": 24,
+            "rate": 0.7916666666666666
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 4,
+            "total": 24,
+            "rate": 0.16666666666666666
+          }
+        }
+      ],
+      "worst": {
+        "ac1": {
+          "passed": 19,
+          "total": 24,
+          "rate": 0.7916666666666666
+        },
+        "ac2": {
+          "passed": 11,
+          "total": 11,
+          "rate": 1.0
+        },
+        "wrong_escalation": {
+          "passed": 4,
+          "total": 24,
+          "rate": 0.16666666666666666
+        }
+      },
+      "ac1_meets_target": false,
+      "ac2_meets_target": true,
+      "meets_targets": false,
+      "tickets_passed_in_all_runs": 30
+    },
+    {
+      "threshold": 0.56,
+      "runs": [
+        {
+          "ac1": {
+            "passed": 19,
+            "total": 24,
+            "rate": 0.7916666666666666
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 4,
+            "total": 24,
+            "rate": 0.16666666666666666
+          }
+        },
+        {
+          "ac1": {
+            "passed": 19,
+            "total": 24,
+            "rate": 0.7916666666666666
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 4,
+            "total": 24,
+            "rate": 0.16666666666666666
+          }
+        },
+        {
+          "ac1": {
+            "passed": 19,
+            "total": 24,
+            "rate": 0.7916666666666666
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 4,
+            "total": 24,
+            "rate": 0.16666666666666666
+          }
+        }
+      ],
+      "worst": {
+        "ac1": {
+          "passed": 19,
+          "total": 24,
+          "rate": 0.7916666666666666
+        },
+        "ac2": {
+          "passed": 11,
+          "total": 11,
+          "rate": 1.0
+        },
+        "wrong_escalation": {
+          "passed": 4,
+          "total": 24,
+          "rate": 0.16666666666666666
+        }
+      },
+      "ac1_meets_target": false,
+      "ac2_meets_target": true,
+      "meets_targets": false,
+      "tickets_passed_in_all_runs": 30
+    },
+    {
+      "threshold": 0.57,
+      "runs": [
+        {
+          "ac1": {
+            "passed": 19,
+            "total": 24,
+            "rate": 0.7916666666666666
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 4,
+            "total": 24,
+            "rate": 0.16666666666666666
+          }
+        },
+        {
+          "ac1": {
+            "passed": 19,
+            "total": 24,
+            "rate": 0.7916666666666666
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 4,
+            "total": 24,
+            "rate": 0.16666666666666666
+          }
+        },
+        {
+          "ac1": {
+            "passed": 19,
+            "total": 24,
+            "rate": 0.7916666666666666
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 4,
+            "total": 24,
+            "rate": 0.16666666666666666
+          }
+        }
+      ],
+      "worst": {
+        "ac1": {
+          "passed": 19,
+          "total": 24,
+          "rate": 0.7916666666666666
+        },
+        "ac2": {
+          "passed": 11,
+          "total": 11,
+          "rate": 1.0
+        },
+        "wrong_escalation": {
+          "passed": 4,
+          "total": 24,
+          "rate": 0.16666666666666666
+        }
+      },
+      "ac1_meets_target": false,
+      "ac2_meets_target": true,
+      "meets_targets": false,
+      "tickets_passed_in_all_runs": 30
+    },
+    {
+      "threshold": 0.58,
+      "runs": [
+        {
+          "ac1": {
+            "passed": 19,
+            "total": 24,
+            "rate": 0.7916666666666666
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 4,
+            "total": 24,
+            "rate": 0.16666666666666666
+          }
+        },
+        {
+          "ac1": {
+            "passed": 19,
+            "total": 24,
+            "rate": 0.7916666666666666
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 4,
+            "total": 24,
+            "rate": 0.16666666666666666
+          }
+        },
+        {
+          "ac1": {
+            "passed": 19,
+            "total": 24,
+            "rate": 0.7916666666666666
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 4,
+            "total": 24,
+            "rate": 0.16666666666666666
+          }
+        }
+      ],
+      "worst": {
+        "ac1": {
+          "passed": 19,
+          "total": 24,
+          "rate": 0.7916666666666666
+        },
+        "ac2": {
+          "passed": 11,
+          "total": 11,
+          "rate": 1.0
+        },
+        "wrong_escalation": {
+          "passed": 4,
+          "total": 24,
+          "rate": 0.16666666666666666
+        }
+      },
+      "ac1_meets_target": false,
+      "ac2_meets_target": true,
+      "meets_targets": false,
+      "tickets_passed_in_all_runs": 30
+    },
+    {
+      "threshold": 0.59,
+      "runs": [
+        {
+          "ac1": {
+            "passed": 19,
+            "total": 24,
+            "rate": 0.7916666666666666
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 4,
+            "total": 24,
+            "rate": 0.16666666666666666
+          }
+        },
+        {
+          "ac1": {
+            "passed": 19,
+            "total": 24,
+            "rate": 0.7916666666666666
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 4,
+            "total": 24,
+            "rate": 0.16666666666666666
+          }
+        },
+        {
+          "ac1": {
+            "passed": 19,
+            "total": 24,
+            "rate": 0.7916666666666666
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 4,
+            "total": 24,
+            "rate": 0.16666666666666666
+          }
+        }
+      ],
+      "worst": {
+        "ac1": {
+          "passed": 19,
+          "total": 24,
+          "rate": 0.7916666666666666
+        },
+        "ac2": {
+          "passed": 11,
+          "total": 11,
+          "rate": 1.0
+        },
+        "wrong_escalation": {
+          "passed": 4,
+          "total": 24,
+          "rate": 0.16666666666666666
+        }
+      },
+      "ac1_meets_target": false,
+      "ac2_meets_target": true,
+      "meets_targets": false,
+      "tickets_passed_in_all_runs": 30
+    },
+    {
+      "threshold": 0.6,
+      "runs": [
+        {
+          "ac1": {
+            "passed": 19,
+            "total": 24,
+            "rate": 0.7916666666666666
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 4,
+            "total": 24,
+            "rate": 0.16666666666666666
+          }
+        },
+        {
+          "ac1": {
+            "passed": 19,
+            "total": 24,
+            "rate": 0.7916666666666666
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 4,
+            "total": 24,
+            "rate": 0.16666666666666666
+          }
+        },
+        {
+          "ac1": {
+            "passed": 19,
+            "total": 24,
+            "rate": 0.7916666666666666
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 4,
+            "total": 24,
+            "rate": 0.16666666666666666
+          }
+        }
+      ],
+      "worst": {
+        "ac1": {
+          "passed": 19,
+          "total": 24,
+          "rate": 0.7916666666666666
+        },
+        "ac2": {
+          "passed": 11,
+          "total": 11,
+          "rate": 1.0
+        },
+        "wrong_escalation": {
+          "passed": 4,
+          "total": 24,
+          "rate": 0.16666666666666666
+        }
+      },
+      "ac1_meets_target": false,
+      "ac2_meets_target": true,
+      "meets_targets": false,
+      "tickets_passed_in_all_runs": 30
+    },
+    {
+      "threshold": 0.61,
+      "runs": [
+        {
+          "ac1": {
+            "passed": 19,
+            "total": 24,
+            "rate": 0.7916666666666666
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 4,
+            "total": 24,
+            "rate": 0.16666666666666666
+          }
+        },
+        {
+          "ac1": {
+            "passed": 19,
+            "total": 24,
+            "rate": 0.7916666666666666
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 4,
+            "total": 24,
+            "rate": 0.16666666666666666
+          }
+        },
+        {
+          "ac1": {
+            "passed": 19,
+            "total": 24,
+            "rate": 0.7916666666666666
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 4,
+            "total": 24,
+            "rate": 0.16666666666666666
+          }
+        }
+      ],
+      "worst": {
+        "ac1": {
+          "passed": 19,
+          "total": 24,
+          "rate": 0.7916666666666666
+        },
+        "ac2": {
+          "passed": 11,
+          "total": 11,
+          "rate": 1.0
+        },
+        "wrong_escalation": {
+          "passed": 4,
+          "total": 24,
+          "rate": 0.16666666666666666
+        }
+      },
+      "ac1_meets_target": false,
+      "ac2_meets_target": true,
+      "meets_targets": false,
+      "tickets_passed_in_all_runs": 30
+    },
+    {
+      "threshold": 0.62,
+      "runs": [
+        {
+          "ac1": {
+            "passed": 19,
+            "total": 24,
+            "rate": 0.7916666666666666
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 4,
+            "total": 24,
+            "rate": 0.16666666666666666
+          }
+        },
+        {
+          "ac1": {
+            "passed": 19,
+            "total": 24,
+            "rate": 0.7916666666666666
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 4,
+            "total": 24,
+            "rate": 0.16666666666666666
+          }
+        },
+        {
+          "ac1": {
+            "passed": 19,
+            "total": 24,
+            "rate": 0.7916666666666666
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 4,
+            "total": 24,
+            "rate": 0.16666666666666666
+          }
+        }
+      ],
+      "worst": {
+        "ac1": {
+          "passed": 19,
+          "total": 24,
+          "rate": 0.7916666666666666
+        },
+        "ac2": {
+          "passed": 11,
+          "total": 11,
+          "rate": 1.0
+        },
+        "wrong_escalation": {
+          "passed": 4,
+          "total": 24,
+          "rate": 0.16666666666666666
+        }
+      },
+      "ac1_meets_target": false,
+      "ac2_meets_target": true,
+      "meets_targets": false,
+      "tickets_passed_in_all_runs": 30
+    },
+    {
+      "threshold": 0.63,
+      "runs": [
+        {
+          "ac1": {
+            "passed": 19,
+            "total": 24,
+            "rate": 0.7916666666666666
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 4,
+            "total": 24,
+            "rate": 0.16666666666666666
+          }
+        },
+        {
+          "ac1": {
+            "passed": 19,
+            "total": 24,
+            "rate": 0.7916666666666666
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 4,
+            "total": 24,
+            "rate": 0.16666666666666666
+          }
+        },
+        {
+          "ac1": {
+            "passed": 19,
+            "total": 24,
+            "rate": 0.7916666666666666
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 4,
+            "total": 24,
+            "rate": 0.16666666666666666
+          }
+        }
+      ],
+      "worst": {
+        "ac1": {
+          "passed": 19,
+          "total": 24,
+          "rate": 0.7916666666666666
+        },
+        "ac2": {
+          "passed": 11,
+          "total": 11,
+          "rate": 1.0
+        },
+        "wrong_escalation": {
+          "passed": 4,
+          "total": 24,
+          "rate": 0.16666666666666666
+        }
+      },
+      "ac1_meets_target": false,
+      "ac2_meets_target": true,
+      "meets_targets": false,
+      "tickets_passed_in_all_runs": 30
+    },
+    {
+      "threshold": 0.64,
+      "runs": [
+        {
+          "ac1": {
+            "passed": 19,
+            "total": 24,
+            "rate": 0.7916666666666666
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 4,
+            "total": 24,
+            "rate": 0.16666666666666666
+          }
+        },
+        {
+          "ac1": {
+            "passed": 19,
+            "total": 24,
+            "rate": 0.7916666666666666
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 4,
+            "total": 24,
+            "rate": 0.16666666666666666
+          }
+        },
+        {
+          "ac1": {
+            "passed": 19,
+            "total": 24,
+            "rate": 0.7916666666666666
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 4,
+            "total": 24,
+            "rate": 0.16666666666666666
+          }
+        }
+      ],
+      "worst": {
+        "ac1": {
+          "passed": 19,
+          "total": 24,
+          "rate": 0.7916666666666666
+        },
+        "ac2": {
+          "passed": 11,
+          "total": 11,
+          "rate": 1.0
+        },
+        "wrong_escalation": {
+          "passed": 4,
+          "total": 24,
+          "rate": 0.16666666666666666
+        }
+      },
+      "ac1_meets_target": false,
+      "ac2_meets_target": true,
+      "meets_targets": false,
+      "tickets_passed_in_all_runs": 30
+    },
+    {
+      "threshold": 0.65,
+      "runs": [
+        {
+          "ac1": {
+            "passed": 18,
+            "total": 24,
+            "rate": 0.75
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 5,
+            "total": 24,
+            "rate": 0.20833333333333334
+          }
+        },
+        {
+          "ac1": {
+            "passed": 18,
+            "total": 24,
+            "rate": 0.75
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 5,
+            "total": 24,
+            "rate": 0.20833333333333334
+          }
+        },
+        {
+          "ac1": {
+            "passed": 18,
+            "total": 24,
+            "rate": 0.75
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 5,
+            "total": 24,
+            "rate": 0.20833333333333334
+          }
+        }
+      ],
+      "worst": {
+        "ac1": {
+          "passed": 18,
+          "total": 24,
+          "rate": 0.75
+        },
+        "ac2": {
+          "passed": 11,
+          "total": 11,
+          "rate": 1.0
+        },
+        "wrong_escalation": {
+          "passed": 5,
+          "total": 24,
+          "rate": 0.20833333333333334
+        }
+      },
+      "ac1_meets_target": false,
+      "ac2_meets_target": true,
+      "meets_targets": false,
+      "tickets_passed_in_all_runs": 29
+    },
+    {
+      "threshold": 0.66,
+      "runs": [
+        {
+          "ac1": {
+            "passed": 18,
+            "total": 24,
+            "rate": 0.75
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 5,
+            "total": 24,
+            "rate": 0.20833333333333334
+          }
+        },
+        {
+          "ac1": {
+            "passed": 18,
+            "total": 24,
+            "rate": 0.75
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 5,
+            "total": 24,
+            "rate": 0.20833333333333334
+          }
+        },
+        {
+          "ac1": {
+            "passed": 18,
+            "total": 24,
+            "rate": 0.75
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 5,
+            "total": 24,
+            "rate": 0.20833333333333334
+          }
+        }
+      ],
+      "worst": {
+        "ac1": {
+          "passed": 18,
+          "total": 24,
+          "rate": 0.75
+        },
+        "ac2": {
+          "passed": 11,
+          "total": 11,
+          "rate": 1.0
+        },
+        "wrong_escalation": {
+          "passed": 5,
+          "total": 24,
+          "rate": 0.20833333333333334
+        }
+      },
+      "ac1_meets_target": false,
+      "ac2_meets_target": true,
+      "meets_targets": false,
+      "tickets_passed_in_all_runs": 29
+    },
+    {
+      "threshold": 0.67,
+      "runs": [
+        {
+          "ac1": {
+            "passed": 18,
+            "total": 24,
+            "rate": 0.75
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 5,
+            "total": 24,
+            "rate": 0.20833333333333334
+          }
+        },
+        {
+          "ac1": {
+            "passed": 18,
+            "total": 24,
+            "rate": 0.75
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 5,
+            "total": 24,
+            "rate": 0.20833333333333334
+          }
+        },
+        {
+          "ac1": {
+            "passed": 18,
+            "total": 24,
+            "rate": 0.75
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 5,
+            "total": 24,
+            "rate": 0.20833333333333334
+          }
+        }
+      ],
+      "worst": {
+        "ac1": {
+          "passed": 18,
+          "total": 24,
+          "rate": 0.75
+        },
+        "ac2": {
+          "passed": 11,
+          "total": 11,
+          "rate": 1.0
+        },
+        "wrong_escalation": {
+          "passed": 5,
+          "total": 24,
+          "rate": 0.20833333333333334
+        }
+      },
+      "ac1_meets_target": false,
+      "ac2_meets_target": true,
+      "meets_targets": false,
+      "tickets_passed_in_all_runs": 29
+    },
+    {
+      "threshold": 0.68,
+      "runs": [
+        {
+          "ac1": {
+            "passed": 18,
+            "total": 24,
+            "rate": 0.75
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 5,
+            "total": 24,
+            "rate": 0.20833333333333334
+          }
+        },
+        {
+          "ac1": {
+            "passed": 18,
+            "total": 24,
+            "rate": 0.75
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 5,
+            "total": 24,
+            "rate": 0.20833333333333334
+          }
+        },
+        {
+          "ac1": {
+            "passed": 18,
+            "total": 24,
+            "rate": 0.75
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 5,
+            "total": 24,
+            "rate": 0.20833333333333334
+          }
+        }
+      ],
+      "worst": {
+        "ac1": {
+          "passed": 18,
+          "total": 24,
+          "rate": 0.75
+        },
+        "ac2": {
+          "passed": 11,
+          "total": 11,
+          "rate": 1.0
+        },
+        "wrong_escalation": {
+          "passed": 5,
+          "total": 24,
+          "rate": 0.20833333333333334
+        }
+      },
+      "ac1_meets_target": false,
+      "ac2_meets_target": true,
+      "meets_targets": false,
+      "tickets_passed_in_all_runs": 29
+    },
+    {
+      "threshold": 0.69,
+      "runs": [
+        {
+          "ac1": {
+            "passed": 17,
+            "total": 24,
+            "rate": 0.7083333333333334
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 6,
+            "total": 24,
+            "rate": 0.25
+          }
+        },
+        {
+          "ac1": {
+            "passed": 17,
+            "total": 24,
+            "rate": 0.7083333333333334
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 6,
+            "total": 24,
+            "rate": 0.25
+          }
+        },
+        {
+          "ac1": {
+            "passed": 17,
+            "total": 24,
+            "rate": 0.7083333333333334
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 6,
+            "total": 24,
+            "rate": 0.25
+          }
+        }
+      ],
+      "worst": {
+        "ac1": {
+          "passed": 17,
+          "total": 24,
+          "rate": 0.7083333333333334
+        },
+        "ac2": {
+          "passed": 11,
+          "total": 11,
+          "rate": 1.0
+        },
+        "wrong_escalation": {
+          "passed": 6,
+          "total": 24,
+          "rate": 0.25
+        }
+      },
+      "ac1_meets_target": false,
+      "ac2_meets_target": true,
+      "meets_targets": false,
+      "tickets_passed_in_all_runs": 28
+    },
+    {
+      "threshold": 0.7,
+      "runs": [
+        {
+          "ac1": {
+            "passed": 17,
+            "total": 24,
+            "rate": 0.7083333333333334
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 6,
+            "total": 24,
+            "rate": 0.25
+          }
+        },
+        {
+          "ac1": {
+            "passed": 17,
+            "total": 24,
+            "rate": 0.7083333333333334
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 6,
+            "total": 24,
+            "rate": 0.25
+          }
+        },
+        {
+          "ac1": {
+            "passed": 17,
+            "total": 24,
+            "rate": 0.7083333333333334
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 6,
+            "total": 24,
+            "rate": 0.25
+          }
+        }
+      ],
+      "worst": {
+        "ac1": {
+          "passed": 17,
+          "total": 24,
+          "rate": 0.7083333333333334
+        },
+        "ac2": {
+          "passed": 11,
+          "total": 11,
+          "rate": 1.0
+        },
+        "wrong_escalation": {
+          "passed": 6,
+          "total": 24,
+          "rate": 0.25
+        }
+      },
+      "ac1_meets_target": false,
+      "ac2_meets_target": true,
+      "meets_targets": false,
+      "tickets_passed_in_all_runs": 28
+    },
+    {
+      "threshold": 0.71,
+      "runs": [
+        {
+          "ac1": {
+            "passed": 15,
+            "total": 24,
+            "rate": 0.625
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 8,
+            "total": 24,
+            "rate": 0.3333333333333333
+          }
+        },
+        {
+          "ac1": {
+            "passed": 15,
+            "total": 24,
+            "rate": 0.625
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 8,
+            "total": 24,
+            "rate": 0.3333333333333333
+          }
+        },
+        {
+          "ac1": {
+            "passed": 15,
+            "total": 24,
+            "rate": 0.625
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 8,
+            "total": 24,
+            "rate": 0.3333333333333333
+          }
+        }
+      ],
+      "worst": {
+        "ac1": {
+          "passed": 15,
+          "total": 24,
+          "rate": 0.625
+        },
+        "ac2": {
+          "passed": 11,
+          "total": 11,
+          "rate": 1.0
+        },
+        "wrong_escalation": {
+          "passed": 8,
+          "total": 24,
+          "rate": 0.3333333333333333
+        }
+      },
+      "ac1_meets_target": false,
+      "ac2_meets_target": true,
+      "meets_targets": false,
+      "tickets_passed_in_all_runs": 26
+    },
+    {
+      "threshold": 0.72,
+      "runs": [
+        {
+          "ac1": {
+            "passed": 15,
+            "total": 24,
+            "rate": 0.625
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 8,
+            "total": 24,
+            "rate": 0.3333333333333333
+          }
+        },
+        {
+          "ac1": {
+            "passed": 15,
+            "total": 24,
+            "rate": 0.625
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 8,
+            "total": 24,
+            "rate": 0.3333333333333333
+          }
+        },
+        {
+          "ac1": {
+            "passed": 15,
+            "total": 24,
+            "rate": 0.625
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 8,
+            "total": 24,
+            "rate": 0.3333333333333333
+          }
+        }
+      ],
+      "worst": {
+        "ac1": {
+          "passed": 15,
+          "total": 24,
+          "rate": 0.625
+        },
+        "ac2": {
+          "passed": 11,
+          "total": 11,
+          "rate": 1.0
+        },
+        "wrong_escalation": {
+          "passed": 8,
+          "total": 24,
+          "rate": 0.3333333333333333
+        }
+      },
+      "ac1_meets_target": false,
+      "ac2_meets_target": true,
+      "meets_targets": false,
+      "tickets_passed_in_all_runs": 26
+    },
+    {
+      "threshold": 0.73,
+      "runs": [
+        {
+          "ac1": {
+            "passed": 13,
+            "total": 24,
+            "rate": 0.5416666666666666
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 10,
+            "total": 24,
+            "rate": 0.4166666666666667
+          }
+        },
+        {
+          "ac1": {
+            "passed": 13,
+            "total": 24,
+            "rate": 0.5416666666666666
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 10,
+            "total": 24,
+            "rate": 0.4166666666666667
+          }
+        },
+        {
+          "ac1": {
+            "passed": 13,
+            "total": 24,
+            "rate": 0.5416666666666666
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 10,
+            "total": 24,
+            "rate": 0.4166666666666667
+          }
+        }
+      ],
+      "worst": {
+        "ac1": {
+          "passed": 13,
+          "total": 24,
+          "rate": 0.5416666666666666
+        },
+        "ac2": {
+          "passed": 11,
+          "total": 11,
+          "rate": 1.0
+        },
+        "wrong_escalation": {
+          "passed": 10,
+          "total": 24,
+          "rate": 0.4166666666666667
+        }
+      },
+      "ac1_meets_target": false,
+      "ac2_meets_target": true,
+      "meets_targets": false,
+      "tickets_passed_in_all_runs": 24
+    },
+    {
+      "threshold": 0.74,
+      "runs": [
+        {
+          "ac1": {
+            "passed": 12,
+            "total": 24,
+            "rate": 0.5
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 11,
+            "total": 24,
+            "rate": 0.4583333333333333
+          }
+        },
+        {
+          "ac1": {
+            "passed": 12,
+            "total": 24,
+            "rate": 0.5
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 11,
+            "total": 24,
+            "rate": 0.4583333333333333
+          }
+        },
+        {
+          "ac1": {
+            "passed": 12,
+            "total": 24,
+            "rate": 0.5
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 11,
+            "total": 24,
+            "rate": 0.4583333333333333
+          }
+        }
+      ],
+      "worst": {
+        "ac1": {
+          "passed": 12,
+          "total": 24,
+          "rate": 0.5
+        },
+        "ac2": {
+          "passed": 11,
+          "total": 11,
+          "rate": 1.0
+        },
+        "wrong_escalation": {
+          "passed": 11,
+          "total": 24,
+          "rate": 0.4583333333333333
+        }
+      },
+      "ac1_meets_target": false,
+      "ac2_meets_target": true,
+      "meets_targets": false,
+      "tickets_passed_in_all_runs": 23
+    },
+    {
+      "threshold": 0.75,
+      "runs": [
+        {
+          "ac1": {
+            "passed": 12,
+            "total": 24,
+            "rate": 0.5
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 11,
+            "total": 24,
+            "rate": 0.4583333333333333
+          }
+        },
+        {
+          "ac1": {
+            "passed": 12,
+            "total": 24,
+            "rate": 0.5
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 11,
+            "total": 24,
+            "rate": 0.4583333333333333
+          }
+        },
+        {
+          "ac1": {
+            "passed": 12,
+            "total": 24,
+            "rate": 0.5
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 11,
+            "total": 24,
+            "rate": 0.4583333333333333
+          }
+        }
+      ],
+      "worst": {
+        "ac1": {
+          "passed": 12,
+          "total": 24,
+          "rate": 0.5
+        },
+        "ac2": {
+          "passed": 11,
+          "total": 11,
+          "rate": 1.0
+        },
+        "wrong_escalation": {
+          "passed": 11,
+          "total": 24,
+          "rate": 0.4583333333333333
+        }
+      },
+      "ac1_meets_target": false,
+      "ac2_meets_target": true,
+      "meets_targets": false,
+      "tickets_passed_in_all_runs": 23
+    },
+    {
+      "threshold": 0.76,
+      "runs": [
+        {
+          "ac1": {
+            "passed": 12,
+            "total": 24,
+            "rate": 0.5
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 11,
+            "total": 24,
+            "rate": 0.4583333333333333
+          }
+        },
+        {
+          "ac1": {
+            "passed": 12,
+            "total": 24,
+            "rate": 0.5
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 11,
+            "total": 24,
+            "rate": 0.4583333333333333
+          }
+        },
+        {
+          "ac1": {
+            "passed": 12,
+            "total": 24,
+            "rate": 0.5
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 11,
+            "total": 24,
+            "rate": 0.4583333333333333
+          }
+        }
+      ],
+      "worst": {
+        "ac1": {
+          "passed": 12,
+          "total": 24,
+          "rate": 0.5
+        },
+        "ac2": {
+          "passed": 11,
+          "total": 11,
+          "rate": 1.0
+        },
+        "wrong_escalation": {
+          "passed": 11,
+          "total": 24,
+          "rate": 0.4583333333333333
+        }
+      },
+      "ac1_meets_target": false,
+      "ac2_meets_target": true,
+      "meets_targets": false,
+      "tickets_passed_in_all_runs": 23
+    },
+    {
+      "threshold": 0.77,
+      "runs": [
+        {
+          "ac1": {
+            "passed": 10,
+            "total": 24,
+            "rate": 0.4166666666666667
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 13,
+            "total": 24,
+            "rate": 0.5416666666666666
+          }
+        },
+        {
+          "ac1": {
+            "passed": 10,
+            "total": 24,
+            "rate": 0.4166666666666667
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 13,
+            "total": 24,
+            "rate": 0.5416666666666666
+          }
+        },
+        {
+          "ac1": {
+            "passed": 10,
+            "total": 24,
+            "rate": 0.4166666666666667
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 13,
+            "total": 24,
+            "rate": 0.5416666666666666
+          }
+        }
+      ],
+      "worst": {
+        "ac1": {
+          "passed": 10,
+          "total": 24,
+          "rate": 0.4166666666666667
+        },
+        "ac2": {
+          "passed": 11,
+          "total": 11,
+          "rate": 1.0
+        },
+        "wrong_escalation": {
+          "passed": 13,
+          "total": 24,
+          "rate": 0.5416666666666666
+        }
+      },
+      "ac1_meets_target": false,
+      "ac2_meets_target": true,
+      "meets_targets": false,
+      "tickets_passed_in_all_runs": 21
+    },
+    {
+      "threshold": 0.78,
+      "runs": [
+        {
+          "ac1": {
+            "passed": 10,
+            "total": 24,
+            "rate": 0.4166666666666667
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 13,
+            "total": 24,
+            "rate": 0.5416666666666666
+          }
+        },
+        {
+          "ac1": {
+            "passed": 10,
+            "total": 24,
+            "rate": 0.4166666666666667
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 13,
+            "total": 24,
+            "rate": 0.5416666666666666
+          }
+        },
+        {
+          "ac1": {
+            "passed": 10,
+            "total": 24,
+            "rate": 0.4166666666666667
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 13,
+            "total": 24,
+            "rate": 0.5416666666666666
+          }
+        }
+      ],
+      "worst": {
+        "ac1": {
+          "passed": 10,
+          "total": 24,
+          "rate": 0.4166666666666667
+        },
+        "ac2": {
+          "passed": 11,
+          "total": 11,
+          "rate": 1.0
+        },
+        "wrong_escalation": {
+          "passed": 13,
+          "total": 24,
+          "rate": 0.5416666666666666
+        }
+      },
+      "ac1_meets_target": false,
+      "ac2_meets_target": true,
+      "meets_targets": false,
+      "tickets_passed_in_all_runs": 21
+    },
+    {
+      "threshold": 0.79,
+      "runs": [
+        {
+          "ac1": {
+            "passed": 9,
+            "total": 24,
+            "rate": 0.375
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 15,
+            "total": 24,
+            "rate": 0.625
+          }
+        },
+        {
+          "ac1": {
+            "passed": 9,
+            "total": 24,
+            "rate": 0.375
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 15,
+            "total": 24,
+            "rate": 0.625
+          }
+        },
+        {
+          "ac1": {
+            "passed": 9,
+            "total": 24,
+            "rate": 0.375
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 15,
+            "total": 24,
+            "rate": 0.625
+          }
+        }
+      ],
+      "worst": {
+        "ac1": {
+          "passed": 9,
+          "total": 24,
+          "rate": 0.375
+        },
+        "ac2": {
+          "passed": 11,
+          "total": 11,
+          "rate": 1.0
+        },
+        "wrong_escalation": {
+          "passed": 15,
+          "total": 24,
+          "rate": 0.625
+        }
+      },
+      "ac1_meets_target": false,
+      "ac2_meets_target": true,
+      "meets_targets": false,
+      "tickets_passed_in_all_runs": 20
+    },
+    {
+      "threshold": 0.8,
+      "runs": [
+        {
+          "ac1": {
+            "passed": 9,
+            "total": 24,
+            "rate": 0.375
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 15,
+            "total": 24,
+            "rate": 0.625
+          }
+        },
+        {
+          "ac1": {
+            "passed": 9,
+            "total": 24,
+            "rate": 0.375
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 15,
+            "total": 24,
+            "rate": 0.625
+          }
+        },
+        {
+          "ac1": {
+            "passed": 9,
+            "total": 24,
+            "rate": 0.375
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 15,
+            "total": 24,
+            "rate": 0.625
+          }
+        }
+      ],
+      "worst": {
+        "ac1": {
+          "passed": 9,
+          "total": 24,
+          "rate": 0.375
+        },
+        "ac2": {
+          "passed": 11,
+          "total": 11,
+          "rate": 1.0
+        },
+        "wrong_escalation": {
+          "passed": 15,
+          "total": 24,
+          "rate": 0.625
+        }
+      },
+      "ac1_meets_target": false,
+      "ac2_meets_target": true,
+      "meets_targets": false,
+      "tickets_passed_in_all_runs": 20
+    },
+    {
+      "threshold": 0.81,
+      "runs": [
+        {
+          "ac1": {
+            "passed": 6,
+            "total": 24,
+            "rate": 0.25
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 18,
+            "total": 24,
+            "rate": 0.75
+          }
+        },
+        {
+          "ac1": {
+            "passed": 6,
+            "total": 24,
+            "rate": 0.25
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 18,
+            "total": 24,
+            "rate": 0.75
+          }
+        },
+        {
+          "ac1": {
+            "passed": 6,
+            "total": 24,
+            "rate": 0.25
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 18,
+            "total": 24,
+            "rate": 0.75
+          }
+        }
+      ],
+      "worst": {
+        "ac1": {
+          "passed": 6,
+          "total": 24,
+          "rate": 0.25
+        },
+        "ac2": {
+          "passed": 11,
+          "total": 11,
+          "rate": 1.0
+        },
+        "wrong_escalation": {
+          "passed": 18,
+          "total": 24,
+          "rate": 0.75
+        }
+      },
+      "ac1_meets_target": false,
+      "ac2_meets_target": true,
+      "meets_targets": false,
+      "tickets_passed_in_all_runs": 17
+    },
+    {
+      "threshold": 0.82,
+      "runs": [
+        {
+          "ac1": {
+            "passed": 5,
+            "total": 24,
+            "rate": 0.20833333333333334
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 19,
+            "total": 24,
+            "rate": 0.7916666666666666
+          }
+        },
+        {
+          "ac1": {
+            "passed": 5,
+            "total": 24,
+            "rate": 0.20833333333333334
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 19,
+            "total": 24,
+            "rate": 0.7916666666666666
+          }
+        },
+        {
+          "ac1": {
+            "passed": 5,
+            "total": 24,
+            "rate": 0.20833333333333334
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 19,
+            "total": 24,
+            "rate": 0.7916666666666666
+          }
+        }
+      ],
+      "worst": {
+        "ac1": {
+          "passed": 5,
+          "total": 24,
+          "rate": 0.20833333333333334
+        },
+        "ac2": {
+          "passed": 11,
+          "total": 11,
+          "rate": 1.0
+        },
+        "wrong_escalation": {
+          "passed": 19,
+          "total": 24,
+          "rate": 0.7916666666666666
+        }
+      },
+      "ac1_meets_target": false,
+      "ac2_meets_target": true,
+      "meets_targets": false,
+      "tickets_passed_in_all_runs": 16
+    },
+    {
+      "threshold": 0.83,
+      "runs": [
+        {
+          "ac1": {
+            "passed": 3,
+            "total": 24,
+            "rate": 0.125
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 21,
+            "total": 24,
+            "rate": 0.875
+          }
+        },
+        {
+          "ac1": {
+            "passed": 3,
+            "total": 24,
+            "rate": 0.125
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 21,
+            "total": 24,
+            "rate": 0.875
+          }
+        },
+        {
+          "ac1": {
+            "passed": 3,
+            "total": 24,
+            "rate": 0.125
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 21,
+            "total": 24,
+            "rate": 0.875
+          }
+        }
+      ],
+      "worst": {
+        "ac1": {
+          "passed": 3,
+          "total": 24,
+          "rate": 0.125
+        },
+        "ac2": {
+          "passed": 11,
+          "total": 11,
+          "rate": 1.0
+        },
+        "wrong_escalation": {
+          "passed": 21,
+          "total": 24,
+          "rate": 0.875
+        }
+      },
+      "ac1_meets_target": false,
+      "ac2_meets_target": true,
+      "meets_targets": false,
+      "tickets_passed_in_all_runs": 14
+    },
+    {
+      "threshold": 0.84,
+      "runs": [
+        {
+          "ac1": {
+            "passed": 3,
+            "total": 24,
+            "rate": 0.125
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 21,
+            "total": 24,
+            "rate": 0.875
+          }
+        },
+        {
+          "ac1": {
+            "passed": 3,
+            "total": 24,
+            "rate": 0.125
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 21,
+            "total": 24,
+            "rate": 0.875
+          }
+        },
+        {
+          "ac1": {
+            "passed": 3,
+            "total": 24,
+            "rate": 0.125
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 21,
+            "total": 24,
+            "rate": 0.875
+          }
+        }
+      ],
+      "worst": {
+        "ac1": {
+          "passed": 3,
+          "total": 24,
+          "rate": 0.125
+        },
+        "ac2": {
+          "passed": 11,
+          "total": 11,
+          "rate": 1.0
+        },
+        "wrong_escalation": {
+          "passed": 21,
+          "total": 24,
+          "rate": 0.875
+        }
+      },
+      "ac1_meets_target": false,
+      "ac2_meets_target": true,
+      "meets_targets": false,
+      "tickets_passed_in_all_runs": 14
+    },
+    {
+      "threshold": 0.85,
+      "runs": [
+        {
+          "ac1": {
+            "passed": 3,
+            "total": 24,
+            "rate": 0.125
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 21,
+            "total": 24,
+            "rate": 0.875
+          }
+        },
+        {
+          "ac1": {
+            "passed": 3,
+            "total": 24,
+            "rate": 0.125
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 21,
+            "total": 24,
+            "rate": 0.875
+          }
+        },
+        {
+          "ac1": {
+            "passed": 3,
+            "total": 24,
+            "rate": 0.125
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 21,
+            "total": 24,
+            "rate": 0.875
+          }
+        }
+      ],
+      "worst": {
+        "ac1": {
+          "passed": 3,
+          "total": 24,
+          "rate": 0.125
+        },
+        "ac2": {
+          "passed": 11,
+          "total": 11,
+          "rate": 1.0
+        },
+        "wrong_escalation": {
+          "passed": 21,
+          "total": 24,
+          "rate": 0.875
+        }
+      },
+      "ac1_meets_target": false,
+      "ac2_meets_target": true,
+      "meets_targets": false,
+      "tickets_passed_in_all_runs": 14
+    },
+    {
+      "threshold": 0.86,
+      "runs": [
+        {
+          "ac1": {
+            "passed": 2,
+            "total": 24,
+            "rate": 0.08333333333333333
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 22,
+            "total": 24,
+            "rate": 0.9166666666666666
+          }
+        },
+        {
+          "ac1": {
+            "passed": 2,
+            "total": 24,
+            "rate": 0.08333333333333333
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 22,
+            "total": 24,
+            "rate": 0.9166666666666666
+          }
+        },
+        {
+          "ac1": {
+            "passed": 2,
+            "total": 24,
+            "rate": 0.08333333333333333
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 22,
+            "total": 24,
+            "rate": 0.9166666666666666
+          }
+        }
+      ],
+      "worst": {
+        "ac1": {
+          "passed": 2,
+          "total": 24,
+          "rate": 0.08333333333333333
+        },
+        "ac2": {
+          "passed": 11,
+          "total": 11,
+          "rate": 1.0
+        },
+        "wrong_escalation": {
+          "passed": 22,
+          "total": 24,
+          "rate": 0.9166666666666666
+        }
+      },
+      "ac1_meets_target": false,
+      "ac2_meets_target": true,
+      "meets_targets": false,
+      "tickets_passed_in_all_runs": 13
+    },
+    {
+      "threshold": 0.87,
+      "runs": [
+        {
+          "ac1": {
+            "passed": 2,
+            "total": 24,
+            "rate": 0.08333333333333333
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 22,
+            "total": 24,
+            "rate": 0.9166666666666666
+          }
+        },
+        {
+          "ac1": {
+            "passed": 2,
+            "total": 24,
+            "rate": 0.08333333333333333
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 22,
+            "total": 24,
+            "rate": 0.9166666666666666
+          }
+        },
+        {
+          "ac1": {
+            "passed": 2,
+            "total": 24,
+            "rate": 0.08333333333333333
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 22,
+            "total": 24,
+            "rate": 0.9166666666666666
+          }
+        }
+      ],
+      "worst": {
+        "ac1": {
+          "passed": 2,
+          "total": 24,
+          "rate": 0.08333333333333333
+        },
+        "ac2": {
+          "passed": 11,
+          "total": 11,
+          "rate": 1.0
+        },
+        "wrong_escalation": {
+          "passed": 22,
+          "total": 24,
+          "rate": 0.9166666666666666
+        }
+      },
+      "ac1_meets_target": false,
+      "ac2_meets_target": true,
+      "meets_targets": false,
+      "tickets_passed_in_all_runs": 13
+    },
+    {
+      "threshold": 0.88,
+      "runs": [
+        {
+          "ac1": {
+            "passed": 0,
+            "total": 24,
+            "rate": 0.0
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 24,
+            "total": 24,
+            "rate": 1.0
+          }
+        },
+        {
+          "ac1": {
+            "passed": 0,
+            "total": 24,
+            "rate": 0.0
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 24,
+            "total": 24,
+            "rate": 1.0
+          }
+        },
+        {
+          "ac1": {
+            "passed": 0,
+            "total": 24,
+            "rate": 0.0
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 24,
+            "total": 24,
+            "rate": 1.0
+          }
+        }
+      ],
+      "worst": {
+        "ac1": {
+          "passed": 0,
+          "total": 24,
+          "rate": 0.0
+        },
+        "ac2": {
+          "passed": 11,
+          "total": 11,
+          "rate": 1.0
+        },
+        "wrong_escalation": {
+          "passed": 24,
+          "total": 24,
+          "rate": 1.0
+        }
+      },
+      "ac1_meets_target": false,
+      "ac2_meets_target": true,
+      "meets_targets": false,
+      "tickets_passed_in_all_runs": 11
+    },
+    {
+      "threshold": 0.89,
+      "runs": [
+        {
+          "ac1": {
+            "passed": 0,
+            "total": 24,
+            "rate": 0.0
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 24,
+            "total": 24,
+            "rate": 1.0
+          }
+        },
+        {
+          "ac1": {
+            "passed": 0,
+            "total": 24,
+            "rate": 0.0
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 24,
+            "total": 24,
+            "rate": 1.0
+          }
+        },
+        {
+          "ac1": {
+            "passed": 0,
+            "total": 24,
+            "rate": 0.0
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 24,
+            "total": 24,
+            "rate": 1.0
+          }
+        }
+      ],
+      "worst": {
+        "ac1": {
+          "passed": 0,
+          "total": 24,
+          "rate": 0.0
+        },
+        "ac2": {
+          "passed": 11,
+          "total": 11,
+          "rate": 1.0
+        },
+        "wrong_escalation": {
+          "passed": 24,
+          "total": 24,
+          "rate": 1.0
+        }
+      },
+      "ac1_meets_target": false,
+      "ac2_meets_target": true,
+      "meets_targets": false,
+      "tickets_passed_in_all_runs": 11
+    },
+    {
+      "threshold": 0.9,
+      "runs": [
+        {
+          "ac1": {
+            "passed": 0,
+            "total": 24,
+            "rate": 0.0
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 24,
+            "total": 24,
+            "rate": 1.0
+          }
+        },
+        {
+          "ac1": {
+            "passed": 0,
+            "total": 24,
+            "rate": 0.0
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 24,
+            "total": 24,
+            "rate": 1.0
+          }
+        },
+        {
+          "ac1": {
+            "passed": 0,
+            "total": 24,
+            "rate": 0.0
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "wrong_escalation": {
+            "passed": 24,
+            "total": 24,
+            "rate": 1.0
+          }
+        }
+      ],
+      "worst": {
+        "ac1": {
+          "passed": 0,
+          "total": 24,
+          "rate": 0.0
+        },
+        "ac2": {
+          "passed": 11,
+          "total": 11,
+          "rate": 1.0
+        },
+        "wrong_escalation": {
+          "passed": 24,
+          "total": 24,
+          "rate": 1.0
+        }
+      },
+      "ac1_meets_target": false,
+      "ac2_meets_target": true,
+      "meets_targets": false,
+      "tickets_passed_in_all_runs": 11
+    }
+  ]
+}

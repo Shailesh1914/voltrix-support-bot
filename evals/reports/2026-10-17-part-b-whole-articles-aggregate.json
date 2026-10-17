@@ -1,0 +1,3738 @@
+{
+  "date": "2026-10-17",
+  "git_commit": "211c5aef7d8ee931caaff1773a5486337fe1439c",
+  "git_dirty": true,
+  "kind": "part-b-aggregate",
+  "threshold": -1.0,
+  "label": "whole-articles",
+  "code_trees": {
+    "query": "8b48ca796e94041056f55ef3a066669171803474",
+    "ingestion": "16f1e659e66da8723025207f79a3ef472a7e7792",
+    "evals/*.py": "e9ed6b85bf524eb9728c680fc98e40c5d0b7998df81bc5e31c91da9b29d415c0"
+  },
+  "model_id": "claude-haiku-4-5-20251001",
+  "temperature": 0,
+  "system_prompt_sha256": "57a9ae57e9648952a933b60d9785122fb3e5d356b2445ce97bca4da1b09f2ac8",
+  "ticket_file_sha256": "c07524bc9a4f251340ed5ee4f9730c3f57307d978df875d389a43d1022fdb80a",
+  "kb_version": "v1",
+  "runs": [
+    {
+      "run": 1,
+      "date": "2026-10-17",
+      "git_commit": "f416c18e31535359df64f449aea7c0e166658d52"
+    },
+    {
+      "run": 2,
+      "date": "2026-10-17",
+      "git_commit": "211c5aef7d8ee931caaff1773a5486337fe1439c"
+    },
+    {
+      "run": 3,
+      "date": "2026-10-17",
+      "git_commit": "211c5aef7d8ee931caaff1773a5486337fe1439c"
+    }
+  ],
+  "sets": {
+    "calibration": {
+      "n_tickets": 35,
+      "per_run": [
+        {
+          "n_tickets": 35,
+          "ac1": {
+            "passed": 19,
+            "total": 24,
+            "rate": 0.7916666666666666
+          },
+          "ac1_meets_target": false,
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "ac2_meets_target": true,
+          "wrong_escalation": {
+            "passed": 4,
+            "total": 24,
+            "rate": 0.16666666666666666
+          },
+          "both_cited": {
+            "passed": 2,
+            "total": 3,
+            "rate": 0.6666666666666666
+          },
+          "any_match_tickets": [
+            {
+              "ticket_id": "T-101",
+              "ac1_pass": false
+            }
+          ],
+          "per_category": {
+            "fault": {
+              "passed": 10,
+              "total": 12,
+              "rate": 0.8333333333333334
+            },
+            "installation": {
+              "passed": 3,
+              "total": 5,
+              "rate": 0.6
+            },
+            "maintenance": {
+              "passed": 3,
+              "total": 3,
+              "rate": 1.0
+            },
+            "out_of_scope": {
+              "passed": 8,
+              "total": 8,
+              "rate": 1.0
+            },
+            "parameters": {
+              "passed": 4,
+              "total": 4,
+              "rate": 1.0
+            },
+            "safety": {
+              "passed": 2,
+              "total": 3,
+              "rate": 0.6666666666666666
+            }
+          },
+          "failed_check_counts": {
+            "grounding": 3
+          },
+          "escalation_reason_counts": {
+            "insufficient_context": 11,
+            "out_of_scope": 4
+          }
+        },
+        {
+          "n_tickets": 35,
+          "ac1": {
+            "passed": 19,
+            "total": 24,
+            "rate": 0.7916666666666666
+          },
+          "ac1_meets_target": false,
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "ac2_meets_target": true,
+          "wrong_escalation": {
+            "passed": 4,
+            "total": 24,
+            "rate": 0.16666666666666666
+          },
+          "both_cited": {
+            "passed": 2,
+            "total": 3,
+            "rate": 0.6666666666666666
+          },
+          "any_match_tickets": [
+            {
+              "ticket_id": "T-101",
+              "ac1_pass": false
+            }
+          ],
+          "per_category": {
+            "fault": {
+              "passed": 10,
+              "total": 12,
+              "rate": 0.8333333333333334
+            },
+            "installation": {
+              "passed": 3,
+              "total": 5,
+              "rate": 0.6
+            },
+            "maintenance": {
+              "passed": 3,
+              "total": 3,
+              "rate": 1.0
+            },
+            "out_of_scope": {
+              "passed": 8,
+              "total": 8,
+              "rate": 1.0
+            },
+            "parameters": {
+              "passed": 4,
+              "total": 4,
+              "rate": 1.0
+            },
+            "safety": {
+              "passed": 2,
+              "total": 3,
+              "rate": 0.6666666666666666
+            }
+          },
+          "failed_check_counts": {
+            "grounding": 3
+          },
+          "escalation_reason_counts": {
+            "insufficient_context": 11,
+            "out_of_scope": 4
+          }
+        },
+        {
+          "n_tickets": 35,
+          "ac1": {
+            "passed": 19,
+            "total": 24,
+            "rate": 0.7916666666666666
+          },
+          "ac1_meets_target": false,
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "ac2_meets_target": true,
+          "wrong_escalation": {
+            "passed": 4,
+            "total": 24,
+            "rate": 0.16666666666666666
+          },
+          "both_cited": {
+            "passed": 2,
+            "total": 3,
+            "rate": 0.6666666666666666
+          },
+          "any_match_tickets": [
+            {
+              "ticket_id": "T-101",
+              "ac1_pass": false
+            }
+          ],
+          "per_category": {
+            "fault": {
+              "passed": 10,
+              "total": 12,
+              "rate": 0.8333333333333334
+            },
+            "installation": {
+              "passed": 3,
+              "total": 5,
+              "rate": 0.6
+            },
+            "maintenance": {
+              "passed": 3,
+              "total": 3,
+              "rate": 1.0
+            },
+            "out_of_scope": {
+              "passed": 8,
+              "total": 8,
+              "rate": 1.0
+            },
+            "parameters": {
+              "passed": 4,
+              "total": 4,
+              "rate": 1.0
+            },
+            "safety": {
+              "passed": 2,
+              "total": 3,
+              "rate": 0.6666666666666666
+            }
+          },
+          "failed_check_counts": {
+            "grounding": 3
+          },
+          "escalation_reason_counts": {
+            "insufficient_context": 11,
+            "out_of_scope": 4
+          }
+        }
+      ],
+      "worst": {
+        "ac1": {
+          "passed": 19,
+          "total": 24,
+          "rate": 0.7916666666666666
+        },
+        "ac2": {
+          "passed": 11,
+          "total": 11,
+          "rate": 1.0
+        },
+        "both_cited": {
+          "passed": 2,
+          "total": 3,
+          "rate": 0.6666666666666666
+        },
+        "wrong_escalation": {
+          "passed": 4,
+          "total": 24,
+          "rate": 0.16666666666666666
+        },
+        "per_category": {
+          "fault": {
+            "passed": 10,
+            "total": 12,
+            "rate": 0.8333333333333334
+          },
+          "installation": {
+            "passed": 3,
+            "total": 5,
+            "rate": 0.6
+          },
+          "maintenance": {
+            "passed": 3,
+            "total": 3,
+            "rate": 1.0
+          },
+          "out_of_scope": {
+            "passed": 8,
+            "total": 8,
+            "rate": 1.0
+          },
+          "parameters": {
+            "passed": 4,
+            "total": 4,
+            "rate": 1.0
+          },
+          "safety": {
+            "passed": 2,
+            "total": 3,
+            "rate": 0.6666666666666666
+          }
+        },
+        "ac1_meets_target": false,
+        "ac2_meets_target": true
+      },
+      "tickets_passed_in_all_runs": 30,
+      "failed_in_some_run": [
+        "T-005",
+        "T-009",
+        "T-021",
+        "T-039",
+        "T-101"
+      ],
+      "unstable": []
+    },
+    "holdout": {
+      "n_tickets": 35,
+      "per_run": [
+        {
+          "n_tickets": 35,
+          "ac1": {
+            "passed": 21,
+            "total": 24,
+            "rate": 0.875
+          },
+          "ac1_meets_target": true,
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "ac2_meets_target": true,
+          "wrong_escalation": {
+            "passed": 3,
+            "total": 24,
+            "rate": 0.125
+          },
+          "both_cited": {
+            "passed": 3,
+            "total": 6,
+            "rate": 0.5
+          },
+          "any_match_tickets": [],
+          "per_category": {
+            "fault": {
+              "passed": 9,
+              "total": 11,
+              "rate": 0.8181818181818182
+            },
+            "installation": {
+              "passed": 4,
+              "total": 4,
+              "rate": 1.0
+            },
+            "maintenance": {
+              "passed": 2,
+              "total": 2,
+              "rate": 1.0
+            },
+            "out_of_scope": {
+              "passed": 10,
+              "total": 10,
+              "rate": 1.0
+            },
+            "parameters": {
+              "passed": 4,
+              "total": 5,
+              "rate": 0.8
+            },
+            "safety": {
+              "passed": 3,
+              "total": 3,
+              "rate": 1.0
+            }
+          },
+          "failed_check_counts": {},
+          "escalation_reason_counts": {
+            "insufficient_context": 8,
+            "out_of_scope": 6
+          }
+        },
+        {
+          "n_tickets": 35,
+          "ac1": {
+            "passed": 21,
+            "total": 24,
+            "rate": 0.875
+          },
+          "ac1_meets_target": true,
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "ac2_meets_target": true,
+          "wrong_escalation": {
+            "passed": 3,
+            "total": 24,
+            "rate": 0.125
+          },
+          "both_cited": {
+            "passed": 3,
+            "total": 6,
+            "rate": 0.5
+          },
+          "any_match_tickets": [],
+          "per_category": {
+            "fault": {
+              "passed": 9,
+              "total": 11,
+              "rate": 0.8181818181818182
+            },
+            "installation": {
+              "passed": 4,
+              "total": 4,
+              "rate": 1.0
+            },
+            "maintenance": {
+              "passed": 2,
+              "total": 2,
+              "rate": 1.0
+            },
+            "out_of_scope": {
+              "passed": 10,
+              "total": 10,
+              "rate": 1.0
+            },
+            "parameters": {
+              "passed": 4,
+              "total": 5,
+              "rate": 0.8
+            },
+            "safety": {
+              "passed": 3,
+              "total": 3,
+              "rate": 1.0
+            }
+          },
+          "failed_check_counts": {},
+          "escalation_reason_counts": {
+            "insufficient_context": 8,
+            "out_of_scope": 6
+          }
+        },
+        {
+          "n_tickets": 35,
+          "ac1": {
+            "passed": 21,
+            "total": 24,
+            "rate": 0.875
+          },
+          "ac1_meets_target": true,
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "ac2_meets_target": true,
+          "wrong_escalation": {
+            "passed": 3,
+            "total": 24,
+            "rate": 0.125
+          },
+          "both_cited": {
+            "passed": 3,
+            "total": 6,
+            "rate": 0.5
+          },
+          "any_match_tickets": [],
+          "per_category": {
+            "fault": {
+              "passed": 9,
+              "total": 11,
+              "rate": 0.8181818181818182
+            },
+            "installation": {
+              "passed": 4,
+              "total": 4,
+              "rate": 1.0
+            },
+            "maintenance": {
+              "passed": 2,
+              "total": 2,
+              "rate": 1.0
+            },
+            "out_of_scope": {
+              "passed": 10,
+              "total": 10,
+              "rate": 1.0
+            },
+            "parameters": {
+              "passed": 4,
+              "total": 5,
+              "rate": 0.8
+            },
+            "safety": {
+              "passed": 3,
+              "total": 3,
+              "rate": 1.0
+            }
+          },
+          "failed_check_counts": {},
+          "escalation_reason_counts": {
+            "insufficient_context": 8,
+            "out_of_scope": 6
+          }
+        }
+      ],
+      "worst": {
+        "ac1": {
+          "passed": 21,
+          "total": 24,
+          "rate": 0.875
+        },
+        "ac2": {
+          "passed": 11,
+          "total": 11,
+          "rate": 1.0
+        },
+        "both_cited": {
+          "passed": 3,
+          "total": 6,
+          "rate": 0.5
+        },
+        "wrong_escalation": {
+          "passed": 3,
+          "total": 24,
+          "rate": 0.125
+        },
+        "per_category": {
+          "fault": {
+            "passed": 9,
+            "total": 11,
+            "rate": 0.8181818181818182
+          },
+          "installation": {
+            "passed": 4,
+            "total": 4,
+            "rate": 1.0
+          },
+          "maintenance": {
+            "passed": 2,
+            "total": 2,
+            "rate": 1.0
+          },
+          "out_of_scope": {
+            "passed": 10,
+            "total": 10,
+            "rate": 1.0
+          },
+          "parameters": {
+            "passed": 4,
+            "total": 5,
+            "rate": 0.8
+          },
+          "safety": {
+            "passed": 3,
+            "total": 3,
+            "rate": 1.0
+          }
+        },
+        "ac1_meets_target": true,
+        "ac2_meets_target": true
+      },
+      "tickets_passed_in_all_runs": 32,
+      "failed_in_some_run": [
+        "T-016",
+        "T-030",
+        "T-102"
+      ],
+      "unstable": []
+    },
+    "full": {
+      "n_tickets": 70,
+      "per_run": [
+        {
+          "n_tickets": 70,
+          "ac1": {
+            "passed": 40,
+            "total": 48,
+            "rate": 0.8333333333333334
+          },
+          "ac1_meets_target": false,
+          "ac2": {
+            "passed": 22,
+            "total": 22,
+            "rate": 1.0
+          },
+          "ac2_meets_target": true,
+          "wrong_escalation": {
+            "passed": 7,
+            "total": 48,
+            "rate": 0.14583333333333334
+          },
+          "both_cited": {
+            "passed": 5,
+            "total": 9,
+            "rate": 0.5555555555555556
+          },
+          "any_match_tickets": [
+            {
+              "ticket_id": "T-101",
+              "ac1_pass": false
+            }
+          ],
+          "per_category": {
+            "fault": {
+              "passed": 19,
+              "total": 23,
+              "rate": 0.8260869565217391
+            },
+            "installation": {
+              "passed": 7,
+              "total": 9,
+              "rate": 0.7777777777777778
+            },
+            "maintenance": {
+              "passed": 5,
+              "total": 5,
+              "rate": 1.0
+            },
+            "out_of_scope": {
+              "passed": 18,
+              "total": 18,
+              "rate": 1.0
+            },
+            "parameters": {
+              "passed": 8,
+              "total": 9,
+              "rate": 0.8888888888888888
+            },
+            "safety": {
+              "passed": 5,
+              "total": 6,
+              "rate": 0.8333333333333334
+            }
+          },
+          "failed_check_counts": {
+            "grounding": 3
+          },
+          "escalation_reason_counts": {
+            "insufficient_context": 19,
+            "out_of_scope": 10
+          }
+        },
+        {
+          "n_tickets": 70,
+          "ac1": {
+            "passed": 40,
+            "total": 48,
+            "rate": 0.8333333333333334
+          },
+          "ac1_meets_target": false,
+          "ac2": {
+            "passed": 22,
+            "total": 22,
+            "rate": 1.0
+          },
+          "ac2_meets_target": true,
+          "wrong_escalation": {
+            "passed": 7,
+            "total": 48,
+            "rate": 0.14583333333333334
+          },
+          "both_cited": {
+            "passed": 5,
+            "total": 9,
+            "rate": 0.5555555555555556
+          },
+          "any_match_tickets": [
+            {
+              "ticket_id": "T-101",
+              "ac1_pass": false
+            }
+          ],
+          "per_category": {
+            "fault": {
+              "passed": 19,
+              "total": 23,
+              "rate": 0.8260869565217391
+            },
+            "installation": {
+              "passed": 7,
+              "total": 9,
+              "rate": 0.7777777777777778
+            },
+            "maintenance": {
+              "passed": 5,
+              "total": 5,
+              "rate": 1.0
+            },
+            "out_of_scope": {
+              "passed": 18,
+              "total": 18,
+              "rate": 1.0
+            },
+            "parameters": {
+              "passed": 8,
+              "total": 9,
+              "rate": 0.8888888888888888
+            },
+            "safety": {
+              "passed": 5,
+              "total": 6,
+              "rate": 0.8333333333333334
+            }
+          },
+          "failed_check_counts": {
+            "grounding": 3
+          },
+          "escalation_reason_counts": {
+            "insufficient_context": 19,
+            "out_of_scope": 10
+          }
+        },
+        {
+          "n_tickets": 70,
+          "ac1": {
+            "passed": 40,
+            "total": 48,
+            "rate": 0.8333333333333334
+          },
+          "ac1_meets_target": false,
+          "ac2": {
+            "passed": 22,
+            "total": 22,
+            "rate": 1.0
+          },
+          "ac2_meets_target": true,
+          "wrong_escalation": {
+            "passed": 7,
+            "total": 48,
+            "rate": 0.14583333333333334
+          },
+          "both_cited": {
+            "passed": 5,
+            "total": 9,
+            "rate": 0.5555555555555556
+          },
+          "any_match_tickets": [
+            {
+              "ticket_id": "T-101",
+              "ac1_pass": false
+            }
+          ],
+          "per_category": {
+            "fault": {
+              "passed": 19,
+              "total": 23,
+              "rate": 0.8260869565217391
+            },
+            "installation": {
+              "passed": 7,
+              "total": 9,
+              "rate": 0.7777777777777778
+            },
+            "maintenance": {
+              "passed": 5,
+              "total": 5,
+              "rate": 1.0
+            },
+            "out_of_scope": {
+              "passed": 18,
+              "total": 18,
+              "rate": 1.0
+            },
+            "parameters": {
+              "passed": 8,
+              "total": 9,
+              "rate": 0.8888888888888888
+            },
+            "safety": {
+              "passed": 5,
+              "total": 6,
+              "rate": 0.8333333333333334
+            }
+          },
+          "failed_check_counts": {
+            "grounding": 3
+          },
+          "escalation_reason_counts": {
+            "insufficient_context": 19,
+            "out_of_scope": 10
+          }
+        }
+      ],
+      "worst": {
+        "ac1": {
+          "passed": 40,
+          "total": 48,
+          "rate": 0.8333333333333334
+        },
+        "ac2": {
+          "passed": 22,
+          "total": 22,
+          "rate": 1.0
+        },
+        "both_cited": {
+          "passed": 5,
+          "total": 9,
+          "rate": 0.5555555555555556
+        },
+        "wrong_escalation": {
+          "passed": 7,
+          "total": 48,
+          "rate": 0.14583333333333334
+        },
+        "per_category": {
+          "fault": {
+            "passed": 19,
+            "total": 23,
+            "rate": 0.8260869565217391
+          },
+          "installation": {
+            "passed": 7,
+            "total": 9,
+            "rate": 0.7777777777777778
+          },
+          "maintenance": {
+            "passed": 5,
+            "total": 5,
+            "rate": 1.0
+          },
+          "out_of_scope": {
+            "passed": 18,
+            "total": 18,
+            "rate": 1.0
+          },
+          "parameters": {
+            "passed": 8,
+            "total": 9,
+            "rate": 0.8888888888888888
+          },
+          "safety": {
+            "passed": 5,
+            "total": 6,
+            "rate": 0.8333333333333334
+          }
+        },
+        "ac1_meets_target": false,
+        "ac2_meets_target": true
+      },
+      "tickets_passed_in_all_runs": 62,
+      "failed_in_some_run": [
+        "T-005",
+        "T-009",
+        "T-016",
+        "T-021",
+        "T-030",
+        "T-039",
+        "T-101",
+        "T-102"
+      ],
+      "unstable": []
+    }
+  },
+  "usage": [
+    {
+      "run": 1,
+      "model_calls": 66,
+      "input_tokens": 312746,
+      "output_tokens": 13209,
+      "malformed_outputs": 0,
+      "cost_usd": 0.378791
+    },
+    {
+      "run": 2,
+      "model_calls": 66,
+      "input_tokens": 312746,
+      "output_tokens": 13209,
+      "malformed_outputs": 0,
+      "cost_usd": 0.378791
+    },
+    {
+      "run": 3,
+      "model_calls": 66,
+      "input_tokens": 312746,
+      "output_tokens": 13209,
+      "malformed_outputs": 0,
+      "cost_usd": 0.378791
+    }
+  ],
+  "usage_total": {
+    "model_calls": 198,
+    "input_tokens": 938238,
+    "output_tokens": 39627,
+    "malformed_outputs": 0,
+    "cost_usd": 1.136373
+  },
+  "watch_tickets": [
+    {
+      "ticket_id": "T-044",
+      "split": "holdout",
+      "expected": "escalate",
+      "category": "out_of_scope",
+      "expected_article_ids": [],
+      "top_score": 0.7659307130041815,
+      "runs": [
+        {
+          "status": "escalated",
+          "escalation_reason": "insufficient_context",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        },
+        {
+          "status": "escalated",
+          "escalation_reason": "insufficient_context",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        },
+        {
+          "status": "escalated",
+          "escalation_reason": "insufficient_context",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        }
+      ],
+      "unstable": false,
+      "passed_all_runs": true
+    },
+    {
+      "ticket_id": "T-049",
+      "split": "calibration",
+      "expected": "escalate",
+      "category": "out_of_scope",
+      "expected_article_ids": [],
+      "top_score": 0.8853467587533242,
+      "runs": [
+        {
+          "status": "escalated",
+          "escalation_reason": "insufficient_context",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        },
+        {
+          "status": "escalated",
+          "escalation_reason": "insufficient_context",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        },
+        {
+          "status": "escalated",
+          "escalation_reason": "insufficient_context",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        }
+      ],
+      "unstable": false,
+      "passed_all_runs": true
+    },
+    {
+      "ticket_id": "T-058",
+      "split": "holdout",
+      "expected": "escalate",
+      "category": "out_of_scope",
+      "expected_article_ids": [],
+      "top_score": 0.789290034085474,
+      "runs": [
+        {
+          "status": "escalated",
+          "escalation_reason": "out_of_scope",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        },
+        {
+          "status": "escalated",
+          "escalation_reason": "out_of_scope",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        },
+        {
+          "status": "escalated",
+          "escalation_reason": "out_of_scope",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        }
+      ],
+      "unstable": false,
+      "passed_all_runs": true
+    },
+    {
+      "ticket_id": "T-109",
+      "split": "calibration",
+      "expected": "escalate",
+      "category": "out_of_scope",
+      "expected_article_ids": [],
+      "top_score": 0.7741283794564947,
+      "runs": [
+        {
+          "status": "escalated",
+          "escalation_reason": "out_of_scope",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        },
+        {
+          "status": "escalated",
+          "escalation_reason": "out_of_scope",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        },
+        {
+          "status": "escalated",
+          "escalation_reason": "out_of_scope",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        }
+      ],
+      "unstable": false,
+      "passed_all_runs": true
+    }
+  ],
+  "tickets": [
+    {
+      "ticket_id": "T-001",
+      "split": "calibration",
+      "expected": "answer",
+      "category": "fault",
+      "expected_article_ids": [
+        "KB-001"
+      ],
+      "top_score": 0.8205470056006614,
+      "runs": [
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-001"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-001"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-001"
+          ],
+          "pass": true
+        }
+      ],
+      "unstable": false,
+      "passed_all_runs": true
+    },
+    {
+      "ticket_id": "T-002",
+      "split": "holdout",
+      "expected": "answer",
+      "category": "fault",
+      "expected_article_ids": [
+        "KB-002"
+      ],
+      "top_score": 0.8379118509749948,
+      "runs": [
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-002",
+            "KB-025"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-002",
+            "KB-025"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-002",
+            "KB-025"
+          ],
+          "pass": true
+        }
+      ],
+      "unstable": false,
+      "passed_all_runs": true
+    },
+    {
+      "ticket_id": "T-003",
+      "split": "calibration",
+      "expected": "answer",
+      "category": "fault",
+      "expected_article_ids": [
+        "KB-003"
+      ],
+      "top_score": 0.8093853272004408,
+      "runs": [
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-003"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-003"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-003"
+          ],
+          "pass": true
+        }
+      ],
+      "unstable": false,
+      "passed_all_runs": true
+    },
+    {
+      "ticket_id": "T-004",
+      "split": "holdout",
+      "expected": "answer",
+      "category": "fault",
+      "expected_article_ids": [
+        "KB-004"
+      ],
+      "top_score": 0.8745369215833915,
+      "runs": [
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-004"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-004"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-004"
+          ],
+          "pass": true
+        }
+      ],
+      "unstable": false,
+      "passed_all_runs": true
+    },
+    {
+      "ticket_id": "T-005",
+      "split": "calibration",
+      "expected": "answer",
+      "category": "fault",
+      "expected_article_ids": [
+        "KB-005",
+        "KB-025"
+      ],
+      "top_score": 0.8853467587533242,
+      "runs": [
+        {
+          "status": "escalated",
+          "escalation_reason": "insufficient_context",
+          "failed_check": "grounding",
+          "cited": [],
+          "pass": false
+        },
+        {
+          "status": "escalated",
+          "escalation_reason": "insufficient_context",
+          "failed_check": "grounding",
+          "cited": [],
+          "pass": false
+        },
+        {
+          "status": "escalated",
+          "escalation_reason": "insufficient_context",
+          "failed_check": "grounding",
+          "cited": [],
+          "pass": false
+        }
+      ],
+      "unstable": false,
+      "passed_all_runs": false
+    },
+    {
+      "ticket_id": "T-006",
+      "split": "holdout",
+      "expected": "answer",
+      "category": "fault",
+      "expected_article_ids": [
+        "KB-006"
+      ],
+      "top_score": 0.8341372732400034,
+      "runs": [
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-006"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-006"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-006"
+          ],
+          "pass": true
+        }
+      ],
+      "unstable": false,
+      "passed_all_runs": true
+    },
+    {
+      "ticket_id": "T-007",
+      "split": "calibration",
+      "expected": "answer",
+      "category": "fault",
+      "expected_article_ids": [
+        "KB-007",
+        "KB-030"
+      ],
+      "top_score": 0.8087017861731228,
+      "runs": [
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-007",
+            "KB-030"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-007",
+            "KB-030"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-007",
+            "KB-030"
+          ],
+          "pass": true
+        }
+      ],
+      "unstable": false,
+      "passed_all_runs": true
+    },
+    {
+      "ticket_id": "T-008",
+      "split": "holdout",
+      "expected": "answer",
+      "category": "fault",
+      "expected_article_ids": [
+        "KB-008",
+        "KB-009"
+      ],
+      "top_score": 0.8260057189191816,
+      "runs": [
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-008",
+            "KB-009"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-008",
+            "KB-009"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-008",
+            "KB-009"
+          ],
+          "pass": true
+        }
+      ],
+      "unstable": false,
+      "passed_all_runs": true
+    },
+    {
+      "ticket_id": "T-009",
+      "split": "calibration",
+      "expected": "answer",
+      "category": "fault",
+      "expected_article_ids": [
+        "KB-008"
+      ],
+      "top_score": 0.8234259903651044,
+      "runs": [
+        {
+          "status": "escalated",
+          "escalation_reason": "insufficient_context",
+          "failed_check": "grounding",
+          "cited": [],
+          "pass": false
+        },
+        {
+          "status": "escalated",
+          "escalation_reason": "insufficient_context",
+          "failed_check": "grounding",
+          "cited": [],
+          "pass": false
+        },
+        {
+          "status": "escalated",
+          "escalation_reason": "insufficient_context",
+          "failed_check": "grounding",
+          "cited": [],
+          "pass": false
+        }
+      ],
+      "unstable": false,
+      "passed_all_runs": false
+    },
+    {
+      "ticket_id": "T-010",
+      "split": "holdout",
+      "expected": "answer",
+      "category": "fault",
+      "expected_article_ids": [
+        "KB-010"
+      ],
+      "top_score": 0.7945346972562455,
+      "runs": [
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-010"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-010"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-010"
+          ],
+          "pass": true
+        }
+      ],
+      "unstable": false,
+      "passed_all_runs": true
+    },
+    {
+      "ticket_id": "T-011",
+      "split": "calibration",
+      "expected": "answer",
+      "category": "fault",
+      "expected_article_ids": [
+        "KB-011"
+      ],
+      "top_score": 0.8712588602969574,
+      "runs": [
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-011"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-011"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-011"
+          ],
+          "pass": true
+        }
+      ],
+      "unstable": false,
+      "passed_all_runs": true
+    },
+    {
+      "ticket_id": "T-012",
+      "split": "holdout",
+      "expected": "answer",
+      "category": "fault",
+      "expected_article_ids": [
+        "KB-012"
+      ],
+      "top_score": 0.8266525534923567,
+      "runs": [
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-012"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-012"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-012"
+          ],
+          "pass": true
+        }
+      ],
+      "unstable": false,
+      "passed_all_runs": true
+    },
+    {
+      "ticket_id": "T-013",
+      "split": "calibration",
+      "expected": "answer",
+      "category": "fault",
+      "expected_article_ids": [
+        "KB-013"
+      ],
+      "top_score": 0.8719112190060432,
+      "runs": [
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-013"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-013"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-013"
+          ],
+          "pass": true
+        }
+      ],
+      "unstable": false,
+      "passed_all_runs": true
+    },
+    {
+      "ticket_id": "T-014",
+      "split": "holdout",
+      "expected": "answer",
+      "category": "fault",
+      "expected_article_ids": [
+        "KB-014"
+      ],
+      "top_score": 0.8593627022455849,
+      "runs": [
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-014",
+            "KB-036"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-014",
+            "KB-036"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-014",
+            "KB-036"
+          ],
+          "pass": true
+        }
+      ],
+      "unstable": false,
+      "passed_all_runs": true
+    },
+    {
+      "ticket_id": "T-015",
+      "split": "calibration",
+      "expected": "answer",
+      "category": "fault",
+      "expected_article_ids": [
+        "KB-015",
+        "KB-028"
+      ],
+      "top_score": 0.8241790177898154,
+      "runs": [
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-015",
+            "KB-028"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-015",
+            "KB-028"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-015",
+            "KB-028"
+          ],
+          "pass": true
+        }
+      ],
+      "unstable": false,
+      "passed_all_runs": true
+    },
+    {
+      "ticket_id": "T-016",
+      "split": "holdout",
+      "expected": "answer",
+      "category": "fault",
+      "expected_article_ids": [
+        "KB-016",
+        "KB-031"
+      ],
+      "top_score": 0.8522809861430272,
+      "runs": [
+        {
+          "status": "escalated",
+          "escalation_reason": "insufficient_context",
+          "failed_check": "",
+          "cited": [],
+          "pass": false
+        },
+        {
+          "status": "escalated",
+          "escalation_reason": "insufficient_context",
+          "failed_check": "",
+          "cited": [],
+          "pass": false
+        },
+        {
+          "status": "escalated",
+          "escalation_reason": "insufficient_context",
+          "failed_check": "",
+          "cited": [],
+          "pass": false
+        }
+      ],
+      "unstable": false,
+      "passed_all_runs": false
+    },
+    {
+      "ticket_id": "T-017",
+      "split": "calibration",
+      "expected": "answer",
+      "category": "installation",
+      "expected_article_ids": [
+        "KB-017"
+      ],
+      "top_score": 0.8159161840528394,
+      "runs": [
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-017"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-017"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-017"
+          ],
+          "pass": true
+        }
+      ],
+      "unstable": false,
+      "passed_all_runs": true
+    },
+    {
+      "ticket_id": "T-018",
+      "split": "holdout",
+      "expected": "answer",
+      "category": "installation",
+      "expected_article_ids": [
+        "KB-018"
+      ],
+      "top_score": 0.763580064998736,
+      "runs": [
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-018"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-018"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-018"
+          ],
+          "pass": true
+        }
+      ],
+      "unstable": false,
+      "passed_all_runs": true
+    },
+    {
+      "ticket_id": "T-019",
+      "split": "calibration",
+      "expected": "answer",
+      "category": "installation",
+      "expected_article_ids": [
+        "KB-018"
+      ],
+      "top_score": 0.8020926097504796,
+      "runs": [
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-018"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-018"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-018"
+          ],
+          "pass": true
+        }
+      ],
+      "unstable": false,
+      "passed_all_runs": true
+    },
+    {
+      "ticket_id": "T-020",
+      "split": "holdout",
+      "expected": "answer",
+      "category": "installation",
+      "expected_article_ids": [
+        "KB-019"
+      ],
+      "top_score": 0.69847054048052,
+      "runs": [
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-019",
+            "KB-034"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-019",
+            "KB-034"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-019",
+            "KB-034"
+          ],
+          "pass": true
+        }
+      ],
+      "unstable": false,
+      "passed_all_runs": true
+    },
+    {
+      "ticket_id": "T-021",
+      "split": "calibration",
+      "expected": "answer",
+      "category": "installation",
+      "expected_article_ids": [
+        "KB-020"
+      ],
+      "top_score": 0.6694372790224443,
+      "runs": [
+        {
+          "status": "escalated",
+          "escalation_reason": "insufficient_context",
+          "failed_check": "grounding",
+          "cited": [],
+          "pass": false
+        },
+        {
+          "status": "escalated",
+          "escalation_reason": "insufficient_context",
+          "failed_check": "grounding",
+          "cited": [],
+          "pass": false
+        },
+        {
+          "status": "escalated",
+          "escalation_reason": "insufficient_context",
+          "failed_check": "grounding",
+          "cited": [],
+          "pass": false
+        }
+      ],
+      "unstable": false,
+      "passed_all_runs": false
+    },
+    {
+      "ticket_id": "T-022",
+      "split": "holdout",
+      "expected": "answer",
+      "category": "installation",
+      "expected_article_ids": [
+        "KB-020",
+        "KB-027"
+      ],
+      "top_score": 0.7044409305454427,
+      "runs": [
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-027",
+            "KB-020"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-027",
+            "KB-020"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-027",
+            "KB-020"
+          ],
+          "pass": true
+        }
+      ],
+      "unstable": false,
+      "passed_all_runs": true
+    },
+    {
+      "ticket_id": "T-023",
+      "split": "calibration",
+      "expected": "answer",
+      "category": "installation",
+      "expected_article_ids": [
+        "KB-021"
+      ],
+      "top_score": 0.8526444605470782,
+      "runs": [
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-021"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-021"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-021"
+          ],
+          "pass": true
+        }
+      ],
+      "unstable": false,
+      "passed_all_runs": true
+    },
+    {
+      "ticket_id": "T-024",
+      "split": "holdout",
+      "expected": "answer",
+      "category": "installation",
+      "expected_article_ids": [
+        "KB-022"
+      ],
+      "top_score": 0.7053790158248183,
+      "runs": [
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-022"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-022"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-022"
+          ],
+          "pass": true
+        }
+      ],
+      "unstable": false,
+      "passed_all_runs": true
+    },
+    {
+      "ticket_id": "T-025",
+      "split": "calibration",
+      "expected": "answer",
+      "category": "parameters",
+      "expected_article_ids": [
+        "KB-023"
+      ],
+      "top_score": 0.7266300455941391,
+      "runs": [
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-023"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-023"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-023"
+          ],
+          "pass": true
+        }
+      ],
+      "unstable": false,
+      "passed_all_runs": true
+    },
+    {
+      "ticket_id": "T-026",
+      "split": "holdout",
+      "expected": "answer",
+      "category": "parameters",
+      "expected_article_ids": [
+        "KB-027"
+      ],
+      "top_score": 0.717559092690678,
+      "runs": [
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-027",
+            "KB-023"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-027",
+            "KB-023"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-027",
+            "KB-023"
+          ],
+          "pass": true
+        }
+      ],
+      "unstable": false,
+      "passed_all_runs": true
+    },
+    {
+      "ticket_id": "T-027",
+      "split": "calibration",
+      "expected": "answer",
+      "category": "parameters",
+      "expected_article_ids": [
+        "KB-024"
+      ],
+      "top_score": 0.7312080569949801,
+      "runs": [
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-024",
+            "KB-022"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-024",
+            "KB-022"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-024",
+            "KB-022"
+          ],
+          "pass": true
+        }
+      ],
+      "unstable": false,
+      "passed_all_runs": true
+    },
+    {
+      "ticket_id": "T-028",
+      "split": "holdout",
+      "expected": "answer",
+      "category": "parameters",
+      "expected_article_ids": [
+        "KB-025"
+      ],
+      "top_score": 0.7308354952158109,
+      "runs": [
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-025"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-025"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-025"
+          ],
+          "pass": true
+        }
+      ],
+      "unstable": false,
+      "passed_all_runs": true
+    },
+    {
+      "ticket_id": "T-029",
+      "split": "calibration",
+      "expected": "answer",
+      "category": "parameters",
+      "expected_article_ids": [
+        "KB-026"
+      ],
+      "top_score": 0.782809994167575,
+      "runs": [
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-026"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-026"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-026"
+          ],
+          "pass": true
+        }
+      ],
+      "unstable": false,
+      "passed_all_runs": true
+    },
+    {
+      "ticket_id": "T-030",
+      "split": "holdout",
+      "expected": "answer",
+      "category": "parameters",
+      "expected_article_ids": [
+        "KB-026",
+        "KB-001"
+      ],
+      "top_score": 0.8205470056006614,
+      "runs": [
+        {
+          "status": "escalated",
+          "escalation_reason": "insufficient_context",
+          "failed_check": "",
+          "cited": [],
+          "pass": false
+        },
+        {
+          "status": "escalated",
+          "escalation_reason": "insufficient_context",
+          "failed_check": "",
+          "cited": [],
+          "pass": false
+        },
+        {
+          "status": "escalated",
+          "escalation_reason": "insufficient_context",
+          "failed_check": "",
+          "cited": [],
+          "pass": false
+        }
+      ],
+      "unstable": false,
+      "passed_all_runs": false
+    },
+    {
+      "ticket_id": "T-031",
+      "split": "calibration",
+      "expected": "answer",
+      "category": "parameters",
+      "expected_article_ids": [
+        "KB-028"
+      ],
+      "top_score": 0.6435305582825936,
+      "runs": [
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-028"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-028"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-028"
+          ],
+          "pass": true
+        }
+      ],
+      "unstable": false,
+      "passed_all_runs": true
+    },
+    {
+      "ticket_id": "T-032",
+      "split": "holdout",
+      "expected": "answer",
+      "category": "parameters",
+      "expected_article_ids": [
+        "KB-028",
+        "KB-024"
+      ],
+      "top_score": 0.7304195499108057,
+      "runs": [
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-028"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-028"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-028"
+          ],
+          "pass": true
+        }
+      ],
+      "unstable": false,
+      "passed_all_runs": true
+    },
+    {
+      "ticket_id": "T-033",
+      "split": "calibration",
+      "expected": "answer",
+      "category": "maintenance",
+      "expected_article_ids": [
+        "KB-029"
+      ],
+      "top_score": 0.7055734272787197,
+      "runs": [
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-029"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-029"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-029"
+          ],
+          "pass": true
+        }
+      ],
+      "unstable": false,
+      "passed_all_runs": true
+    },
+    {
+      "ticket_id": "T-034",
+      "split": "holdout",
+      "expected": "answer",
+      "category": "maintenance",
+      "expected_article_ids": [
+        "KB-030"
+      ],
+      "top_score": 0.6627121793164013,
+      "runs": [
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-030"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-030"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-030"
+          ],
+          "pass": true
+        }
+      ],
+      "unstable": false,
+      "passed_all_runs": true
+    },
+    {
+      "ticket_id": "T-035",
+      "split": "calibration",
+      "expected": "answer",
+      "category": "maintenance",
+      "expected_article_ids": [
+        "KB-031"
+      ],
+      "top_score": 0.7654912498211831,
+      "runs": [
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-031"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-031"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-031"
+          ],
+          "pass": true
+        }
+      ],
+      "unstable": false,
+      "passed_all_runs": true
+    },
+    {
+      "ticket_id": "T-036",
+      "split": "holdout",
+      "expected": "answer",
+      "category": "maintenance",
+      "expected_article_ids": [
+        "KB-032"
+      ],
+      "top_score": 0.7939489167036624,
+      "runs": [
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-032"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-032"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-032"
+          ],
+          "pass": true
+        }
+      ],
+      "unstable": false,
+      "passed_all_runs": true
+    },
+    {
+      "ticket_id": "T-037",
+      "split": "calibration",
+      "expected": "answer",
+      "category": "maintenance",
+      "expected_article_ids": [
+        "KB-033"
+      ],
+      "top_score": 0.7062096828243238,
+      "runs": [
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-033"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-033"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-033"
+          ],
+          "pass": true
+        }
+      ],
+      "unstable": false,
+      "passed_all_runs": true
+    },
+    {
+      "ticket_id": "T-038",
+      "split": "holdout",
+      "expected": "answer",
+      "category": "safety",
+      "expected_article_ids": [
+        "KB-034"
+      ],
+      "top_score": 0.7163367516025261,
+      "runs": [
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-034"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-034"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-034"
+          ],
+          "pass": true
+        }
+      ],
+      "unstable": false,
+      "passed_all_runs": true
+    },
+    {
+      "ticket_id": "T-039",
+      "split": "calibration",
+      "expected": "answer",
+      "category": "safety",
+      "expected_article_ids": [
+        "KB-034"
+      ],
+      "top_score": 0.7860781604151821,
+      "runs": [
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-036",
+            "KB-032"
+          ],
+          "pass": false
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-036",
+            "KB-032"
+          ],
+          "pass": false
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-036",
+            "KB-032"
+          ],
+          "pass": false
+        }
+      ],
+      "unstable": false,
+      "passed_all_runs": false
+    },
+    {
+      "ticket_id": "T-040",
+      "split": "holdout",
+      "expected": "answer",
+      "category": "safety",
+      "expected_article_ids": [
+        "KB-035"
+      ],
+      "top_score": 0.664218257204879,
+      "runs": [
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-035"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-035"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-035"
+          ],
+          "pass": true
+        }
+      ],
+      "unstable": false,
+      "passed_all_runs": true
+    },
+    {
+      "ticket_id": "T-041",
+      "split": "calibration",
+      "expected": "answer",
+      "category": "safety",
+      "expected_article_ids": [
+        "KB-035"
+      ],
+      "top_score": 0.6806368771140866,
+      "runs": [
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-035"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-035"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-035"
+          ],
+          "pass": true
+        }
+      ],
+      "unstable": false,
+      "passed_all_runs": true
+    },
+    {
+      "ticket_id": "T-042",
+      "split": "holdout",
+      "expected": "answer",
+      "category": "safety",
+      "expected_article_ids": [
+        "KB-036"
+      ],
+      "top_score": 0.8844271282632645,
+      "runs": [
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-036"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-036"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-036"
+          ],
+          "pass": true
+        }
+      ],
+      "unstable": false,
+      "passed_all_runs": true
+    },
+    {
+      "ticket_id": "T-043",
+      "split": "calibration",
+      "expected": "escalate",
+      "category": "out_of_scope",
+      "expected_article_ids": [],
+      "top_score": 0.6728703661188509,
+      "runs": [
+        {
+          "status": "escalated",
+          "escalation_reason": "insufficient_context",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        },
+        {
+          "status": "escalated",
+          "escalation_reason": "insufficient_context",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        },
+        {
+          "status": "escalated",
+          "escalation_reason": "insufficient_context",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        }
+      ],
+      "unstable": false,
+      "passed_all_runs": true
+    },
+    {
+      "ticket_id": "T-044",
+      "split": "holdout",
+      "expected": "escalate",
+      "category": "out_of_scope",
+      "expected_article_ids": [],
+      "top_score": 0.7659307130041815,
+      "runs": [
+        {
+          "status": "escalated",
+          "escalation_reason": "insufficient_context",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        },
+        {
+          "status": "escalated",
+          "escalation_reason": "insufficient_context",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        },
+        {
+          "status": "escalated",
+          "escalation_reason": "insufficient_context",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        }
+      ],
+      "unstable": false,
+      "passed_all_runs": true
+    },
+    {
+      "ticket_id": "T-045",
+      "split": "calibration",
+      "expected": "escalate",
+      "category": "out_of_scope",
+      "expected_article_ids": [],
+      "top_score": 0.675470178737469,
+      "runs": [
+        {
+          "status": "escalated",
+          "escalation_reason": "insufficient_context",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        },
+        {
+          "status": "escalated",
+          "escalation_reason": "insufficient_context",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        },
+        {
+          "status": "escalated",
+          "escalation_reason": "insufficient_context",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        }
+      ],
+      "unstable": false,
+      "passed_all_runs": true
+    },
+    {
+      "ticket_id": "T-046",
+      "split": "holdout",
+      "expected": "escalate",
+      "category": "out_of_scope",
+      "expected_article_ids": [],
+      "top_score": 0.6979830543154251,
+      "runs": [
+        {
+          "status": "escalated",
+          "escalation_reason": "insufficient_context",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        },
+        {
+          "status": "escalated",
+          "escalation_reason": "insufficient_context",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        },
+        {
+          "status": "escalated",
+          "escalation_reason": "insufficient_context",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        }
+      ],
+      "unstable": false,
+      "passed_all_runs": true
+    },
+    {
+      "ticket_id": "T-047",
+      "split": "calibration",
+      "expected": "escalate",
+      "category": "out_of_scope",
+      "expected_article_ids": [],
+      "top_score": 0.6336383442628799,
+      "runs": [
+        {
+          "status": "escalated",
+          "escalation_reason": "insufficient_context",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        },
+        {
+          "status": "escalated",
+          "escalation_reason": "insufficient_context",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        },
+        {
+          "status": "escalated",
+          "escalation_reason": "insufficient_context",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        }
+      ],
+      "unstable": false,
+      "passed_all_runs": true
+    },
+    {
+      "ticket_id": "T-048",
+      "split": "holdout",
+      "expected": "escalate",
+      "category": "out_of_scope",
+      "expected_article_ids": [],
+      "top_score": 0.7177006917483952,
+      "runs": [
+        {
+          "status": "escalated",
+          "escalation_reason": "insufficient_context",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        },
+        {
+          "status": "escalated",
+          "escalation_reason": "insufficient_context",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        },
+        {
+          "status": "escalated",
+          "escalation_reason": "insufficient_context",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        }
+      ],
+      "unstable": false,
+      "passed_all_runs": true
+    },
+    {
+      "ticket_id": "T-049",
+      "split": "calibration",
+      "expected": "escalate",
+      "category": "out_of_scope",
+      "expected_article_ids": [],
+      "top_score": 0.8853467587533242,
+      "runs": [
+        {
+          "status": "escalated",
+          "escalation_reason": "insufficient_context",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        },
+        {
+          "status": "escalated",
+          "escalation_reason": "insufficient_context",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        },
+        {
+          "status": "escalated",
+          "escalation_reason": "insufficient_context",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        }
+      ],
+      "unstable": false,
+      "passed_all_runs": true
+    },
+    {
+      "ticket_id": "T-050",
+      "split": "holdout",
+      "expected": "escalate",
+      "category": "out_of_scope",
+      "expected_article_ids": [],
+      "top_score": 0.6627250600794802,
+      "runs": [
+        {
+          "status": "escalated",
+          "escalation_reason": "insufficient_context",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        },
+        {
+          "status": "escalated",
+          "escalation_reason": "insufficient_context",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        },
+        {
+          "status": "escalated",
+          "escalation_reason": "insufficient_context",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        }
+      ],
+      "unstable": false,
+      "passed_all_runs": true
+    },
+    {
+      "ticket_id": "T-051",
+      "split": "calibration",
+      "expected": "escalate",
+      "category": "out_of_scope",
+      "expected_article_ids": [],
+      "top_score": 0.7053228793498562,
+      "runs": [
+        {
+          "status": "escalated",
+          "escalation_reason": "out_of_scope",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        },
+        {
+          "status": "escalated",
+          "escalation_reason": "out_of_scope",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        },
+        {
+          "status": "escalated",
+          "escalation_reason": "out_of_scope",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        }
+      ],
+      "unstable": false,
+      "passed_all_runs": true
+    },
+    {
+      "ticket_id": "T-052",
+      "split": "holdout",
+      "expected": "escalate",
+      "category": "out_of_scope",
+      "expected_article_ids": [],
+      "top_score": 0.7111868732695459,
+      "runs": [
+        {
+          "status": "escalated",
+          "escalation_reason": "out_of_scope",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        },
+        {
+          "status": "escalated",
+          "escalation_reason": "out_of_scope",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        },
+        {
+          "status": "escalated",
+          "escalation_reason": "out_of_scope",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        }
+      ],
+      "unstable": false,
+      "passed_all_runs": true
+    },
+    {
+      "ticket_id": "T-053",
+      "split": "calibration",
+      "expected": "escalate",
+      "category": "fault",
+      "expected_article_ids": [],
+      "top_score": 0.6635236384240546,
+      "runs": [
+        {
+          "status": "escalated",
+          "escalation_reason": "insufficient_context",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        },
+        {
+          "status": "escalated",
+          "escalation_reason": "insufficient_context",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        },
+        {
+          "status": "escalated",
+          "escalation_reason": "insufficient_context",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        }
+      ],
+      "unstable": false,
+      "passed_all_runs": true
+    },
+    {
+      "ticket_id": "T-054",
+      "split": "holdout",
+      "expected": "escalate",
+      "category": "fault",
+      "expected_article_ids": [],
+      "top_score": 0.6629897367468103,
+      "runs": [
+        {
+          "status": "escalated",
+          "escalation_reason": "insufficient_context",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        },
+        {
+          "status": "escalated",
+          "escalation_reason": "insufficient_context",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        },
+        {
+          "status": "escalated",
+          "escalation_reason": "insufficient_context",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        }
+      ],
+      "unstable": false,
+      "passed_all_runs": true
+    },
+    {
+      "ticket_id": "T-055",
+      "split": "calibration",
+      "expected": "escalate",
+      "category": "fault",
+      "expected_article_ids": [],
+      "top_score": 0.722058627034152,
+      "runs": [
+        {
+          "status": "escalated",
+          "escalation_reason": "insufficient_context",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        },
+        {
+          "status": "escalated",
+          "escalation_reason": "insufficient_context",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        },
+        {
+          "status": "escalated",
+          "escalation_reason": "insufficient_context",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        }
+      ],
+      "unstable": false,
+      "passed_all_runs": true
+    },
+    {
+      "ticket_id": "T-056",
+      "split": "holdout",
+      "expected": "escalate",
+      "category": "out_of_scope",
+      "expected_article_ids": [],
+      "top_score": 0.7011258452313482,
+      "runs": [
+        {
+          "status": "escalated",
+          "escalation_reason": "out_of_scope",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        },
+        {
+          "status": "escalated",
+          "escalation_reason": "out_of_scope",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        },
+        {
+          "status": "escalated",
+          "escalation_reason": "out_of_scope",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        }
+      ],
+      "unstable": false,
+      "passed_all_runs": true
+    },
+    {
+      "ticket_id": "T-057",
+      "split": "calibration",
+      "expected": "escalate",
+      "category": "out_of_scope",
+      "expected_article_ids": [],
+      "top_score": 0.6827881869979097,
+      "runs": [
+        {
+          "status": "escalated",
+          "escalation_reason": "out_of_scope",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        },
+        {
+          "status": "escalated",
+          "escalation_reason": "out_of_scope",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        },
+        {
+          "status": "escalated",
+          "escalation_reason": "out_of_scope",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        }
+      ],
+      "unstable": false,
+      "passed_all_runs": true
+    },
+    {
+      "ticket_id": "T-058",
+      "split": "holdout",
+      "expected": "escalate",
+      "category": "out_of_scope",
+      "expected_article_ids": [],
+      "top_score": 0.789290034085474,
+      "runs": [
+        {
+          "status": "escalated",
+          "escalation_reason": "out_of_scope",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        },
+        {
+          "status": "escalated",
+          "escalation_reason": "out_of_scope",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        },
+        {
+          "status": "escalated",
+          "escalation_reason": "out_of_scope",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        }
+      ],
+      "unstable": false,
+      "passed_all_runs": true
+    },
+    {
+      "ticket_id": "T-059",
+      "split": "calibration",
+      "expected": "escalate",
+      "category": "out_of_scope",
+      "expected_article_ids": [],
+      "top_score": 0.6343899321527906,
+      "runs": [
+        {
+          "status": "escalated",
+          "escalation_reason": "out_of_scope",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        },
+        {
+          "status": "escalated",
+          "escalation_reason": "out_of_scope",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        },
+        {
+          "status": "escalated",
+          "escalation_reason": "out_of_scope",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        }
+      ],
+      "unstable": false,
+      "passed_all_runs": true
+    },
+    {
+      "ticket_id": "T-060",
+      "split": "holdout",
+      "expected": "escalate",
+      "category": "out_of_scope",
+      "expected_article_ids": [],
+      "top_score": 0.6889905201370435,
+      "runs": [
+        {
+          "status": "escalated",
+          "escalation_reason": "out_of_scope",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        },
+        {
+          "status": "escalated",
+          "escalation_reason": "out_of_scope",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        },
+        {
+          "status": "escalated",
+          "escalation_reason": "out_of_scope",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        }
+      ],
+      "unstable": false,
+      "passed_all_runs": true
+    },
+    {
+      "ticket_id": "T-101",
+      "split": "calibration",
+      "expected": "answer",
+      "category": "installation",
+      "expected_article_ids": [
+        "KB-019",
+        "KB-022"
+      ],
+      "top_score": 0.69745631003881,
+      "runs": [
+        {
+          "status": "escalated",
+          "escalation_reason": "insufficient_context",
+          "failed_check": "",
+          "cited": [],
+          "pass": false
+        },
+        {
+          "status": "escalated",
+          "escalation_reason": "insufficient_context",
+          "failed_check": "",
+          "cited": [],
+          "pass": false
+        },
+        {
+          "status": "escalated",
+          "escalation_reason": "insufficient_context",
+          "failed_check": "",
+          "cited": [],
+          "pass": false
+        }
+      ],
+      "unstable": false,
+      "passed_all_runs": false
+    },
+    {
+      "ticket_id": "T-102",
+      "split": "holdout",
+      "expected": "answer",
+      "category": "fault",
+      "expected_article_ids": [
+        "KB-001"
+      ],
+      "top_score": 0.62460936793601,
+      "runs": [
+        {
+          "status": "escalated",
+          "escalation_reason": "insufficient_context",
+          "failed_check": "",
+          "cited": [],
+          "pass": false
+        },
+        {
+          "status": "escalated",
+          "escalation_reason": "insufficient_context",
+          "failed_check": "",
+          "cited": [],
+          "pass": false
+        },
+        {
+          "status": "escalated",
+          "escalation_reason": "insufficient_context",
+          "failed_check": "",
+          "cited": [],
+          "pass": false
+        }
+      ],
+      "unstable": false,
+      "passed_all_runs": false
+    },
+    {
+      "ticket_id": "T-103",
+      "split": "calibration",
+      "expected": "answer",
+      "category": "safety",
+      "expected_article_ids": [
+        "KB-034"
+      ],
+      "top_score": 0.7619235053354111,
+      "runs": [
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-034",
+            "KB-032"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-034",
+            "KB-032"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-034",
+            "KB-032"
+          ],
+          "pass": true
+        }
+      ],
+      "unstable": false,
+      "passed_all_runs": true
+    },
+    {
+      "ticket_id": "T-104",
+      "split": "holdout",
+      "expected": "answer",
+      "category": "parameters",
+      "expected_article_ids": [
+        "KB-028"
+      ],
+      "top_score": 0.7376192019346259,
+      "runs": [
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-028"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-028"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-028"
+          ],
+          "pass": true
+        }
+      ],
+      "unstable": false,
+      "passed_all_runs": true
+    },
+    {
+      "ticket_id": "T-105",
+      "split": "calibration",
+      "expected": "answer",
+      "category": "fault",
+      "expected_article_ids": [
+        "KB-006"
+      ],
+      "top_score": 0.728159326559928,
+      "runs": [
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-006"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-006"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-006"
+          ],
+          "pass": true
+        }
+      ],
+      "unstable": false,
+      "passed_all_runs": true
+    },
+    {
+      "ticket_id": "T-106",
+      "split": "holdout",
+      "expected": "answer",
+      "category": "fault",
+      "expected_article_ids": [
+        "KB-007",
+        "KB-030"
+      ],
+      "top_score": 0.7825252982079383,
+      "runs": [
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-030",
+            "KB-007"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-030",
+            "KB-007"
+          ],
+          "pass": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-030",
+            "KB-007"
+          ],
+          "pass": true
+        }
+      ],
+      "unstable": false,
+      "passed_all_runs": true
+    },
+    {
+      "ticket_id": "T-107",
+      "split": "calibration",
+      "expected": "escalate",
+      "category": "fault",
+      "expected_article_ids": [],
+      "top_score": 0.7313501373942126,
+      "runs": [
+        {
+          "status": "escalated",
+          "escalation_reason": "insufficient_context",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        },
+        {
+          "status": "escalated",
+          "escalation_reason": "insufficient_context",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        },
+        {
+          "status": "escalated",
+          "escalation_reason": "insufficient_context",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        }
+      ],
+      "unstable": false,
+      "passed_all_runs": true
+    },
+    {
+      "ticket_id": "T-108",
+      "split": "holdout",
+      "expected": "escalate",
+      "category": "out_of_scope",
+      "expected_article_ids": [],
+      "top_score": 0.6791666801875795,
+      "runs": [
+        {
+          "status": "escalated",
+          "escalation_reason": "out_of_scope",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        },
+        {
+          "status": "escalated",
+          "escalation_reason": "out_of_scope",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        },
+        {
+          "status": "escalated",
+          "escalation_reason": "out_of_scope",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        }
+      ],
+      "unstable": false,
+      "passed_all_runs": true
+    },
+    {
+      "ticket_id": "T-109",
+      "split": "calibration",
+      "expected": "escalate",
+      "category": "out_of_scope",
+      "expected_article_ids": [],
+      "top_score": 0.7741283794564947,
+      "runs": [
+        {
+          "status": "escalated",
+          "escalation_reason": "out_of_scope",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        },
+        {
+          "status": "escalated",
+          "escalation_reason": "out_of_scope",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        },
+        {
+          "status": "escalated",
+          "escalation_reason": "out_of_scope",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        }
+      ],
+      "unstable": false,
+      "passed_all_runs": true
+    },
+    {
+      "ticket_id": "T-110",
+      "split": "holdout",
+      "expected": "escalate",
+      "category": "out_of_scope",
+      "expected_article_ids": [],
+      "top_score": 0.7369231181000804,
+      "runs": [
+        {
+          "status": "escalated",
+          "escalation_reason": "out_of_scope",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        },
+        {
+          "status": "escalated",
+          "escalation_reason": "out_of_scope",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        },
+        {
+          "status": "escalated",
+          "escalation_reason": "out_of_scope",
+          "failed_check": "",
+          "cited": [],
+          "pass": true
+        }
+      ],
+      "unstable": false,
+      "passed_all_runs": true
+    }
+  ],
+  "run_files": [
+    {
+      "file": "evals/reports/2026-10-17-part-b-whole-articles-run1.json",
+      "sha256": "5110fdf73c42618f8eae18f538b79c860d8481637ac0b9880155bde23fff80b1"
+    },
+    {
+      "file": "evals/reports/2026-10-17-part-b-whole-articles-run2.json",
+      "sha256": "f86750d5ac9b66d66dc6b75710b9fad7c5514917e82081f00bc3dc8314f45745"
+    },
+    {
+      "file": "evals/reports/2026-10-17-part-b-whole-articles-run3.json",
+      "sha256": "e05759fa4fea73c428f83defeb96c6501912c4b193179884e7f11d51bc5f5d8e"
+    }
+  ]
+}
