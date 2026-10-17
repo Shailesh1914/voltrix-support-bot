@@ -70,11 +70,16 @@ def test_fixed_question_and_kb_version():
     assert smoke.SMOKE_KB_VERSION == "v1"
 
 
-def test_one_call_to_the_generator_with_real_shaped_chunks(run):
+def test_one_call_to_the_generator_with_real_shaped_chunks(run, spec_retrieval):
     code, text, requests, opened, queries = run()
     assert code == 0
     assert opened == ["v1"]
-    assert queries == [(smoke.SMOKE_QUESTION, 5)]
+    # Retrieved as the flow does (spec 02 step 3): main search, then the
+    # code boost for E-01 with the KB-001 title.
+    assert queries == [
+        (smoke.SMOKE_QUESTION, spec_retrieval.main_k),
+        ("E-01 Overcurrent during acceleration", spec_retrieval.boost_k),
+    ]
     assert len(requests) == 1
     body = json.loads(requests[0].content)
     assert body["model"] == MODEL_ID and body["temperature"] == 0

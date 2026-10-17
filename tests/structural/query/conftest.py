@@ -4,7 +4,9 @@ Helpers are fixtures, not importable names, so this conftest never
 clashes with the ingestion one when both suites run together.
 """
 
+import re
 import socket
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -63,6 +65,36 @@ def spec_02_text() -> str:
     return (REPO_ROOT / "specs" / "02-query-escalation-spec.md").read_text(encoding="utf-8")
 
 
+@dataclass(frozen=True)
+class SpecRetrieval:
+    main_k: int
+    boost_k: int
+    max_articles: int
+
+
+def parse_spec_retrieval(spec_text: str) -> SpecRetrieval:
+    """k of the main and code-boost searches and the number of articles,
+    read from spec 02 Processing step 3 (never from query/config.py)."""
+    start = spec_text.index("3. Retrieval")
+    step = " ".join(spec_text[start:spec_text.index("4. Unknown fault codes", start)].split())
+
+    def one(pattern: str) -> int:
+        found = re.findall(pattern, step)
+        assert len(found) == 1, f"spec 02 step 3: expected one match of {pattern!r}, found {found}"
+        return int(found[0])
+
+    return SpecRetrieval(
+        main_k=one(r"search\(query, k=([0-9]+)\)"),
+        boost_k=one(r"search\(<that article's title>, k=([0-9]+)\)"),
+        max_articles=one(r"up to ([0-9]+) different articles"),
+    )
+
+
+@pytest.fixture
+def spec_retrieval(spec_02_text) -> SpecRetrieval:
+    return parse_spec_retrieval(spec_02_text)
+
+
 @pytest.fixture
 def query_dir() -> Path:
     return REPO_ROOT / "query"
@@ -85,17 +117,25 @@ def make_chunk():
 
 
 class FakeRetriever:
-    """Contract-shaped retriever returning fixed chunks; records queries."""
+    """Contract-shaped retriever; records every (query, k) call.
 
-    def __init__(self, chunks, articles=FAKE_ARTICLES, kb_version="v1"):
+    Without results, every query returns the same fixed chunks. With
+    results ({query: chunks}), each query returns its own list (none if
+    not listed). Either way the list is cut to k and sorted as spec 03
+    says, like the real search().
+    """
+
+    def __init__(self, chunks=(), articles=FAKE_ARTICLES, kb_version="v1", results=None):
         self.chunks = list(chunks)
+        self.results = results
         self.articles = list(articles)
         self.kb_version = kb_version
         self.queries: list[tuple[str, int]] = []
 
     def search(self, query: str, k: int):
         self.queries.append((query, k))
-        return self.chunks[:k]
+        found = self.chunks if self.results is None else self.results.get(query, [])
+        return sorted(found, key=lambda c: (-c.similarity_score, c.chunk_id))[:k]
 
     def kb_info(self):
         return KBInfo(kb_version=self.kb_version, articles=sorted(self.articles))
@@ -126,6 +166,20 @@ def fake_retriever(make_chunk):
         if chunks is None:
             chunks = [make_chunk("KB-001", n=i + 1, score=s) for i, s in enumerate(scores)]
         return FakeRetriever(chunks, **kwargs)
+
+    return _make
+
+
+@pytest.fixture
+def scripted_retriever(make_chunk):
+    """A fake whose searches each return their own chunks:
+    {query: [(article_id, n, score), ...]}."""
+
+    def _make(results, **kwargs):
+        return FakeRetriever(
+            results={q: [make_chunk(a, n=n, score=s) for a, n, s in found] for q, found in results.items()},
+            **kwargs,
+        )
 
     return _make
 

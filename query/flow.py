@@ -3,7 +3,10 @@
 Order for one question:
 1. mask personal data (decision 3)
 2. normalise fault codes
-3. search(k=5) through the retrieval contract
+3. retrieval (query/retrieval.py): main search plus one code-boost search
+   per known E-xx code, merged, then the best chunk of each of up to 5
+   articles. These final chunks are used by every later step: the
+   retrieval check, the model, the checks on the answer and the handoff.
 4. unknown fault code -> escalate "insufficient_context", no model call
 5a. highest similarity_score below the threshold -> escalate
     "low_similarity", no model call
@@ -27,12 +30,13 @@ from typing import Protocol
 
 from ingestion import Chunk, KBInfo
 from query.checks import safety_warnings, uncited_retrieved, ungrounded, with_safety_warnings
-from query.config import SEARCH_K, ConfigError, require_threshold
-from query.fault_codes import known_fault_codes, unknown_fault_codes
+from query.config import ConfigError, require_threshold
+from query.fault_codes import code_titles, unknown_fault_codes
 from query.generator import Generator, GeneratorServiceError, MalformedOutput
 from query.handoff import HandoffStore, build_handoff, utc_now
 from query.masking import mask_personal_data
 from query.normalise import normalise_codes
+from query.retrieval import retrieve
 from query.response import QueryResponse, answered_response, citations_for, escalated_response
 
 
@@ -65,8 +69,10 @@ class QueryFlow:
         self._handoff_store = handoff_store
         self._kb_version = kb_version
         self._clock = clock
-        # Built once at startup (step 4).
-        self.known_fault_codes = known_fault_codes(info)
+        # Built once at startup: the code boost (step 3b) and the set of
+        # known codes (step 4) come from the same kb_info() titles.
+        self.code_titles = code_titles(info)
+        self.known_fault_codes = frozenset(self.code_titles)
 
     def ask(self, question: str) -> QueryResponse:
         if not isinstance(question, str) or not question.strip():
@@ -74,7 +80,7 @@ class QueryFlow:
 
         received = mask_personal_data(question)
         normalised = normalise_codes(received)
-        chunks = self._retriever.search(normalised, k=SEARCH_K)
+        chunks = retrieve(self._retriever, normalised, self.code_titles)
 
         def escalate(reason: str, rejected_answer: str = "", failed_check: str = "") -> QueryResponse:
             return self._escalate(received, normalised, chunks, reason, rejected_answer, failed_check)

@@ -65,6 +65,11 @@ Reasons:
 - Session E's E1 experiment adds the prefix itself; after search()
   adds it, Session E must stop doing so (handle at the Part A
   re-run). The original no-prefix baseline report stays committed.
+- Code questions: the title search mostly decides the final 5
+  (two different E-14 questions got identical chunks). May push out
+  wording-only articles on two-article tickets (e.g. T-005 KB-025).
+- Decision 5 limitation is now tested: a WARNING line only in a
+  dropped lower chunk of a cited article is not used.
 
 ## Still missed after E1+E2+E3
 - T-039 (safety: STOP is not isolation), T-101 (reverse rotation),

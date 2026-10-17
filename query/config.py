@@ -34,8 +34,11 @@ MODEL_ID = "claude-haiku-4-5-20251001"
 GENERATION_TEMPERATURE = 0
 MAX_OUTPUT_TOKENS = 2048
 
-# Chunks retrieved per question (spec 02, Processing step 3).
-SEARCH_K = 5
+# Retrieval (spec 02, Processing step 3, chosen at Step 9): k of the main
+# search and of each code-boost search, and the number of different
+# articles kept (one chunk each). Both are checked against spec 02.
+SEARCH_K = 20
+MAX_ARTICLES = 5
 
 # Units for the grounding check of criterion 7 (spec 02, decision 9).
 # Matching is tolerant of spacing and aliases; see the grounding check.

@@ -2,7 +2,8 @@
 
     python -m query.smoke
 
-Sends ONE fixed question, with real chunks from search(k=5) on KB version v1,
+Sends ONE fixed question, with real chunks retrieved as the flow does
+(spec 02, step 3: query/retrieval.py) on KB version v1,
 to the Anthropic generator ONLY: no flow, no threshold, no handoff.
 Prints the decision, used_article_ids, the start of the answer and the
 token usage. Never prints the API key.
@@ -18,10 +19,12 @@ from typing import TextIO
 
 from ingestion import RetrievalError, open_retrieval
 from query.anthropic_api import AnthropicGenerator
-from query.config import SEARCH_K, ConfigError
+from query.config import ConfigError
+from query.fault_codes import code_titles
 from query.generator import GeneratorServiceError, MalformedOutput
 from query.masking import mask_personal_data
 from query.normalise import normalise_codes
+from query.retrieval import retrieve
 
 SMOKE_QUESTION = "E-01 when the motor ramps up, what do I check?"
 SMOKE_KB_VERSION = "v1"
@@ -42,13 +45,15 @@ def main(
     try:
         generator = make_generator()
         retriever = open_index(SMOKE_KB_VERSION)
+        titles = code_titles(retriever.kb_info())
     except (ConfigError, RetrievalError) as e:
         say(f"error: {e}")
         return EXIT_STARTUP_FAILED
 
-    # The same question preparation as the flow (spec 02, steps 1-2).
+    # The same question preparation and retrieval as the flow (spec 02,
+    # steps 1-3).
     question = normalise_codes(mask_personal_data(SMOKE_QUESTION))
-    chunks = retriever.search(question, k=SEARCH_K)
+    chunks = retrieve(retriever, question, titles)
     say(f"question:   {question}")
     say(f"kb_version: {SMOKE_KB_VERSION}")
     say(f"model:      {generator.model_id}")

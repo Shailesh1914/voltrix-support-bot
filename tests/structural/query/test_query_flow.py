@@ -7,7 +7,7 @@ reaches the model call shows it by the stub's AssertionError.
 
 import pytest
 
-from query.config import SEARCH_K, ConfigError
+from query.config import ConfigError
 from query.handoff import missing_fields
 from query.response import ESCALATION_MESSAGE
 
@@ -50,15 +50,32 @@ def test_empty_question_is_rejected(make_flow, question):
         make_flow().ask(question)
 
 
-# --- Steps 1-3: masked, normalised query, k=5 ----------------------------------
+# Chunks of five different articles, one each, so the diversity step of
+# Processing step 3 keeps them all (one chunk per article).
+FIVE_ARTICLES = ("KB-001", "KB-002", "KB-003", "KB-020", "KB-034")
 
 
-def test_search_gets_masked_normalised_question_and_k_5(make_flow, fake_retriever, stub_generator):
+@pytest.fixture
+def spread_chunks(make_chunk):
+    def _make(scores):
+        return [make_chunk(a, n=1, score=s) for a, s in zip(FIVE_ARTICLES, scores, strict=True)]
+
+    return _make
+
+
+# --- Steps 1-3: masked, normalised query; spec 02 retrieval ---------------------
+
+
+def test_search_gets_masked_normalised_question(make_flow, fake_retriever, stub_generator, spec_retrieval):
     retriever = fake_retriever()
     with pytest.raises(AssertionError, match="generator called"):
         make_flow(retriever=retriever).ask("e1 when ramping, mail tech@example.com")
-    assert retriever.queries == [("E-01 when ramping, mail [EMAIL]", SEARCH_K)]
-    assert SEARCH_K == 5
+    # Main search with the masked, normalised question, then the code boost
+    # with the KB-001 title exactly as kb_info() gives it.
+    assert retriever.queries == [
+        ("E-01 when ramping, mail [EMAIL]", spec_retrieval.main_k),
+        ("E-01 Overcurrent during acceleration", spec_retrieval.boost_k),
+    ]
     # The model gets the same masked, normalised text (decision 3).
     assert stub_generator.calls[0][0] == "E-01 when ramping, mail [EMAIL]"
 
@@ -68,13 +85,13 @@ def test_search_gets_masked_normalised_question_and_k_5(make_flow, fake_retrieve
 
 @pytest.mark.parametrize("question", ["E33 on the display", "e-47 after power up", "E-01 and E 99 together"])
 def test_criterion_8_unknown_code_escalates_without_model_call(
-    make_flow, fake_retriever, stub_generator, memory_store, question
+    make_flow, fake_retriever, spread_chunks, stub_generator, memory_store, question
 ):
-    retriever = fake_retriever(scores=(0.9, 0.8, 0.7, 0.6, 0.5))  # high scores: still escalates
-    response = make_flow(retriever=retriever).ask(question)
+    chunks = spread_chunks((0.9, 0.8, 0.7, 0.6, 0.5))  # high scores: still escalates
+    response = make_flow(retriever=fake_retriever(chunks=chunks)).ask(question)
     record = assert_complete_escalation(response, memory_store, "insufficient_context")
     assert stub_generator.calls == []
-    assert [c.chunk_id for c in record.retrieved_chunks] == [c.chunk_id for c in retriever.chunks[:5]]
+    assert [c.chunk_id for c in record.retrieved_chunks] == [c.chunk_id for c in chunks]
     assert [c.similarity_score for c in record.retrieved_chunks] == [0.9, 0.8, 0.7, 0.6, 0.5]
 
 
@@ -92,12 +109,12 @@ def test_known_code_goes_on_to_the_model(make_flow, stub_generator):
 # --- Step 5a: low similarity -----------------------------------------------------
 
 
-def test_low_similarity_escalates_without_model_call(make_flow, fake_retriever, stub_generator, memory_store):
-    retriever = fake_retriever(scores=(0.49, 0.3))
-    response = make_flow(threshold=0.5, retriever=retriever).ask("how do I size a drive")
+def test_low_similarity_escalates_without_model_call(make_flow, fake_retriever, make_chunk, stub_generator, memory_store):
+    chunks = [make_chunk("KB-001", score=0.49), make_chunk("KB-020", score=0.3)]
+    response = make_flow(threshold=0.5, retriever=fake_retriever(chunks=chunks)).ask("how do I size a drive")
     record = assert_complete_escalation(response, memory_store, "low_similarity")
     assert stub_generator.calls == []
-    assert [c.chunk_id for c in record.retrieved_chunks] == ["KB-001#c1", "KB-001#c2"]
+    assert [c.chunk_id for c in record.retrieved_chunks] == ["KB-001#c1", "KB-020#c1"]
 
 
 def test_score_equal_to_threshold_is_not_low(make_flow, fake_retriever, stub_generator):
@@ -183,12 +200,12 @@ def test_jsonl_store_end_to_end(make_flow, tmp_path):
 
 
 @pytest.fixture
-def flow_with(make_flow, fake_retriever):
+def flow_with(make_flow, fake_retriever, make_chunk):
     def _make(response, store):
         from query.generator import FakeGenerator
 
         generator = FakeGenerator(response)
-        retriever = fake_retriever(scores=(0.8, 0.7))
+        retriever = fake_retriever(chunks=[make_chunk("KB-001", score=0.8), make_chunk("KB-020", score=0.7)])
         return make_flow(threshold=0.5, retriever=retriever, generator=generator, store=store), generator, retriever
 
     return _make
@@ -200,7 +217,7 @@ def test_model_escalation_decision(flow_with, memory_store, decision):
     response = flow.ask("e2 when stopping, call 020 7946 0958")
     record = assert_complete_escalation(response, memory_store, decision)
     assert generator.calls == [("E-02 when stopping, call [PHONE]", retriever.chunks)]
-    assert [c.chunk_id for c in record.retrieved_chunks] == ["KB-001#c1", "KB-001#c2"]
+    assert [c.chunk_id for c in record.retrieved_chunks] == ["KB-001#c1", "KB-020#c1"]
 
 
 def test_malformed_output_escalates_insufficient_context(flow_with, memory_store):
@@ -237,12 +254,21 @@ SAFE_TEXT = (
 )
 
 
+DROPPED_TEXT = "E-02 — Braking\n\nDANGER: Never bridge the brake resistor terminals. Fit 47 Ω."
+
+
 @pytest.fixture
 def answer_chunks(make_chunk):
     return [
-        make_chunk("KB-002", n=1, score=0.8, text="E-02 fixes — Lengthen P-06 (0.1–600.0 s) or set P-08 to coast."),
+        make_chunk(
+            "KB-002", n=1, score=0.8,
+            text="E-02 fixes — Lengthen P-06 (0.1–600.0 s) or set P-08 to coast.\n"
+            "CAUTION: The motor may coast for 30 s.",
+        ),
         make_chunk("KB-034", n=2, score=0.7, text=SAFE_TEXT),
-        make_chunk("KB-002", n=3, score=0.6, text="E-02 — Stopping\n\nCAUTION: The motor may coast for 30 s."),
+        # A second, lower KB-002 chunk: dropped by the diversity step (best
+        # chunk of each article only), so the flow never sees it.
+        make_chunk("KB-002", n=3, score=0.6, text=DROPPED_TEXT),
     ]
 
 
@@ -341,6 +367,19 @@ def test_decision_5_warning_already_given_is_not_repeated(answer_flow, memory_st
 def test_decision_5_unused_article_warnings_not_added(answer_flow, memory_store):
     flow, _ = answer_flow("Lengthen P-06.", ["KB-002"])
     assert "DC bus stays charged" not in flow.ask("q").answer
+
+
+def test_decision_5_and_grounding_see_only_the_kept_chunk_of_each_article(answer_flow, memory_store):
+    # Spec 02 step 3d keeps the best chunk of each article. A warning line or
+    # a value that is only in a lower chunk of a cited article is therefore
+    # not retrieved: no warning is added from it, and the value is ungrounded.
+    flow, generator = answer_flow("Lengthen P-06.", ["KB-002"])
+    response = flow.ask("q")
+    assert [c.chunk_id for c in generator.calls[0][1]] == ["KB-002#c1", "KB-034#c2"]
+    assert "DANGER" not in response.answer
+    flow, _ = answer_flow("Fit 47 Ω.", ["KB-002"])
+    record = assert_complete_escalation(flow.ask("q"), memory_store, "insufficient_context")
+    assert record.failed_check == "grounding"
 
 
 # --- Answer-path order (spec 02 v1.7, step 5: "The first check that fails decides
