@@ -1,5 +1,14 @@
 """Part A2: retrieval experiments (spec 05). No model calls.
 
+History: Part A2 was completed on 2026-10-17 and E1+E2+E3 was adopted
+(spec 02 v1.12-v1.13, spec 03 v1.3-v1.4). This module is kept only to
+document how the committed report
+evals/reports/2026-10-17-part-a2-retrieval-experiments.* was computed.
+Nothing runnable calls it any more: E1 adds BGE_QUERY_PREFIX itself, and
+search() now adds it too, so re-running it would embed a double prefix.
+`python -m evals.run_eval part-a2` refuses. Only BGE_QUERY_PREFIX is
+still used, by Part A's double-prefix guard.
+
 Each experiment is simulated through the public retrieval contract only
 (search and kb_info); query/ is not changed. Every experiment starts
 from the flow's own masked and normalised query (recorded by Part A).

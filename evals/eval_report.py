@@ -83,6 +83,53 @@ def histogram(scores: list[float], low: float = 0.50, high: float = 1.00, step: 
     return lines
 
 
+def part_a2_comparison_lines(c: dict) -> list[str]:
+    """Part A (real flow) against the committed Part A2 simulation."""
+    commit = c.get("part_a2_git_commit") or "unknown"
+    if c.get("part_a2_git_dirty"):
+        commit += " (with uncommitted changes)"
+    verdict = "**MATCH**" if c["match"] else "**MISMATCH**"
+    out = [
+        "",
+        f"## Against the Part A2 simulation ({c['experiment']})",
+        "",
+        "For every ticket: the query, the texts searched, the final chunk ids (in",
+        "order), the article ids, recall and the top score (tolerance",
+        f"{c['score_tolerance']:g}) must equal the committed simulation.",
+        "",
+        f"- Part A2 report: `{c['part_a2_report']}`",
+        f"- Part A2 report SHA-256: `{c['part_a2_report_sha256']}`",
+        f"- Part A2 git commit: {commit}",
+        f"- Result: {verdict}: {c['tickets_matching']}/{c['tickets_compared']} tickets match; "
+        f"largest top-score difference {c['max_score_difference']:.2e}",
+        "",
+        "| Set | Recall: real flow | Recall: Part A2 | Both articles: real flow | Both articles: Part A2 |",
+        "|---|---|---|---|---|",
+    ]
+    for name in SETS:
+        s = c["summary"][name]
+        out.append(
+            f"| {name} | {fmt_rate(s['part_a']['recall'])} | {fmt_rate(s['part_a2']['recall'])} | "
+            f"{fmt_rate(s['part_a']['both_recall'])} | {fmt_rate(s['part_a2']['both_recall'])} |"
+        )
+    out += ["", "### Differences", ""]
+    if c["differences"]:
+        out += ["| Ticket | Field | Real flow | Part A2 |", "|---|---|---|---|"]
+        for d in c["differences"]:
+            out.append(f"| {d['ticket_id']} | {d['field']} | {fmt_value(d['part_a'])} | {fmt_value(d['part_a2'])} |")
+    else:
+        out.append("None.")
+    return out
+
+
+def fmt_value(value) -> str:
+    if isinstance(value, float):
+        return f"{value:.6f}"
+    if isinstance(value, list):
+        value = ", ".join(map(str, value))
+    return str(value).replace("|", "\\|")
+
+
 # --- Part A --------------------------------------------------------------------------
 
 
@@ -94,14 +141,18 @@ def part_a_markdown(data: dict) -> str:
         "threshold -1.0 and a stand-in generator that never calls the model, so the",
         "query searched is the flow's own masked and normalised query",
         "(clarification 3) and the scores equal those the sweep uses.",
+        "The final retrieved chunks (up to 5 articles, one chunk each) are read",
+        "from each ticket's handoff record; the top score is the highest score",
+        "among them.",
         "",
-        f"- KB version: {data['kb_version']}, search k = {data['k']}",
+        f"- KB version: {data['kb_version']}",
+        f"- Retrieval: {data['retrieval']}",
         *provenance_lines(data),
         f"- Model calls a full-flow run would make: {data['planned_model_calls']} of {len(data['tickets'])} tickets",
         "",
         "## Retrieval recall",
         "",
-        "| Set | Recall (≥1 expected article in top 5) | Both articles in top 5 (two-article tickets) |",
+        "| Set | Recall (≥1 expected article retrieved) | Both articles retrieved (two-article tickets) |",
         "|---|---|---|",
     ]
     for name in SETS:
@@ -114,12 +165,12 @@ def part_a_markdown(data: dict) -> str:
             'Tickets with `article_match: "any"` (excluded from the both-articles column, clarification 2):',
             "",
         ]
-        out += [f"- {t['ticket_id']}: expected article in top 5: {fmt_flag(t['recall_hit'])}" for t in any_match]
+        out += [f"- {t['ticket_id']}: expected article retrieved: {fmt_flag(t['recall_hit'])}" for t in any_match]
 
     misses = [t for t in data["tickets"] if t["recall_hit"] is False or t["both_hit"] is False]
     out += ["", "### Recall misses", ""]
     if misses:
-        out += ["| Ticket | Set | Expected | Top 5 article_ids | Top score |", "|---|---|---|---|---|"]
+        out += ["| Ticket | Set | Expected | Retrieved article_ids | Top score |", "|---|---|---|---|---|"]
         for t in misses:
             out.append(
                 f"| {t['ticket_id']} | {t['split']} | {', '.join(t['expected_article_ids'])} | "
@@ -127,6 +178,9 @@ def part_a_markdown(data: dict) -> str:
             )
     else:
         out.append("None.")
+
+    if "against_part_a2" in data:
+        out += part_a2_comparison_lines(data["against_part_a2"])
 
     out += [
         "",
@@ -180,7 +234,7 @@ def part_a_markdown(data: dict) -> str:
         "",
         "## All tickets, by top score",
         "",
-        "| Ticket | Set | Expected | Category | Top score | Top 5 article_ids | Recall | Model call |",
+        "| Ticket | Set | Expected | Category | Top score | Retrieved article_ids | Recall | Model call |",
         "|---|---|---|---|---|---|---|---|",
     ]
     for t in sorted(data["tickets"], key=lambda t: (t["top_score"], t["ticket_id"])):

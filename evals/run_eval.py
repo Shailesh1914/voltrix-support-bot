@@ -1,11 +1,13 @@
 """Evaluation runner (spec 05). Run from the repository root:
 
     python -m evals.run_eval part-a
-    python -m evals.run_eval part-a2
     python -m evals.run_eval sweep --runs RUN1.json RUN2.json RUN3.json
 
-All three commands are free: they never call the model. The paid parts
+Both commands are free: they never call the model. The paid parts
 (Part B and the confirmation run) are not implemented yet.
+
+Part A2 is completed (spec 05 v1.5): `part-a2` only refuses and points to
+its committed report.
 """
 
 import argparse
@@ -14,20 +16,12 @@ import sys
 from datetime import date
 from pathlib import Path
 
-from evals.eval_experiments import (
-    BGE_QUERY_PREFIX,
-    DESCRIPTIONS,
-    EXPERIMENTS,
-    boost_queries,
-    code_titles,
-    experiment_summary,
-    run_experiment,
-)
+from evals.eval_compare import PART_A2_REPORT, compare_with_part_a2
+from evals.eval_experiments import BGE_QUERY_PREFIX
 from evals.eval_recorders import EvalError, MemoryHandoffStore, NoCallGenerator, RecordingRetriever
 from evals.eval_report import (
     REPORTS_DIR,
     ReportExists,
-    part_a2_markdown,
     part_a_markdown,
     sweep_markdown,
     write_report,
@@ -46,19 +40,23 @@ from evals.eval_tickets import (
     select,
 )
 
-# Spec 05: kb_v1, search(k=5), threshold -1.0 so the retrieval check never
-# escalates.
+# Spec 05: kb_v1 and the flow's own retrieval (spec 02 step 3), threshold
+# -1.0 so the retrieval check never escalates.
 KB_VERSION = "v1"
-SEARCH_K = 5
 NO_ESCALATION_THRESHOLD = -1.0
 RUNS_REQUIRED = 3
 
 PART_A_NAME = "part-a-retrieval"
-PART_A2_NAME = "part-a2-retrieval-experiments"
 SWEEP_NAME = "part-c-sweep"
 
 EXIT_FAILED = 1
+EXIT_MISMATCH = 3  # Part A differs from the Part A2 simulation (report still written)
 
+PART_A2_COMPLETED = (
+    "Part A2 was completed on 2026-10-17 (spec 05 v1.5). Its simulation assumed "
+    "search() without the prefix, so it cannot be re-run. Evidence: "
+    "evals/reports/2026-10-17-part-a2-retrieval-experiments.md"
+)
 
 def git_state(repo_root: Path = REPO_ROOT) -> tuple[str | None, bool | None]:
     """(commit, has uncommitted changes); (None, None) if git is unavailable."""
@@ -87,23 +85,36 @@ def build_flow(retriever, generator, handoff_store, threshold: float = NO_ESCALA
 
 def part_a(tickets: list[Ticket], retriever) -> dict:
     """Run every ticket through the flow without the model and record its
-    retrieval. retriever is open_retrieval(KB_VERSION) (or a test fake)."""
+    retrieval. retriever is open_retrieval(KB_VERSION) (or a test fake).
+
+    The final retrieved chunks are read from each ticket's handoff record
+    (spec 02: it holds all retrieved chunks), so Part A follows whatever
+    the flow's retrieval does and never re-implements it. The raw search()
+    calls are recorded as information only.
+    """
     recorder = RecordingRetriever(retriever)
     generator = NoCallGenerator()
-    flow = build_flow(recorder, generator, MemoryHandoffStore())
+    store = MemoryHandoffStore()
+    flow = build_flow(recorder, generator, store)
     rows = []
     for ticket in tickets:
         calls_before = generator.calls
-        flow.ask(ticket.question)
+        response = flow.ask(ticket.question)
         searches = recorder.take()
-        if len(searches) != 1:
-            raise EvalError(f"{ticket.ticket_id}: the flow made {len(searches)} search() calls, expected 1")
-        call = searches[0]
-        if call.k != SEARCH_K:
-            raise EvalError(f"{ticket.ticket_id}: the flow searched with k={call.k}, spec 05 needs k={SEARCH_K}")
-        if not call.chunks:
-            raise EvalError(f"{ticket.ticket_id}: search() returned no chunks")
-        top_ids = [c.article_id for c in call.chunks]
+        # search() adds the prefix itself (spec 03 v1.4); a query that
+        # already has it would be embedded with a double prefix.
+        if any(BGE_QUERY_PREFIX in call.query for call in searches):
+            raise EvalError(
+                f"{ticket.ticket_id}: a query reached search() with the BGE prefix already in it; "
+                "search() adds it itself (spec 03 v1.4)"
+            )
+        record = store.by_id(response.handoff_id)
+        if record is None:
+            raise EvalError(f"{ticket.ticket_id}: the flow left no handoff record (status {response.status!r})")
+        chunks = record.retrieved_chunks
+        if not chunks:
+            raise EvalError(f"{ticket.ticket_id}: the flow retrieved no chunks")
+        top_ids = [c.article_id for c in chunks]
         rows.append(
             {
                 "ticket_id": ticket.ticket_id,
@@ -112,13 +123,15 @@ def part_a(tickets: list[Ticket], retriever) -> dict:
                 "category": ticket.category,
                 "expected_article_ids": list(ticket.expected_article_ids),
                 "article_match": ticket.article_match,
-                "query_sent": call.query,
-                "top_score": call.top_score,
+                "query_sent": record.question_normalised,
+                # Spec 05: the highest score among the final retrieved chunks.
+                "top_score": max(c.similarity_score for c in chunks),
                 "top_article_ids": top_ids,
                 "top_chunks": [
                     {"chunk_id": c.chunk_id, "article_id": c.article_id, "similarity_score": c.similarity_score}
-                    for c in call.chunks
+                    for c in chunks
                 ],
+                "searches": [{"query": call.query, "k": call.k, "n_chunks": len(call.chunks)} for call in searches],
                 "model_called": generator.calls > calls_before,
                 **retrieval_row(ticket, top_ids),
             }
@@ -127,7 +140,7 @@ def part_a(tickets: list[Ticket], retriever) -> dict:
     return {
         "kind": "part-a",
         "kb_version": KB_VERSION,
-        "k": SEARCH_K,
+        "retrieval": "the flow's own: spec 02 step 3 (main search, code boost, merge, diversity)",
         "threshold": NO_ESCALATION_THRESHOLD,
         "planned_model_calls": generator.calls,
         "summary": {name: retrieval_summary(select(tickets, name), by_id) for name in SETS},
@@ -145,75 +158,30 @@ def run_part_a(args) -> int:
         raise EvalError("the ticket file changed during the run")
     commit, dirty = git_state()
     data = {"date": args.date, "git_commit": commit, "git_dirty": dirty, "ticket_file_sha256": sha_before, **data}
+    comparison = compare_with_part_a2(data, args.part_a2_report)
+    data["against_part_a2"] = comparison
     paths = write_report(args.reports_dir, args.date, PART_A_NAME, data, part_a_markdown(data), args.overwrite)
     print("Part A written (no model calls):")
     for p in paths:
         print(f"  {p}")
+    matched = f"{comparison['tickets_matching']}/{comparison['tickets_compared']} tickets"
+    if not comparison["match"]:
+        print(
+            f"MISMATCH with the Part A2 {comparison['experiment']} simulation: {matched} match, "
+            f"{len(comparison['differences'])} differences (see the report)",
+            file=sys.stderr,
+        )
+        return EXIT_MISMATCH
+    print(f"MATCH with the Part A2 {comparison['experiment']} simulation: {matched}")
     return 0
 
 
-# --- Part A2 ---------------------------------------------------------------------------
-
-
-def part_a2(tickets: list[Ticket], retriever) -> dict:
-    """Retrieval experiments E1, E2, E3 and E2+E3 against the baseline.
-    Each starts from the flow's own query (recorded by Part A); after that
-    only search() and kb_info() are used."""
-    queries = {r["ticket_id"]: r["query_sent"] for r in part_a(tickets, retriever)["tickets"]}
-    titles_by_code = code_titles(retriever.kb_info())
-    rows = []
-    for ticket in tickets:
-        query = queries[ticket.ticket_id]
-        results = {}
-        for name in EXPERIMENTS:
-            chunks = run_experiment(name, retriever, query, titles_by_code)
-            if not chunks:
-                raise EvalError(f"{ticket.ticket_id}: experiment {name} returned no chunks")
-            top_ids = [c.article_id for c in chunks]
-            results[name] = {
-                "top_score": chunks[0].similarity_score,
-                "top_article_ids": top_ids,
-                "top_chunk_ids": [c.chunk_id for c in chunks],
-                **retrieval_row(ticket, top_ids),
-            }
-        rows.append(
-            {
-                "ticket_id": ticket.ticket_id,
-                "split": ticket.split,
-                "expected": ticket.expected,
-                "category": ticket.category,
-                "expected_article_ids": list(ticket.expected_article_ids),
-                "article_match": ticket.article_match,
-                "query_sent": query,
-                "boost_titles": boost_queries(query, titles_by_code),
-                "results": results,
-            }
-        )
-    return {
-        "kind": "part-a2",
-        "kb_version": KB_VERSION,
-        "experiments": {name: DESCRIPTIONS[name] for name in EXPERIMENTS},
-        "bge_query_prefix": BGE_QUERY_PREFIX,
-        "summary": experiment_summary(tickets, {r["ticket_id"]: r for r in rows}),
-        "tickets": rows,
-    }
+# --- Part A2 (completed) ---------------------------------------------------------------
 
 
 def run_part_a2(args) -> int:
-    from ingestion import open_retrieval
-
-    sha_before = file_sha256(args.tickets)
-    tickets = load_tickets(args.tickets)
-    data = part_a2(tickets, open_retrieval(KB_VERSION))
-    if file_sha256(args.tickets) != sha_before:
-        raise EvalError("the ticket file changed during the run")
-    commit, dirty = git_state()
-    data = {"date": args.date, "git_commit": commit, "git_dirty": dirty, "ticket_file_sha256": sha_before, **data}
-    paths = write_report(args.reports_dir, args.date, PART_A2_NAME, data, part_a2_markdown(data), args.overwrite)
-    print("Part A2 written (no model calls):")
-    for p in paths:
-        print(f"  {p}")
-    return 0
+    """Part A2 is history: refuse, without searching or writing anything."""
+    raise EvalError(PART_A2_COMPLETED)
 
 
 # --- Part C ----------------------------------------------------------------------------
@@ -260,8 +228,10 @@ def parser() -> argparse.ArgumentParser:
         sp.add_argument("--tickets", type=Path, default=TICKETS_PATH, help=argparse.SUPPRESS)
         sp.add_argument("--overwrite", action="store_true", help="replace existing report files")
 
-    common(sub.add_parser("part-a", help="retrieval report (free, no model calls)"))
-    common(sub.add_parser("part-a2", help="retrieval experiments E1, E2, E3, E2+E3 (free, no model calls)"))
+    part_a_parser = sub.add_parser("part-a", help="retrieval report (free, no model calls)")
+    part_a_parser.add_argument("--part-a2-report", type=Path, default=PART_A2_REPORT, help=argparse.SUPPRESS)
+    common(part_a_parser)
+    sub.add_parser("part-a2", help="completed 2026-10-17; refuses to run (spec 05 v1.5)")
     sweep_parser = sub.add_parser("sweep", help="threshold sweep from 3 Part B runs (free)")
     sweep_parser.add_argument("--runs", nargs="+", type=Path, required=True, help="the 3 Part B run .json files")
     common(sweep_parser)

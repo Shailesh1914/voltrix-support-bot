@@ -1,22 +1,20 @@
-"""Part A2: retrieval experiments, simulated with a fake retriever."""
-
-import json
+"""Part A2 (completed, kept as history): the experiment logic, simulated
+with fake retrievers. The runner refuses `part-a2`; see test_eval_runner."""
 
 import pytest
 
-import ingestion
-from evals import run_eval
 from evals.eval_experiments import (
     BGE_QUERY_PREFIX,
     EXPERIMENTS,
     boost_queries,
     code_titles,
     diversify,
+    experiment_summary,
     fault_codes_in,
     merge,
     run_experiment,
 )
-from evals.eval_tickets import TICKETS_PATH, file_sha256
+from evals.eval_scoring import retrieval_row
 from ingestion import KBInfo
 
 E01_TITLE = "E-01 Overcurrent during acceleration"
@@ -178,43 +176,36 @@ def boosted_fake(fake_retriever):
     return fake_retriever(scores)
 
 
-def test_part_a2_compares_with_baseline(make_ticket, fake_retriever):
+def test_experiment_summary_compares_with_baseline(make_ticket, fake_retriever, fake_articles):
+    """The summary logic behind the committed Part A2 report (history).
+    The runner no longer runs Part A2, so rows are built directly."""
     tickets = [
-        make_ticket("T-001", ids=("KB-002",), question="E2 when stopping the mixer"),
+        make_ticket("T-001", ids=("KB-002",), question="E-02 when stopping the mixer"),
         make_ticket("T-002", ids=("KB-020",), category="parameters", question="how do i set the ramp"),
         make_ticket("T-003", expected="escalate", question="display shows E-21"),
     ]
-    data = run_eval.part_a2(tickets, boosted_fake(fake_retriever))
-    rows = {r["ticket_id"]: r for r in data["tickets"]}
+    retriever = boosted_fake(fake_retriever)
+    titles = code_titles(KBInfo("v1", fake_articles))
+    rows = {}
+    for t in tickets:
+        results = {}
+        for name in EXPERIMENTS:
+            ids = [c.article_id for c in run_experiment(name, retriever, t.question, titles)]
+            results[name] = retrieval_row(t, ids)
+        rows[t.ticket_id] = {"results": results}
 
-    # Starts from the flow's own normalised query (E2 -> E-02).
-    assert "E-02" in rows["T-001"]["query_sent"]
-    assert rows["T-001"]["boost_titles"] == [E02_TITLE]
-    assert rows["T-003"]["boost_titles"] == []
-    assert set(rows["T-001"]["results"]) == set(EXPERIMENTS)
+    assert boost_queries(tickets[0].question, titles) == [E02_TITLE]
     assert rows["T-001"]["results"]["baseline"]["recall_hit"] is False
     assert rows["T-001"]["results"]["E3"]["recall_hit"] is True
 
-    full = data["summary"]["full"]
+    summary = experiment_summary(tickets, rows)
+    full = summary["full"]
     assert full["baseline"]["recall"] == {"passed": 1, "total": 2, "rate": 0.5}
     assert full["E3"]["recall"]["passed"] == 2
     assert full["E3"]["gained"] == ["T-001"] and full["E3"]["lost"] == []
     assert full["E3"]["recall_change"] == 1
     # E1 finds only KB-019 here: it loses T-002 and gains nothing.
     assert full["E1"]["lost"] == ["T-002"] and full["E1"]["recall_change"] == -1
-    assert data["summary"]["calibration"]["E3"]["improves_on_baseline"] is True
-    assert data["summary"]["holdout"]["E3"]["improves_on_baseline"] is False
+    assert summary["calibration"]["E3"]["improves_on_baseline"] is True
+    assert summary["holdout"]["E3"]["improves_on_baseline"] is False
     assert full["baseline"]["improves_on_baseline"] is False
-
-
-def test_part_a2_command_writes_reports_only(tmp_path, monkeypatch, fake_retriever):
-    monkeypatch.setattr(ingestion, "open_retrieval", lambda kb_version: boosted_fake(fake_retriever))
-    before = file_sha256(TICKETS_PATH)
-    assert run_eval.main(["part-a2", "--date", "2026-10-17", "--reports-dir", str(tmp_path)]) == 0
-    data = json.loads((tmp_path / "2026-10-17-part-a2-retrieval-experiments.json").read_text(encoding="utf-8"))
-    md = (tmp_path / "2026-10-17-part-a2-retrieval-experiments.md").read_text(encoding="utf-8")
-    assert data["kind"] == "part-a2" and len(data["tickets"]) == 70
-    assert data["bge_query_prefix"] == BGE_QUERY_PREFIX
-    assert "This report does not choose" in md and "## Against the baseline" in md
-    assert file_sha256(TICKETS_PATH) == before
-    assert len(list(tmp_path.iterdir())) == 2

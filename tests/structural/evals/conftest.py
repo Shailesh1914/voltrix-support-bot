@@ -132,3 +132,45 @@ def run_result():
 @pytest.fixture
 def repo_root() -> Path:
     return REPO_ROOT
+
+
+@pytest.fixture
+def make_part_a2():
+    """A Part A2 report whose E1+E2+E3 results equal the given Part A data,
+    so a comparison matches until a test changes something."""
+
+    def _make(part_a: dict, ticket_file_sha256: str) -> dict:
+        tickets = []
+        for r in part_a["tickets"]:
+            tickets.append(
+                {
+                    "ticket_id": r["ticket_id"],
+                    "query_sent": r["query_sent"],
+                    "boost_titles": [s["query"] for s in r["searches"][1:]],
+                    "results": {
+                        "E1+E2+E3": {
+                            "top_score": r["top_score"],
+                            "top_article_ids": list(r["top_article_ids"]),
+                            "top_chunk_ids": [c["chunk_id"] for c in r["top_chunks"]],
+                            "recall_hit": r["recall_hit"],
+                            "both_hit": r["both_hit"],
+                        }
+                    },
+                }
+            )
+        return {
+            "kind": "part-a2",
+            "date": "2026-10-17",
+            "git_commit": "a2commit",
+            "git_dirty": True,
+            "ticket_file_sha256": ticket_file_sha256,
+            "kb_version": part_a["kb_version"],
+            "experiments": {"E1+E2+E3": "simulated"},
+            "summary": {
+                name: {"E1+E2+E3": {k: s[k] for k in ("recall", "both_recall")}}
+                for name, s in part_a["summary"].items()
+            },
+            "tickets": tickets,
+        }
+
+    return _make
