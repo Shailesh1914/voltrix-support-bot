@@ -420,3 +420,218 @@ def part_a2_markdown(data: dict) -> str:
         "searches), so the sweep must be redone on any adopted experiment.",
     ]
     return "\n".join(out) + "\n"
+
+
+# --- Part B ----------------------------------------------------------------------------
+
+
+def fmt_usd(value: float) -> str:
+    return f"${value:.4f}"
+
+
+def quote(text: str) -> list[str]:
+    return [f"> {line}" if line else ">" for line in (text or "(empty)").splitlines()] or ["> (empty)"]
+
+
+def part_b_provenance_lines(data: dict) -> list[str]:
+    trees = ", ".join(f"{k} `{(v or 'unknown')[:12]}`" for k, v in data["code_trees"].items())
+    return [
+        *provenance_lines(data),
+        f"- Code trees at HEAD: {trees}",
+        f"- Model: {data['model_id']}, temperature {data['temperature']}, max output tokens {data['max_output_tokens']}",
+        f"- System prompt SHA-256: `{data['system_prompt_sha256']}`",
+        f"- KB version: {data['kb_version']}; threshold {data['threshold']} (evaluation only, passed to the flow)",
+    ]
+
+
+def summary_table(summaries: dict, label: str = "") -> list[str]:
+    out = [
+        f"| Set{label} | AC1 (target {AC1_TARGET_PCT}%) | AC2 (target {AC2_TARGET_PCT}%) | Wrong escalation | "
+        "Both articles cited |",
+        "|---|---|---|---|---|",
+    ]
+    for name in SETS:
+        s = summaries[name]
+        out.append(
+            f"| {name} | {fmt_rate(s['ac1'])} | {fmt_rate(s['ac2'])} | {fmt_rate(s['wrong_escalation'])} | "
+            f"{fmt_rate(s['both_cited'])} |"
+        )
+    return out
+
+
+def usage_lines(data: dict) -> list[str]:
+    tokens = data["tokens"]
+    return [
+        f"- Model calls: {data['model_calls']}",
+        f"- Tokens: {tokens['input']:,} input, {tokens['output']:,} output",
+        f"- Cost: {fmt_usd(data['cost_usd'])} (${data['prices_usd_per_mtok']['input']:.2f} / "
+        f"${data['prices_usd_per_mtok']['output']:.2f} per million input / output tokens)",
+        f"- Malformed model outputs: {data['malformed_outputs']}. {data['cost_note']}",
+    ]
+
+
+def part_b_markdown(data: dict) -> str:
+    verdict = "**VALID**" if data["valid"] else "**INVALID: re-run it (spec 05)**"
+    out = [
+        f"# Part B: full-flow run {data['run']}",
+        "",
+        "Spec 05, Part B. Every ticket through QueryFlow with the real model at",
+        "threshold -1.0, so the retrieval check never escalates; the",
+        "unknown-fault-code check stays active. Handoffs went to the",
+        "evaluation-only file below, never to handoffs/.",
+        "",
+        f"- Run: {verdict}",
+        f"- Tickets run: {data['tickets_run']}/{data['tickets_total']}",
+    ]
+    if data["stopped"]:
+        out.append(f"- Stopped at {data['stopped']['ticket_id']}: {data['stopped']['reason']}")
+    if data["incomplete_handoff_records"]:
+        out.append(f"- **Incomplete handoff records (criterion 3):** {', '.join(data['incomplete_handoff_records'])}")
+    out += [
+        *part_b_provenance_lines(data),
+        f"- Handoffs: `{data['handoffs_file']}` ({data['handoff_records']} records)",
+        *usage_lines(data),
+    ]
+    if data["summary"]:
+        full = data["summary"][FULL]
+        out += [
+            "",
+            "## Results at threshold -1.0 (this run only)",
+            "",
+            "The threshold itself is simulated by the sweep (Part C).",
+            "",
+            *summary_table(data["summary"]),
+            "",
+            "- failed_check counts (full set): "
+            + (", ".join(f"{k} {v}" for k, v in full["failed_check_counts"].items()) or "none"),
+            "- Escalation reasons (full set): "
+            + (", ".join(f"{k} {v}" for k, v in full["escalation_reason_counts"].items()) or "none"),
+        ]
+        for t in full["any_match_tickets"]:
+            out.append(f'- {t["ticket_id"]} (article_match "any"): AC1 {fmt_flag(t["ac1_pass"])}')
+    out += [
+        "",
+        "## All tickets",
+        "",
+        "| Ticket | Set | Expected | Top score | Status | Reason | failed_check | Cited | Pass | Tokens in/out |",
+        "|---|---|---|---|---|---|---|---|---|---|",
+    ]
+    for t in data["tickets"]:
+        tokens = "–" if t["input_tokens"] is None else f"{t['input_tokens']}/{t['output_tokens']}"
+        if t["malformed_output"]:
+            tokens = "malformed (unknown)"
+        out.append(
+            f"| {t['ticket_id']} | {t['split']} | {t['expected']} | {fmt_score(t['top_score'])} | {t['status']} | "
+            f"{t['escalation_reason'] or '–'} | {t['failed_check'] or '–'} | "
+            f"{', '.join(c['article_id'] for c in t['citations']) or '–'} | {fmt_flag(t['ac_pass'])} | {tokens} |"
+        )
+    out += [
+        "",
+        "## Answers (for the Step 10 review)",
+        "",
+        "Not scored automatically beyond criterion 7 (spec 05, Scoring).",
+    ]
+    for t in data["tickets"]:
+        if not t["model_called"]:
+            continue
+        m = t["model_output"]
+        out += ["", f"### {t['ticket_id']} ({t['expected']}; {t['status']}"
+                + (f", {t['escalation_reason']}" if t["escalation_reason"] else "") + ")", ""]
+        out += [f"Question: {t['question_sent']}", ""]
+        if m is None:
+            out.append("Model output: malformed or service error (no structured output).")
+            continue
+        out.append(f"Model decision: {m['decision']}; used_article_ids: {', '.join(m['used_article_ids']) or '–'}")
+        if t["status"] == "answered":
+            out += ["", "Answer shown to the user:", "", *quote(t["answer"])]
+        elif t["rejected_answer"]:
+            out += ["", f"Rejected draft (failed_check {t['failed_check']}, never shown):", "", *quote(t["rejected_answer"])]
+    return "\n".join(out) + "\n"
+
+
+def aggregate_markdown(data: dict) -> str:
+    out = [
+        "# Part B: aggregate of 3 runs",
+        "",
+        "Spec 05, Part B and clarification 1. Results at threshold -1.0. For each",
+        "metric the WORST value across the 3 runs: the lowest for success rates,",
+        "the highest for the wrong-escalation rate; each metric's worst value may",
+        "come from a different run. The threshold itself is simulated by the",
+        "sweep (Part C).",
+        "",
+        f"- Model: {data['model_id']}, temperature {data['temperature']}",
+        f"- System prompt SHA-256: `{data['system_prompt_sha256']}`",
+        f"- Ticket file SHA-256: `{data['ticket_file_sha256']}`",
+        "- Code trees: " + ", ".join(f"{k} `{(v or 'unknown')[:12]}`" for k, v in data["code_trees"].items()),
+        "- Runs: " + "; ".join(f"run {r['run']} ({r['date']}, {(r['git_commit'] or 'unknown')[:12]})" for r in data["runs"]),
+        "",
+        "## Worst of 3",
+        "",
+        *summary_table({n: s["worst"] for n, s in data["sets"].items()}, " (worst)"),
+        "",
+        "| Set | AC1 meets target | AC2 meets target | Passed in all 3 runs (not a gate) |",
+        "|---|---|---|---|",
+    ]
+    for name in SETS:
+        s = data["sets"][name]
+        out.append(
+            f"| {name} | {fmt_flag(s['worst']['ac1_meets_target'])} | {fmt_flag(s['worst']['ac2_meets_target'])} | "
+            f"{s['tickets_passed_in_all_runs']}/{s['n_tickets']} |"
+        )
+    for name in SETS:
+        s = data["sets"][name]
+        out += ["", f"### Per run: {name} set", ""]
+        out += ["| Run | AC1 | AC2 | Wrong escalation | Both articles cited |", "|---|---|---|---|---|"]
+        for run, r in zip(data["runs"], s["per_run"]):
+            out.append(
+                f"| {run['run']} | {fmt_rate(r['ac1'])} | {fmt_rate(r['ac2'])} | {fmt_rate(r['wrong_escalation'])} | "
+                f"{fmt_rate(r['both_cited'])} |"
+            )
+        out += ["", "Per category (worst of 3): "
+                + ", ".join(f"{c} {fmt_rate(v)}" for c, v in s["worst"]["per_category"].items())]
+
+    full = data["sets"][FULL]
+    out += ["", "## Unstable tickets (clarification 4)", "",
+            "Status or AC pass/fail differs between runs; wording alone does not count.", ""]
+    unstable = [t for t in data["tickets"] if t["unstable"]]
+    out += ticket_runs_table(unstable) if unstable else ["None."]
+    out += ["", "## Tickets that failed in at least one run", ""]
+    failed = [t for t in data["tickets"] if not t["passed_all_runs"]]
+    out += ticket_runs_table(failed) if failed else ["None."]
+    out += ["", "## Escalate tickets to watch (notes/step9-retrieval-review.md)", ""]
+    out += ticket_runs_table(data["watch_tickets"]) if data["watch_tickets"] else ["None in this ticket set."]
+
+    out += ["", "## failed_check and escalation reasons per run (full set)", "",
+            "| Run | failed_check | Escalation reasons |", "|---|---|---|"]
+    for run, r in zip(data["runs"], full["per_run"]):
+        out.append(
+            f"| {run['run']} | {', '.join(f'{k} {v}' for k, v in r['failed_check_counts'].items()) or 'none'} | "
+            f"{', '.join(f'{k} {v}' for k, v in r['escalation_reason_counts'].items()) or 'none'} |"
+        )
+    total = data["usage_total"]
+    out += ["", "## Tokens and cost", "", "| Run | Model calls | Input tokens | Output tokens | Malformed | Cost |",
+            "|---|---|---|---|---|---|"]
+    for u in data["usage"]:
+        out.append(f"| {u['run']} | {u['model_calls']} | {u['input_tokens']:,} | {u['output_tokens']:,} | "
+                   f"{u['malformed_outputs']} | {fmt_usd(u['cost_usd'])} |")
+    out.append(f"| total | {total['model_calls']} | {total['input_tokens']:,} | {total['output_tokens']:,} | "
+               f"{total['malformed_outputs']} | {fmt_usd(total['cost_usd'])} |")
+    out += ["", f"Malformed model outputs: {total['malformed_outputs']}. They have no token counts but are still "
+            "billed, so the cost is slightly underestimated for them."]
+    return "\n".join(out) + "\n"
+
+
+def ticket_runs_table(tickets: list[dict]) -> list[str]:
+    out = ["| Ticket | Set | Expected | Top score | Run 1 | Run 2 | Run 3 |", "|---|---|---|---|---|---|---|"]
+    for t in tickets:
+        cells = []
+        for v in t["runs"]:
+            text = v["status"] + (f" ({v['escalation_reason']})" if v["escalation_reason"] else "")
+            if v["failed_check"]:
+                text += f" [{v['failed_check']}]"
+            if v["cited"]:
+                text += f" cites {', '.join(v['cited'])}"
+            cells.append(text + (" ✓" if v["pass"] else " ✗"))
+        out.append(f"| {t['ticket_id']} | {t['split']} | {t['expected']} | {fmt_score(t['top_score'])} | "
+                   + " | ".join(cells) + " |")
+    return out

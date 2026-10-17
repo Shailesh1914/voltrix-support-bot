@@ -82,3 +82,13 @@ Part A on the REAL implementation (Sessions I and Q): MATCH with the
 Part A2 E1+E2+E3 simulation on 70/70 tickets (exit code 0).
 Recall 45/48, both-articles 7/9, confirmed on real code.
 Report: evals/reports/2026-10-17-part-a-retrieval.md (clean commit).
+
+## Preview from Part A on real retrieval (2026-10-17)
+- Answer median 0.78 vs escalate median 0.70 (better separated).
+- T-005 and T-049 have identical chunks and score (0.8853): only the
+  model can separate them (spec 02 v1.13 reasoning).
+- Lowest found answer ticket: T-031 at 0.6435. Escalate tickets
+  T-047 (0.6336) and T-059 (0.6344) sit just below it.
+- Hard escalate tickets the model must catch: T-049, T-058, T-109,
+  T-044. Watch them in Part B.
+- Threshold to be chosen from the Part B sweep, not from this.

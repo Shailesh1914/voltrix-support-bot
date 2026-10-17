@@ -262,12 +262,15 @@ def test_sweep_command_refuses_invalid_run(tmp_path, capsys):
     assert "invalid" in capsys.readouterr().err
 
 
-# Spec 05 "Independence": only the bot's public parts and their inputs and
-# outputs are imported.
+# Spec 05 "Independence": only the bot's public parts (QueryFlow,
+# AnthropicGenerator, open_retrieval) and their inputs and outputs are
+# imported. The two generator exceptions are AnthropicGenerator's outputs
+# (Part B records malformed output and service errors).
 ALLOWED_IMPORTS = {
     "ingestion": {"Chunk", "KBInfo", "open_retrieval"},
     "query.flow": {"QueryFlow"},
-    "query.generator": {"GeneratorOutput"},
+    "query.anthropic_api": {"AnthropicGenerator"},
+    "query.generator": {"GeneratorOutput", "MalformedOutput", "GeneratorServiceError"},
     "query.handoff": {"HandoffRecord"},
 }
 
