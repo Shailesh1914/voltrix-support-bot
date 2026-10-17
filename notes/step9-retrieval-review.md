@@ -76,3 +76,9 @@ Reasons:
   T-102 (loaded conveyor symptom) -> kb_v3 content fix.
 - Both-articles partial misses: T-030, T-032.
 - kb_v3 to be done AFTER Part B, as a separate measured change.
+
+## Verification (2026-10-17)
+Part A on the REAL implementation (Sessions I and Q): MATCH with the
+Part A2 E1+E2+E3 simulation on 70/70 tickets (exit code 0).
+Recall 45/48, both-articles 7/9, confirmed on real code.
+Report: evals/reports/2026-10-17-part-a-retrieval.md (clean commit).

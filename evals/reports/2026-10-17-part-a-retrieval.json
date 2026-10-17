@@ -1,0 +1,4247 @@
+{
+  "date": "2026-10-17",
+  "git_commit": "78ff42c5fc999a74d09b1c446ce3f2f4c12ff412",
+  "git_dirty": false,
+  "ticket_file_sha256": "c07524bc9a4f251340ed5ee4f9730c3f57307d978df875d389a43d1022fdb80a",
+  "kind": "part-a",
+  "kb_version": "v1",
+  "retrieval": "the flow's own: spec 02 step 3 (main search, code boost, merge, diversity)",
+  "threshold": -1.0,
+  "planned_model_calls": 66,
+  "summary": {
+    "calibration": {
+      "n_tickets": 35,
+      "recall": {
+        "passed": 22,
+        "total": 24,
+        "rate": 0.9166666666666666
+      },
+      "both_recall": {
+        "passed": 3,
+        "total": 3,
+        "rate": 1.0
+      },
+      "any_match_tickets": [
+        {
+          "ticket_id": "T-101",
+          "recall_hit": false
+        }
+      ],
+      "answer_scores": {
+        "n": 24,
+        "min": 0.6435305582825936,
+        "q1": 0.7215249549016853,
+        "median": 0.7844440772913785,
+        "q3": 0.8212667517917721,
+        "max": 0.8853467587533242,
+        "mean": 0.7737730705410518
+      },
+      "escalate_scores": {
+        "n": 11,
+        "min": 0.6336383442628799,
+        "q1": 0.6681970022714527,
+        "median": 0.6827881869979097,
+        "q3": 0.7267043822141823,
+        "max": 0.8853467587533242,
+        "mean": 0.707353402607454
+      },
+      "escalate_scores_reaching_threshold_check": {
+        "n": 8,
+        "min": 0.6336383442628799,
+        "q1": 0.6632502576273358,
+        "median": 0.6791291828676893,
+        "q3": 0.7225242543765158,
+        "max": 0.8853467587533242,
+        "mean": 0.7079943782286969
+      },
+      "escalate_stopped_by_fault_code_check": [
+        "T-053",
+        "T-055",
+        "T-107"
+      ],
+      "overlap": {
+        "lowest_answer_score": 0.6435305582825936,
+        "highest_escalate_score": 0.8853467587533242,
+        "separated": false,
+        "answer_tickets_at_or_below_highest_escalate": 24,
+        "escalate_tickets_at_or_above_lowest_answer": 6
+      }
+    },
+    "holdout": {
+      "n_tickets": 35,
+      "recall": {
+        "passed": 23,
+        "total": 24,
+        "rate": 0.9583333333333334
+      },
+      "both_recall": {
+        "passed": 4,
+        "total": 6,
+        "rate": 0.6666666666666666
+      },
+      "any_match_tickets": [],
+      "answer_scores": {
+        "n": 24,
+        "min": 0.62460936793601,
+        "q1": 0.7135973176580992,
+        "median": 0.7730526816033372,
+        "q3": 0.8285237334292683,
+        "max": 0.8844271282632645,
+        "mean": 0.7684604791788153
+      },
+      "escalate_scores": {
+        "n": 11,
+        "min": 0.6627250600794802,
+        "q1": 0.6840786001623116,
+        "median": 0.7011258452313482,
+        "q3": 0.7273119049242378,
+        "max": 0.789290034085474,
+        "mean": 0.7103647569913968
+      },
+      "escalate_scores_reaching_threshold_check": {
+        "n": 10,
+        "min": 0.6627250600794802,
+        "q1": 0.6912386536816388,
+        "median": 0.7061563592504471,
+        "q3": 0.7321175115121591,
+        "max": 0.789290034085474,
+        "mean": 0.7151022590158553
+      },
+      "escalate_stopped_by_fault_code_check": [
+        "T-054"
+      ],
+      "overlap": {
+        "lowest_answer_score": 0.62460936793601,
+        "highest_escalate_score": 0.789290034085474,
+        "separated": false,
+        "answer_tickets_at_or_below_highest_escalate": 13,
+        "escalate_tickets_at_or_above_lowest_answer": 10
+      }
+    },
+    "full": {
+      "n_tickets": 70,
+      "recall": {
+        "passed": 45,
+        "total": 48,
+        "rate": 0.9375
+      },
+      "both_recall": {
+        "passed": 7,
+        "total": 9,
+        "rate": 0.7777777777777778
+      },
+      "any_match_tickets": [
+        {
+          "ticket_id": "T-101",
+          "recall_hit": false
+        }
+      ],
+      "answer_scores": {
+        "n": 48,
+        "min": 0.62460936793601,
+        "q1": 0.7138049844079755,
+        "median": 0.7826676461877566,
+        "q3": 0.824635693072157,
+        "max": 0.8853467587533242,
+        "mean": 0.7711167748599336
+      },
+      "escalate_scores": {
+        "n": 22,
+        "min": 0.6336383442628799,
+        "q1": 0.6735203192735054,
+        "median": 0.6995544497733867,
+        "q3": 0.7290272598041976,
+        "max": 0.8853467587533242,
+        "mean": 0.7088590797994253
+      },
+      "escalate_scores_reaching_threshold_check": {
+        "n": 18,
+        "min": 0.6336383442628799,
+        "q1": 0.6763943040999966,
+        "median": 0.6995544497733867,
+        "q3": 0.7321175115121591,
+        "max": 0.8853467587533242,
+        "mean": 0.7119432008882294
+      },
+      "escalate_stopped_by_fault_code_check": [
+        "T-053",
+        "T-054",
+        "T-055",
+        "T-107"
+      ],
+      "overlap": {
+        "lowest_answer_score": 0.62460936793601,
+        "highest_escalate_score": 0.8853467587533242,
+        "separated": false,
+        "answer_tickets_at_or_below_highest_escalate": 48,
+        "escalate_tickets_at_or_above_lowest_answer": 18
+      }
+    }
+  },
+  "tickets": [
+    {
+      "ticket_id": "T-001",
+      "split": "calibration",
+      "expected": "answer",
+      "category": "fault",
+      "expected_article_ids": [
+        "KB-001"
+      ],
+      "article_match": "all",
+      "query_sent": "vx200 on the infeed conveyor trips evry time it ramps up, E-01 flashing. wht to check first",
+      "top_score": 0.8205470056006614,
+      "top_article_ids": [
+        "KB-001",
+        "KB-002",
+        "KB-003",
+        "KB-009",
+        "KB-025"
+      ],
+      "top_chunks": [
+        {
+          "chunk_id": "KB-001#c1",
+          "article_id": "KB-001",
+          "similarity_score": 0.8205470056006614
+        },
+        {
+          "chunk_id": "KB-002#c2",
+          "article_id": "KB-002",
+          "similarity_score": 0.7577855918351262
+        },
+        {
+          "chunk_id": "KB-003#c1",
+          "article_id": "KB-003",
+          "similarity_score": 0.7412961348162039
+        },
+        {
+          "chunk_id": "KB-009#c1",
+          "article_id": "KB-009",
+          "similarity_score": 0.7357266486853178
+        },
+        {
+          "chunk_id": "KB-025#c3",
+          "article_id": "KB-025",
+          "similarity_score": 0.7300460410818153
+        }
+      ],
+      "searches": [
+        {
+          "query": "vx200 on the infeed conveyor trips evry time it ramps up, E-01 flashing. wht to check first",
+          "k": 20,
+          "n_chunks": 20
+        },
+        {
+          "query": "E-01 Overcurrent during acceleration",
+          "k": 20,
+          "n_chunks": 20
+        }
+      ],
+      "model_called": true,
+      "recall_hit": true,
+      "both_hit": null
+    },
+    {
+      "ticket_id": "T-002",
+      "split": "holdout",
+      "expected": "answer",
+      "category": "fault",
+      "expected_article_ids": [
+        "KB-002"
+      ],
+      "article_match": "all",
+      "query_sent": "Getting E-02 when we stop the mixer. Ramp down is set to 3 sec. We don't really need a controlled stop on this machine, is there a way round it?",
+      "top_score": 0.8379118509749948,
+      "top_article_ids": [
+        "KB-002",
+        "KB-001",
+        "KB-025",
+        "KB-003",
+        "KB-005"
+      ],
+      "top_chunks": [
+        {
+          "chunk_id": "KB-002#c1",
+          "article_id": "KB-002",
+          "similarity_score": 0.8379118509749948
+        },
+        {
+          "chunk_id": "KB-001#c1",
+          "article_id": "KB-001",
+          "similarity_score": 0.7783422529584658
+        },
+        {
+          "chunk_id": "KB-025#c4",
+          "article_id": "KB-025",
+          "similarity_score": 0.7519794973573022
+        },
+        {
+          "chunk_id": "KB-003#c2",
+          "article_id": "KB-003",
+          "similarity_score": 0.7479576308213783
+        },
+        {
+          "chunk_id": "KB-005#c2",
+          "article_id": "KB-005",
+          "similarity_score": 0.7380009982784894
+        }
+      ],
+      "searches": [
+        {
+          "query": "Getting E-02 when we stop the mixer. Ramp down is set to 3 sec. We don't really need a controlled stop on this machine, is there a way round it?",
+          "k": 20,
+          "n_chunks": 20
+        },
+        {
+          "query": "E-02 Overcurrent during deceleration",
+          "k": 20,
+          "n_chunks": 20
+        }
+      ],
+      "model_called": true,
+      "recall_hit": true,
+      "both_hit": null
+    },
+    {
+      "ticket_id": "T-003",
+      "split": "calibration",
+      "expected": "answer",
+      "category": "fault",
+      "expected_article_ids": [
+        "KB-003"
+      ],
+      "article_match": "all",
+      "query_sent": "Drive cut out while running at steady speed, red fault light on and E-03 on the display. One of the operators had flicked the local isolator next to the motor while it was running. Could that be the cause or is the drive damaged?",
+      "top_score": 0.8093853272004408,
+      "top_article_ids": [
+        "KB-003",
+        "KB-014",
+        "KB-009",
+        "KB-001",
+        "KB-002"
+      ],
+      "top_chunks": [
+        {
+          "chunk_id": "KB-003#c4",
+          "article_id": "KB-003",
+          "similarity_score": 0.8093853272004408
+        },
+        {
+          "chunk_id": "KB-014#c1",
+          "article_id": "KB-014",
+          "similarity_score": 0.7367521109478176
+        },
+        {
+          "chunk_id": "KB-009#c1",
+          "article_id": "KB-009",
+          "similarity_score": 0.7343664144463813
+        },
+        {
+          "chunk_id": "KB-001#c1",
+          "article_id": "KB-001",
+          "similarity_score": 0.7317432377479074
+        },
+        {
+          "chunk_id": "KB-002#c4",
+          "article_id": "KB-002",
+          "similarity_score": 0.7257874271639511
+        }
+      ],
+      "searches": [
+        {
+          "query": "Drive cut out while running at steady speed, red fault light on and E-03 on the display. One of the operators had flicked the local isolator next to the motor while it was running. Could that be the cause or is the drive damaged?",
+          "k": 20,
+          "n_chunks": 20
+        },
+        {
+          "query": "E-03 Overcurrent at constant speed",
+          "k": 20,
+          "n_chunks": 20
+        }
+      ],
+      "model_called": true,
+      "recall_hit": true,
+      "both_hit": null
+    },
+    {
+      "ticket_id": "T-004",
+      "split": "holdout",
+      "expected": "answer",
+      "category": "fault",
+      "expected_article_ids": [
+        "KB-004"
+      ],
+      "article_match": "all",
+      "query_sent": "E-04 keeps coming up overnight when the drive is just sat there not running anything. Measured the incoming supply at 535 V between phases. Is that the problem?",
+      "top_score": 0.8745369215833915,
+      "top_article_ids": [
+        "KB-004",
+        "KB-005",
+        "KB-006",
+        "KB-002",
+        "KB-034"
+      ],
+      "top_chunks": [
+        {
+          "chunk_id": "KB-004#c1",
+          "article_id": "KB-004",
+          "similarity_score": 0.8745369215833915
+        },
+        {
+          "chunk_id": "KB-005#c1",
+          "article_id": "KB-005",
+          "similarity_score": 0.8084040052295229
+        },
+        {
+          "chunk_id": "KB-006#c1",
+          "article_id": "KB-006",
+          "similarity_score": 0.746163124678495
+        },
+        {
+          "chunk_id": "KB-002#c3",
+          "article_id": "KB-002",
+          "similarity_score": 0.7404713997840173
+        },
+        {
+          "chunk_id": "KB-034#c1",
+          "article_id": "KB-034",
+          "similarity_score": 0.7248744670877055
+        }
+      ],
+      "searches": [
+        {
+          "query": "E-04 keeps coming up overnight when the drive is just sat there not running anything. Measured the incoming supply at 535 V between phases. Is that the problem?",
+          "k": 20,
+          "n_chunks": 20
+        },
+        {
+          "query": "E-04 DC bus overvoltage at standstill or constant speed",
+          "k": 20,
+          "n_chunks": 20
+        }
+      ],
+      "model_called": true,
+      "recall_hit": true,
+      "both_hit": null
+    },
+    {
+      "ticket_id": "T-005",
+      "split": "calibration",
+      "expected": "answer",
+      "category": "fault",
+      "expected_article_ids": [
+        "KB-005",
+        "KB-025"
+      ],
+      "article_match": "all",
+      "query_sent": "big extract fan, drive throws an overvoltage code every time we stop it (E-05). decel is at 5s. what do i change and can i change it while the fan is still running or do i have to stop it first",
+      "top_score": 0.8853467587533242,
+      "top_article_ids": [
+        "KB-005",
+        "KB-004",
+        "KB-002",
+        "KB-006",
+        "KB-025"
+      ],
+      "top_chunks": [
+        {
+          "chunk_id": "KB-005#c2",
+          "article_id": "KB-005",
+          "similarity_score": 0.8853467587533242
+        },
+        {
+          "chunk_id": "KB-004#c1",
+          "article_id": "KB-004",
+          "similarity_score": 0.8003808675905618
+        },
+        {
+          "chunk_id": "KB-002#c3",
+          "article_id": "KB-002",
+          "similarity_score": 0.798930810720542
+        },
+        {
+          "chunk_id": "KB-006#c1",
+          "article_id": "KB-006",
+          "similarity_score": 0.7594699042789494
+        },
+        {
+          "chunk_id": "KB-025#c3",
+          "article_id": "KB-025",
+          "similarity_score": 0.7494323320871794
+        }
+      ],
+      "searches": [
+        {
+          "query": "big extract fan, drive throws an overvoltage code every time we stop it (E-05). decel is at 5s. what do i change and can i change it while the fan is still running or do i have to stop it first",
+          "k": 20,
+          "n_chunks": 20
+        },
+        {
+          "query": "E-05 DC bus overvoltage during fast deceleration",
+          "k": 20,
+          "n_chunks": 20
+        }
+      ],
+      "model_called": true,
+      "recall_hit": true,
+      "both_hit": true
+    },
+    {
+      "ticket_id": "T-006",
+      "split": "holdout",
+      "expected": "answer",
+      "category": "fault",
+      "expected_article_ids": [
+        "KB-006"
+      ],
+      "article_match": "all",
+      "query_sent": "Our drive drops out whenever the big compressor on the same board kicks in. Display says E-06. Motor just coasts down. Anything we can do on the drive side?",
+      "top_score": 0.8341372732400034,
+      "top_article_ids": [
+        "KB-006",
+        "KB-005",
+        "KB-004",
+        "KB-003",
+        "KB-016"
+      ],
+      "top_chunks": [
+        {
+          "chunk_id": "KB-006#c1",
+          "article_id": "KB-006",
+          "similarity_score": 0.8341372732400034
+        },
+        {
+          "chunk_id": "KB-005#c1",
+          "article_id": "KB-005",
+          "similarity_score": 0.7473704042279042
+        },
+        {
+          "chunk_id": "KB-004#c1",
+          "article_id": "KB-004",
+          "similarity_score": 0.7371383532466651
+        },
+        {
+          "chunk_id": "KB-003#c3",
+          "article_id": "KB-003",
+          "similarity_score": 0.7126500006653149
+        },
+        {
+          "chunk_id": "KB-016#c1",
+          "article_id": "KB-016",
+          "similarity_score": 0.7071856600193768
+        }
+      ],
+      "searches": [
+        {
+          "query": "Our drive drops out whenever the big compressor on the same board kicks in. Display says E-06. Motor just coasts down. Anything we can do on the drive side?",
+          "k": 20,
+          "n_chunks": 20
+        },
+        {
+          "query": "E-06 DC bus undervoltage",
+          "k": 20,
+          "n_chunks": 20
+        }
+      ],
+      "model_called": true,
+      "recall_hit": true,
+      "both_hit": null
+    },
+    {
+      "ticket_id": "T-007",
+      "split": "calibration",
+      "expected": "answer",
+      "category": "fault",
+      "expected_article_ids": [
+        "KB-007",
+        "KB-030"
+      ],
+      "article_match": "all",
+      "query_sent": "Drive in a warm panel keeps tripping mid afternoon on the heatsink overtemp fault and it wont reset straight away. Fins look pretty clogged with dust. Why wont it reset and whats the proper way to clean it out?",
+      "top_score": 0.8087017861731228,
+      "top_article_ids": [
+        "KB-007",
+        "KB-013",
+        "KB-030",
+        "KB-031",
+        "KB-003"
+      ],
+      "top_chunks": [
+        {
+          "chunk_id": "KB-007#c2",
+          "article_id": "KB-007",
+          "similarity_score": 0.8087017861731228
+        },
+        {
+          "chunk_id": "KB-013#c3",
+          "article_id": "KB-013",
+          "similarity_score": 0.7649303955782323
+        },
+        {
+          "chunk_id": "KB-030#c1",
+          "article_id": "KB-030",
+          "similarity_score": 0.7525003671152178
+        },
+        {
+          "chunk_id": "KB-031#c3",
+          "article_id": "KB-031",
+          "similarity_score": 0.6920580979017482
+        },
+        {
+          "chunk_id": "KB-003#c3",
+          "article_id": "KB-003",
+          "similarity_score": 0.6911019611106133
+        }
+      ],
+      "searches": [
+        {
+          "query": "Drive in a warm panel keeps tripping mid afternoon on the heatsink overtemp fault and it wont reset straight away. Fins look pretty clogged with dust. Why wont it reset and whats the proper way to clean it out?",
+          "k": 20,
+          "n_chunks": 20
+        }
+      ],
+      "model_called": true,
+      "recall_hit": true,
+      "both_hit": true
+    },
+    {
+      "ticket_id": "T-008",
+      "split": "holdout",
+      "expected": "answer",
+      "category": "fault",
+      "expected_article_ids": [
+        "KB-008",
+        "KB-009"
+      ],
+      "article_match": "all",
+      "query_sent": "whats the actual difference between E-08 and E-09?? we get both on different days and nobody here knows which one means what",
+      "top_score": 0.8260057189191816,
+      "top_article_ids": [
+        "KB-009",
+        "KB-008",
+        "KB-003",
+        "KB-007",
+        "KB-002"
+      ],
+      "top_chunks": [
+        {
+          "chunk_id": "KB-009#c3",
+          "article_id": "KB-009",
+          "similarity_score": 0.8260057189191816
+        },
+        {
+          "chunk_id": "KB-008#c3",
+          "article_id": "KB-008",
+          "similarity_score": 0.8234259903651044
+        },
+        {
+          "chunk_id": "KB-003#c2",
+          "article_id": "KB-003",
+          "similarity_score": 0.7260579296209189
+        },
+        {
+          "chunk_id": "KB-007#c2",
+          "article_id": "KB-007",
+          "similarity_score": 0.7245063775901535
+        },
+        {
+          "chunk_id": "KB-002#c2",
+          "article_id": "KB-002",
+          "similarity_score": 0.7058128690230501
+        }
+      ],
+      "searches": [
+        {
+          "query": "whats the actual difference between E-08 and E-09?? we get both on different days and nobody here knows which one means what",
+          "k": 20,
+          "n_chunks": 20
+        },
+        {
+          "query": "E-08 Motor overload",
+          "k": 20,
+          "n_chunks": 20
+        },
+        {
+          "query": "E-09 Drive overload",
+          "k": 20,
+          "n_chunks": 20
+        }
+      ],
+      "model_called": true,
+      "recall_hit": true,
+      "both_hit": true
+    },
+    {
+      "ticket_id": "T-009",
+      "split": "calibration",
+      "expected": "answer",
+      "category": "fault",
+      "expected_article_ids": [
+        "KB-008"
+      ],
+      "article_match": "all",
+      "query_sent": "E-08 on a pump motor after about 20 min running. Motor plate says 8.4 A but I see P-17 is set to 6.0. Machine turns freely by hand. Is that setting wrong?",
+      "top_score": 0.8234259903651044,
+      "top_article_ids": [
+        "KB-008",
+        "KB-009",
+        "KB-001",
+        "KB-002",
+        "KB-025"
+      ],
+      "top_chunks": [
+        {
+          "chunk_id": "KB-008#c3",
+          "article_id": "KB-008",
+          "similarity_score": 0.8234259903651044
+        },
+        {
+          "chunk_id": "KB-009#c3",
+          "article_id": "KB-009",
+          "similarity_score": 0.7871789283378039
+        },
+        {
+          "chunk_id": "KB-001#c2",
+          "article_id": "KB-001",
+          "similarity_score": 0.7635911767567136
+        },
+        {
+          "chunk_id": "KB-002#c2",
+          "article_id": "KB-002",
+          "similarity_score": 0.7415764736699099
+        },
+        {
+          "chunk_id": "KB-025#c4",
+          "article_id": "KB-025",
+          "similarity_score": 0.7372463026157802
+        }
+      ],
+      "searches": [
+        {
+          "query": "E-08 on a pump motor after about 20 min running. Motor plate says 8.4 A but I see P-17 is set to 6.0. Machine turns freely by hand. Is that setting wrong?",
+          "k": 20,
+          "n_chunks": 20
+        },
+        {
+          "query": "E-08 Motor overload",
+          "k": 20,
+          "n_chunks": 20
+        }
+      ],
+      "model_called": true,
+      "recall_hit": true,
+      "both_hit": null
+    },
+    {
+      "ticket_id": "T-010",
+      "split": "holdout",
+      "expected": "answer",
+      "category": "fault",
+      "expected_article_ids": [
+        "KB-010"
+      ],
+      "article_match": "all",
+      "query_sent": "one of the three supply fuses had blown, replaced it but still getting input phase loss. production wants it running tonight - can i just switch that protection off to get through the shift?",
+      "top_score": 0.7945346972562455,
+      "top_article_ids": [
+        "KB-010",
+        "KB-011",
+        "KB-015",
+        "KB-006",
+        "KB-036"
+      ],
+      "top_chunks": [
+        {
+          "chunk_id": "KB-010#c2",
+          "article_id": "KB-010",
+          "similarity_score": 0.7945346972562455
+        },
+        {
+          "chunk_id": "KB-011#c3",
+          "article_id": "KB-011",
+          "similarity_score": 0.7135877144514929
+        },
+        {
+          "chunk_id": "KB-015#c3",
+          "article_id": "KB-015",
+          "similarity_score": 0.7076327330406096
+        },
+        {
+          "chunk_id": "KB-006#c3",
+          "article_id": "KB-006",
+          "similarity_score": 0.7027633238983041
+        },
+        {
+          "chunk_id": "KB-036#c4",
+          "article_id": "KB-036",
+          "similarity_score": 0.6973205846535446
+        }
+      ],
+      "searches": [
+        {
+          "query": "one of the three supply fuses had blown, replaced it but still getting input phase loss. production wants it running tonight - can i just switch that protection off to get through the shift?",
+          "k": 20,
+          "n_chunks": 20
+        }
+      ],
+      "model_called": true,
+      "recall_hit": true,
+      "both_hit": null
+    },
+    {
+      "ticket_id": "T-011",
+      "split": "calibration",
+      "expected": "answer",
+      "category": "fault",
+      "expected_article_ids": [
+        "KB-011"
+      ],
+      "article_match": "all",
+      "query_sent": "E-11 output phase loss. Terminals at the drive look tight. What should I be measuring on the motor leads to see if a winding has gone?",
+      "top_score": 0.8712588602969574,
+      "top_article_ids": [
+        "KB-011",
+        "KB-010",
+        "KB-012",
+        "KB-008",
+        "KB-032"
+      ],
+      "top_chunks": [
+        {
+          "chunk_id": "KB-011#c3",
+          "article_id": "KB-011",
+          "similarity_score": 0.8712588602969574
+        },
+        {
+          "chunk_id": "KB-010#c3",
+          "article_id": "KB-010",
+          "similarity_score": 0.8108734853088673
+        },
+        {
+          "chunk_id": "KB-012#c3",
+          "article_id": "KB-012",
+          "similarity_score": 0.7464939771043211
+        },
+        {
+          "chunk_id": "KB-008#c3",
+          "article_id": "KB-008",
+          "similarity_score": 0.7410722597965242
+        },
+        {
+          "chunk_id": "KB-032#c3",
+          "article_id": "KB-032",
+          "similarity_score": 0.7400965319398931
+        }
+      ],
+      "searches": [
+        {
+          "query": "E-11 output phase loss. Terminals at the drive look tight. What should I be measuring on the motor leads to see if a winding has gone?",
+          "k": 20,
+          "n_chunks": 20
+        },
+        {
+          "query": "E-11 Output phase loss",
+          "k": 20,
+          "n_chunks": 20
+        }
+      ],
+      "model_called": true,
+      "recall_hit": true,
+      "both_hit": null
+    },
+    {
+      "ticket_id": "T-012",
+      "split": "holdout",
+      "expected": "answer",
+      "category": "fault",
+      "expected_article_ids": [
+        "KB-012"
+      ],
+      "article_match": "all",
+      "query_sent": "earth fault E-12 after washdown. ok to put the insulation tester straight on the U V W terminals of the drive to check the motor?",
+      "top_score": 0.8266525534923567,
+      "top_article_ids": [
+        "KB-012",
+        "KB-003",
+        "KB-008",
+        "KB-011",
+        "KB-010"
+      ],
+      "top_chunks": [
+        {
+          "chunk_id": "KB-012#c3",
+          "article_id": "KB-012",
+          "similarity_score": 0.8266525534923567
+        },
+        {
+          "chunk_id": "KB-003#c3",
+          "article_id": "KB-003",
+          "similarity_score": 0.7525376824275637
+        },
+        {
+          "chunk_id": "KB-008#c3",
+          "article_id": "KB-008",
+          "similarity_score": 0.7447344468446291
+        },
+        {
+          "chunk_id": "KB-011#c3",
+          "article_id": "KB-011",
+          "similarity_score": 0.7375663105418302
+        },
+        {
+          "chunk_id": "KB-010#c3",
+          "article_id": "KB-010",
+          "similarity_score": 0.7257483654025125
+        }
+      ],
+      "searches": [
+        {
+          "query": "earth fault E-12 after washdown. ok to put the insulation tester straight on the U V W terminals of the drive to check the motor?",
+          "k": 20,
+          "n_chunks": 20
+        },
+        {
+          "query": "E-12 Earth (ground) fault",
+          "k": 20,
+          "n_chunks": 20
+        }
+      ],
+      "model_called": true,
+      "recall_hit": true,
+      "both_hit": null
+    },
+    {
+      "ticket_id": "T-013",
+      "split": "calibration",
+      "expected": "answer",
+      "category": "fault",
+      "expected_article_ids": [
+        "KB-013"
+      ],
+      "article_match": "all",
+      "query_sent": "Drive shows E-13 as soon as we try to run. This motor has no thermistor in it at all, nothing wired to TH1/TH2. How do we get rid of it?",
+      "top_score": 0.8719112190060432,
+      "top_article_ids": [
+        "KB-013",
+        "KB-007",
+        "KB-008",
+        "KB-012",
+        "KB-030"
+      ],
+      "top_chunks": [
+        {
+          "chunk_id": "KB-013#c1",
+          "article_id": "KB-013",
+          "similarity_score": 0.8719112190060432
+        },
+        {
+          "chunk_id": "KB-007#c2",
+          "article_id": "KB-007",
+          "similarity_score": 0.7525393893483342
+        },
+        {
+          "chunk_id": "KB-008#c1",
+          "article_id": "KB-008",
+          "similarity_score": 0.7106921038000384
+        },
+        {
+          "chunk_id": "KB-012#c3",
+          "article_id": "KB-012",
+          "similarity_score": 0.6956836468504181
+        },
+        {
+          "chunk_id": "KB-030#c6",
+          "article_id": "KB-030",
+          "similarity_score": 0.6926595095580418
+        }
+      ],
+      "searches": [
+        {
+          "query": "Drive shows E-13 as soon as we try to run. This motor has no thermistor in it at all, nothing wired to TH1/TH2. How do we get rid of it?",
+          "k": 20,
+          "n_chunks": 20
+        },
+        {
+          "query": "E-13 Motor thermistor overtemperature",
+          "k": 20,
+          "n_chunks": 20
+        }
+      ],
+      "model_called": true,
+      "recall_hit": true,
+      "both_hit": null
+    },
+    {
+      "ticket_id": "T-014",
+      "split": "holdout",
+      "expected": "answer",
+      "category": "fault",
+      "expected_article_ids": [
+        "KB-014"
+      ],
+      "article_match": "all",
+      "query_sent": "brand new drive, only power and motor connected, nothing on the control terminals. powers up with E-14. the little wire link that came on the terminals got taken off during wiring. related?",
+      "top_score": 0.8593627022455849,
+      "top_article_ids": [
+        "KB-014",
+        "KB-036",
+        "KB-022",
+        "KB-020",
+        "KB-019"
+      ],
+      "top_chunks": [
+        {
+          "chunk_id": "KB-014#c1",
+          "article_id": "KB-014",
+          "similarity_score": 0.8593627022455849
+        },
+        {
+          "chunk_id": "KB-036#c1",
+          "article_id": "KB-036",
+          "similarity_score": 0.7663625331675809
+        },
+        {
+          "chunk_id": "KB-022#c2",
+          "article_id": "KB-022",
+          "similarity_score": 0.7390481162934133
+        },
+        {
+          "chunk_id": "KB-020#c4",
+          "article_id": "KB-020",
+          "similarity_score": 0.7376332050873998
+        },
+        {
+          "chunk_id": "KB-019#c2",
+          "article_id": "KB-019",
+          "similarity_score": 0.724958147868449
+        }
+      ],
+      "searches": [
+        {
+          "query": "brand new drive, only power and motor connected, nothing on the control terminals. powers up with E-14. the little wire link that came on the terminals got taken off during wiring. related?",
+          "k": 20,
+          "n_chunks": 20
+        },
+        {
+          "query": "E-14 External fault input active",
+          "k": 20,
+          "n_chunks": 20
+        }
+      ],
+      "model_called": true,
+      "recall_hit": true,
+      "both_hit": null
+    },
+    {
+      "ticket_id": "T-015",
+      "split": "calibration",
+      "expected": "answer",
+      "category": "fault",
+      "expected_article_ids": [
+        "KB-015",
+        "KB-028"
+      ],
+      "article_match": "all",
+      "query_sent": "Power went off on site while I was halfway through saving a parameter. Now it comes up with E-15 and won't run. How do I get it back, and what exactly will I lose if I do the reset to defaults?",
+      "top_score": 0.8241790177898154,
+      "top_article_ids": [
+        "KB-015",
+        "KB-028",
+        "KB-036",
+        "KB-010",
+        "KB-009"
+      ],
+      "top_chunks": [
+        {
+          "chunk_id": "KB-015#c2",
+          "article_id": "KB-015",
+          "similarity_score": 0.8241790177898154
+        },
+        {
+          "chunk_id": "KB-028#c4",
+          "article_id": "KB-028",
+          "similarity_score": 0.6977765720522636
+        },
+        {
+          "chunk_id": "KB-036#c5",
+          "article_id": "KB-036",
+          "similarity_score": 0.6864994093347228
+        },
+        {
+          "chunk_id": "KB-010#c3",
+          "article_id": "KB-010",
+          "similarity_score": 0.6804789664505407
+        },
+        {
+          "chunk_id": "KB-009#c3",
+          "article_id": "KB-009",
+          "similarity_score": 0.6746098612832226
+        }
+      ],
+      "searches": [
+        {
+          "query": "Power went off on site while I was halfway through saving a parameter. Now it comes up with E-15 and won't run. How do I get it back, and what exactly will I lose if I do the reset to defaults?",
+          "k": 20,
+          "n_chunks": 20
+        },
+        {
+          "query": "E-15 Parameter memory error",
+          "k": 20,
+          "n_chunks": 20
+        }
+      ],
+      "model_called": true,
+      "recall_hit": true,
+      "both_hit": true
+    },
+    {
+      "ticket_id": "T-016",
+      "split": "holdout",
+      "expected": "answer",
+      "category": "fault",
+      "expected_article_ids": [
+        "KB-016",
+        "KB-031"
+      ],
+      "article_match": "all",
+      "query_sent": "E-16 on a 5.5 kW unit. how many fans has this size got and whats the procedure to swap them, do i need to do both",
+      "top_score": 0.8522809861430272,
+      "top_article_ids": [
+        "KB-016",
+        "KB-031",
+        "KB-007",
+        "KB-013",
+        "KB-030"
+      ],
+      "top_chunks": [
+        {
+          "chunk_id": "KB-016#c1",
+          "article_id": "KB-016",
+          "similarity_score": 0.8522809861430272
+        },
+        {
+          "chunk_id": "KB-031#c6",
+          "article_id": "KB-031",
+          "similarity_score": 0.8037565272653973
+        },
+        {
+          "chunk_id": "KB-007#c2",
+          "article_id": "KB-007",
+          "similarity_score": 0.6834526728120759
+        },
+        {
+          "chunk_id": "KB-013#c1",
+          "article_id": "KB-013",
+          "similarity_score": 0.6692825290574771
+        },
+        {
+          "chunk_id": "KB-030#c6",
+          "article_id": "KB-030",
+          "similarity_score": 0.6556515828536826
+        }
+      ],
+      "searches": [
+        {
+          "query": "E-16 on a 5.5 kW unit. how many fans has this size got and whats the procedure to swap them, do i need to do both",
+          "k": 20,
+          "n_chunks": 20
+        },
+        {
+          "query": "E-16 Cooling fan failure",
+          "k": 20,
+          "n_chunks": 20
+        }
+      ],
+      "model_called": true,
+      "recall_hit": true,
+      "both_hit": true
+    },
+    {
+      "ticket_id": "T-017",
+      "split": "calibration",
+      "expected": "answer",
+      "category": "installation",
+      "expected_article_ids": [
+        "KB-017"
+      ],
+      "article_match": "all",
+      "query_sent": "Just unpacked a new VX-200. There's a short wire fitted between two of the control terminals from the factory - is that meant to be there? What else should have been in the box?",
+      "top_score": 0.8159161840528394,
+      "top_article_ids": [
+        "KB-017",
+        "KB-021",
+        "KB-020",
+        "KB-027",
+        "KB-014"
+      ],
+      "top_chunks": [
+        {
+          "chunk_id": "KB-017#c2",
+          "article_id": "KB-017",
+          "similarity_score": 0.8159161840528394
+        },
+        {
+          "chunk_id": "KB-021#c2",
+          "article_id": "KB-021",
+          "similarity_score": 0.717858798063087
+        },
+        {
+          "chunk_id": "KB-020#c4",
+          "article_id": "KB-020",
+          "similarity_score": 0.7153847677802223
+        },
+        {
+          "chunk_id": "KB-027#c1",
+          "article_id": "KB-027",
+          "similarity_score": 0.7050282228138086
+        },
+        {
+          "chunk_id": "KB-014#c1",
+          "article_id": "KB-014",
+          "similarity_score": 0.7037026803503041
+        }
+      ],
+      "searches": [
+        {
+          "query": "Just unpacked a new VX-200. There's a short wire fitted between two of the control terminals from the factory - is that meant to be there? What else should have been in the box?",
+          "k": 20,
+          "n_chunks": 20
+        }
+      ],
+      "model_called": true,
+      "recall_hit": true,
+      "both_hit": null
+    },
+    {
+      "ticket_id": "T-018",
+      "split": "holdout",
+      "expected": "answer",
+      "category": "installation",
+      "expected_article_ids": [
+        "KB-018"
+      ],
+      "article_match": "all",
+      "query_sent": "short of space in the panel. how much gap does the drive need round it and can i mount it on its side to fit",
+      "top_score": 0.763580064998736,
+      "top_article_ids": [
+        "KB-018",
+        "KB-019",
+        "KB-022",
+        "KB-030",
+        "KB-017"
+      ],
+      "top_chunks": [
+        {
+          "chunk_id": "KB-018#c3",
+          "article_id": "KB-018",
+          "similarity_score": 0.763580064998736
+        },
+        {
+          "chunk_id": "KB-019#c4",
+          "article_id": "KB-019",
+          "similarity_score": 0.6509708341440341
+        },
+        {
+          "chunk_id": "KB-022#c2",
+          "article_id": "KB-022",
+          "similarity_score": 0.6467224865857137
+        },
+        {
+          "chunk_id": "KB-030#c6",
+          "article_id": "KB-030",
+          "similarity_score": 0.6459311837629507
+        },
+        {
+          "chunk_id": "KB-017#c4",
+          "article_id": "KB-017",
+          "similarity_score": 0.6216198397007066
+        }
+      ],
+      "searches": [
+        {
+          "query": "short of space in the panel. how much gap does the drive need round it and can i mount it on its side to fit",
+          "k": 20,
+          "n_chunks": 20
+        }
+      ],
+      "model_called": true,
+      "recall_hit": true,
+      "both_hit": null
+    },
+    {
+      "ticket_id": "T-019",
+      "split": "calibration",
+      "expected": "answer",
+      "category": "installation",
+      "expected_article_ids": [
+        "KB-018"
+      ],
+      "article_match": "all",
+      "query_sent": "What is the highest air temperature the drive is allowed to run in? Our cabinets get pretty hot in summer. And is that the room temperature or the temperature inside the cabinet?",
+      "top_score": 0.8020926097504796,
+      "top_article_ids": [
+        "KB-018",
+        "KB-007",
+        "KB-035",
+        "KB-013",
+        "KB-030"
+      ],
+      "top_chunks": [
+        {
+          "chunk_id": "KB-018#c4",
+          "article_id": "KB-018",
+          "similarity_score": 0.8020926097504796
+        },
+        {
+          "chunk_id": "KB-007#c2",
+          "article_id": "KB-007",
+          "similarity_score": 0.7199327105552176
+        },
+        {
+          "chunk_id": "KB-035#c4",
+          "article_id": "KB-035",
+          "similarity_score": 0.6539293510971731
+        },
+        {
+          "chunk_id": "KB-013#c1",
+          "article_id": "KB-013",
+          "similarity_score": 0.6288065156689974
+        },
+        {
+          "chunk_id": "KB-030#c6",
+          "article_id": "KB-030",
+          "similarity_score": 0.6228374459185781
+        }
+      ],
+      "searches": [
+        {
+          "query": "What is the highest air temperature the drive is allowed to run in? Our cabinets get pretty hot in summer. And is that the room temperature or the temperature inside the cabinet?",
+          "k": 20,
+          "n_chunks": 20
+        }
+      ],
+      "model_called": true,
+      "recall_hit": true,
+      "both_hit": null
+    },
+    {
+      "ticket_id": "T-020",
+      "split": "holdout",
+      "expected": "answer",
+      "category": "installation",
+      "expected_article_ids": [
+        "KB-019"
+      ],
+      "article_match": "all",
+      "query_sent": "there are two terminals marked DC+ and DC- next to the power terminals. what are they for, can i connect anything to them?",
+      "top_score": 0.69847054048052,
+      "top_article_ids": [
+        "KB-019",
+        "KB-035",
+        "KB-032",
+        "KB-020",
+        "KB-034"
+      ],
+      "top_chunks": [
+        {
+          "chunk_id": "KB-019#c2",
+          "article_id": "KB-019",
+          "similarity_score": 0.69847054048052
+        },
+        {
+          "chunk_id": "KB-035#c3",
+          "article_id": "KB-035",
+          "similarity_score": 0.6742820613444753
+        },
+        {
+          "chunk_id": "KB-032#c3",
+          "article_id": "KB-032",
+          "similarity_score": 0.673222275145733
+        },
+        {
+          "chunk_id": "KB-020#c2",
+          "article_id": "KB-020",
+          "similarity_score": 0.6698158041466606
+        },
+        {
+          "chunk_id": "KB-034#c1",
+          "article_id": "KB-034",
+          "similarity_score": 0.6666255051270699
+        }
+      ],
+      "searches": [
+        {
+          "query": "there are two terminals marked DC+ and DC- next to the power terminals. what are they for, can i connect anything to them?",
+          "k": 20,
+          "n_chunks": 20
+        }
+      ],
+      "model_called": true,
+      "recall_hit": true,
+      "both_hit": null
+    },
+    {
+      "ticket_id": "T-021",
+      "split": "calibration",
+      "expected": "answer",
+      "category": "installation",
+      "expected_article_ids": [
+        "KB-020"
+      ],
+      "article_match": "all",
+      "query_sent": "Want to add a speed pot on the panel door. Which terminals does it go on and what value pot do I need?",
+      "top_score": 0.6694372790224443,
+      "top_article_ids": [
+        "KB-020",
+        "KB-019",
+        "KB-027",
+        "KB-024",
+        "KB-032"
+      ],
+      "top_chunks": [
+        {
+          "chunk_id": "KB-020#c2",
+          "article_id": "KB-020",
+          "similarity_score": 0.6694372790224443
+        },
+        {
+          "chunk_id": "KB-019#c5",
+          "article_id": "KB-019",
+          "similarity_score": 0.6390820739228842
+        },
+        {
+          "chunk_id": "KB-027#c3",
+          "article_id": "KB-027",
+          "similarity_score": 0.638650295976389
+        },
+        {
+          "chunk_id": "KB-024#c3",
+          "article_id": "KB-024",
+          "similarity_score": 0.6202084674337824
+        },
+        {
+          "chunk_id": "KB-032#c5",
+          "article_id": "KB-032",
+          "similarity_score": 0.6117033725653684
+        }
+      ],
+      "searches": [
+        {
+          "query": "Want to add a speed pot on the panel door. Which terminals does it go on and what value pot do I need?",
+          "k": 20,
+          "n_chunks": 20
+        }
+      ],
+      "model_called": true,
+      "recall_hit": true,
+      "both_hit": null
+    },
+    {
+      "ticket_id": "T-022",
+      "split": "holdout",
+      "expected": "answer",
+      "category": "installation",
+      "expected_article_ids": [
+        "KB-020",
+        "KB-027"
+      ],
+      "article_match": "all",
+      "query_sent": "we have a 4-20mA speed signal coming from the control room. where does it land on the drive and what do i need to set so the drive actually follows it and starts from a remote contact",
+      "top_score": 0.7044409305454427,
+      "top_article_ids": [
+        "KB-020",
+        "KB-027",
+        "KB-014",
+        "KB-022",
+        "KB-004"
+      ],
+      "top_chunks": [
+        {
+          "chunk_id": "KB-020#c4",
+          "article_id": "KB-020",
+          "similarity_score": 0.7044409305454427
+        },
+        {
+          "chunk_id": "KB-027#c4",
+          "article_id": "KB-027",
+          "similarity_score": 0.6909117642111458
+        },
+        {
+          "chunk_id": "KB-014#c3",
+          "article_id": "KB-014",
+          "similarity_score": 0.6755705713458445
+        },
+        {
+          "chunk_id": "KB-022#c4",
+          "article_id": "KB-022",
+          "similarity_score": 0.6683479858566798
+        },
+        {
+          "chunk_id": "KB-004#c4",
+          "article_id": "KB-004",
+          "similarity_score": 0.6594110102688007
+        }
+      ],
+      "searches": [
+        {
+          "query": "we have a 4-20mA speed signal coming from the control room. where does it land on the drive and what do i need to set so the drive actually follows it and starts from a remote contact",
+          "k": 20,
+          "n_chunks": 20
+        }
+      ],
+      "model_called": true,
+      "recall_hit": true,
+      "both_hit": true
+    },
+    {
+      "ticket_id": "T-023",
+      "split": "calibration",
+      "expected": "answer",
+      "category": "installation",
+      "expected_article_ids": [
+        "KB-021"
+      ],
+      "article_match": "all",
+      "query_sent": "Screened cables - do I earth the screen at one end or both? Asking for the motor cable and also the analog signal cable, heard different things from different people.",
+      "top_score": 0.8526444605470782,
+      "top_article_ids": [
+        "KB-021",
+        "KB-020",
+        "KB-019",
+        "KB-012",
+        "KB-004"
+      ],
+      "top_chunks": [
+        {
+          "chunk_id": "KB-021#c3",
+          "article_id": "KB-021",
+          "similarity_score": 0.8526444605470782
+        },
+        {
+          "chunk_id": "KB-020#c4",
+          "article_id": "KB-020",
+          "similarity_score": 0.7233053735271163
+        },
+        {
+          "chunk_id": "KB-019#c4",
+          "article_id": "KB-019",
+          "similarity_score": 0.7087107086688561
+        },
+        {
+          "chunk_id": "KB-012#c3",
+          "article_id": "KB-012",
+          "similarity_score": 0.6964640456993961
+        },
+        {
+          "chunk_id": "KB-004#c3",
+          "article_id": "KB-004",
+          "similarity_score": 0.6512059272116624
+        }
+      ],
+      "searches": [
+        {
+          "query": "Screened cables - do I earth the screen at one end or both? Asking for the motor cable and also the analog signal cable, heard different things from different people.",
+          "k": 20,
+          "n_chunks": 20
+        }
+      ],
+      "model_called": true,
+      "recall_hit": true,
+      "both_hit": null
+    },
+    {
+      "ticket_id": "T-024",
+      "split": "holdout",
+      "expected": "answer",
+      "category": "installation",
+      "expected_article_ids": [
+        "KB-022"
+      ],
+      "article_match": "all",
+      "query_sent": "about to switch on a newly installed drive for the first time. is there a list of things to check before i do, and what should the display look like if all is ok?",
+      "top_score": 0.7053790158248183,
+      "top_article_ids": [
+        "KB-017",
+        "KB-022",
+        "KB-010",
+        "KB-011",
+        "KB-030"
+      ],
+      "top_chunks": [
+        {
+          "chunk_id": "KB-017#c4",
+          "article_id": "KB-017",
+          "similarity_score": 0.7053790158248183
+        },
+        {
+          "chunk_id": "KB-022#c3",
+          "article_id": "KB-022",
+          "similarity_score": 0.685676927785589
+        },
+        {
+          "chunk_id": "KB-010#c3",
+          "article_id": "KB-010",
+          "similarity_score": 0.6769189356656282
+        },
+        {
+          "chunk_id": "KB-011#c3",
+          "article_id": "KB-011",
+          "similarity_score": 0.6610327674097932
+        },
+        {
+          "chunk_id": "KB-030#c6",
+          "article_id": "KB-030",
+          "similarity_score": 0.6560757865913459
+        }
+      ],
+      "searches": [
+        {
+          "query": "about to switch on a newly installed drive for the first time. is there a list of things to check before i do, and what should the display look like if all is ok?",
+          "k": 20,
+          "n_chunks": 20
+        }
+      ],
+      "model_called": true,
+      "recall_hit": true,
+      "both_hit": null
+    },
+    {
+      "ticket_id": "T-025",
+      "split": "calibration",
+      "expected": "answer",
+      "category": "parameters",
+      "expected_article_ids": [
+        "KB-023"
+      ],
+      "article_match": "all",
+      "query_sent": "how do i change a setting on this thing. pressed MENU, got P-01 on the screen, now stuck",
+      "top_score": 0.7266300455941391,
+      "top_article_ids": [
+        "KB-023",
+        "KB-028",
+        "KB-015",
+        "KB-027",
+        "KB-022"
+      ],
+      "top_chunks": [
+        {
+          "chunk_id": "KB-023#c3",
+          "article_id": "KB-023",
+          "similarity_score": 0.7266300455941391
+        },
+        {
+          "chunk_id": "KB-028#c2",
+          "article_id": "KB-028",
+          "similarity_score": 0.6865965150273189
+        },
+        {
+          "chunk_id": "KB-015#c3",
+          "article_id": "KB-015",
+          "similarity_score": 0.6769825198835564
+        },
+        {
+          "chunk_id": "KB-027#c2",
+          "article_id": "KB-027",
+          "similarity_score": 0.6535798902721384
+        },
+        {
+          "chunk_id": "KB-022#c3",
+          "article_id": "KB-022",
+          "similarity_score": 0.6496493221865753
+        }
+      ],
+      "searches": [
+        {
+          "query": "how do i change a setting on this thing. pressed MENU, got P-01 on the screen, now stuck",
+          "k": 20,
+          "n_chunks": 20
+        }
+      ],
+      "model_called": true,
+      "recall_hit": true,
+      "both_hit": null
+    },
+    {
+      "ticket_id": "T-026",
+      "split": "holdout",
+      "expected": "answer",
+      "category": "parameters",
+      "expected_article_ids": [
+        "KB-027"
+      ],
+      "article_match": "all",
+      "query_sent": "The green RUN button on the front does nothing at all, but the stop button still works. There's a light lit up labelled REMOTE. Is the keypad broken?",
+      "top_score": 0.717559092690678,
+      "top_article_ids": [
+        "KB-027",
+        "KB-023",
+        "KB-036",
+        "KB-020",
+        "KB-028"
+      ],
+      "top_chunks": [
+        {
+          "chunk_id": "KB-027#c2",
+          "article_id": "KB-027",
+          "similarity_score": 0.717559092690678
+        },
+        {
+          "chunk_id": "KB-023#c2",
+          "article_id": "KB-023",
+          "similarity_score": 0.6927075442131871
+        },
+        {
+          "chunk_id": "KB-036#c5",
+          "article_id": "KB-036",
+          "similarity_score": 0.6493286908220947
+        },
+        {
+          "chunk_id": "KB-020#c3",
+          "article_id": "KB-020",
+          "similarity_score": 0.6072359661923816
+        },
+        {
+          "chunk_id": "KB-028#c3",
+          "article_id": "KB-028",
+          "similarity_score": 0.6071978300642881
+        }
+      ],
+      "searches": [
+        {
+          "query": "The green RUN button on the front does nothing at all, but the stop button still works. There's a light lit up labelled REMOTE. Is the keypad broken?",
+          "k": 20,
+          "n_chunks": 20
+        }
+      ],
+      "model_called": true,
+      "recall_hit": true,
+      "both_hit": null
+    },
+    {
+      "ticket_id": "T-027",
+      "split": "calibration",
+      "expected": "answer",
+      "category": "parameters",
+      "expected_article_ids": [
+        "KB-024"
+      ],
+      "article_match": "all",
+      "query_sent": "Swapped the motor for a new one today. What do I have to put into the drive for the new motor, and does the shaft turn during the tuning? Need to know if the guards have to be back on.",
+      "top_score": 0.7312080569949801,
+      "top_article_ids": [
+        "KB-022",
+        "KB-024",
+        "KB-003",
+        "KB-008",
+        "KB-028"
+      ],
+      "top_chunks": [
+        {
+          "chunk_id": "KB-022#c4",
+          "article_id": "KB-022",
+          "similarity_score": 0.7312080569949801
+        },
+        {
+          "chunk_id": "KB-024#c5",
+          "article_id": "KB-024",
+          "similarity_score": 0.7052809610016841
+        },
+        {
+          "chunk_id": "KB-003#c3",
+          "article_id": "KB-003",
+          "similarity_score": 0.702781533596978
+        },
+        {
+          "chunk_id": "KB-008#c3",
+          "article_id": "KB-008",
+          "similarity_score": 0.6986927529158158
+        },
+        {
+          "chunk_id": "KB-028#c3",
+          "article_id": "KB-028",
+          "similarity_score": 0.6969631689171469
+        }
+      ],
+      "searches": [
+        {
+          "query": "Swapped the motor for a new one today. What do I have to put into the drive for the new motor, and does the shaft turn during the tuning? Need to know if the guards have to be back on.",
+          "k": 20,
+          "n_chunks": 20
+        }
+      ],
+      "model_called": true,
+      "recall_hit": true,
+      "both_hit": null
+    },
+    {
+      "ticket_id": "T-028",
+      "split": "holdout",
+      "expected": "answer",
+      "category": "parameters",
+      "expected_article_ids": [
+        "KB-025"
+      ],
+      "article_match": "all",
+      "query_sent": "accel time question. if i set P-05 to 10 is that 10 seconds to whatever speed i ask for, or 10 seconds to top speed?",
+      "top_score": 0.7308354952158109,
+      "top_article_ids": [
+        "KB-026",
+        "KB-025",
+        "KB-005",
+        "KB-024",
+        "KB-002"
+      ],
+      "top_chunks": [
+        {
+          "chunk_id": "KB-026#c5",
+          "article_id": "KB-026",
+          "similarity_score": 0.7308354952158109
+        },
+        {
+          "chunk_id": "KB-025#c1",
+          "article_id": "KB-025",
+          "similarity_score": 0.7266059538211139
+        },
+        {
+          "chunk_id": "KB-005#c3",
+          "article_id": "KB-005",
+          "similarity_score": 0.7187241441454708
+        },
+        {
+          "chunk_id": "KB-024#c6",
+          "article_id": "KB-024",
+          "similarity_score": 0.697518601597533
+        },
+        {
+          "chunk_id": "KB-002#c3",
+          "article_id": "KB-002",
+          "similarity_score": 0.6833197983705526
+        }
+      ],
+      "searches": [
+        {
+          "query": "accel time question. if i set P-05 to 10 is that 10 seconds to whatever speed i ask for, or 10 seconds to top speed?",
+          "k": 20,
+          "n_chunks": 20
+        }
+      ],
+      "model_called": true,
+      "recall_hit": true,
+      "both_hit": null
+    },
+    {
+      "ticket_id": "T-029",
+      "split": "calibration",
+      "expected": "answer",
+      "category": "parameters",
+      "expected_article_ids": [
+        "KB-026"
+      ],
+      "article_match": "all",
+      "query_sent": "Our pump must never run slower than about 20 Hz even if the speed signal drops to zero. Which parameter does that?",
+      "top_score": 0.782809994167575,
+      "top_article_ids": [
+        "KB-026",
+        "KB-025",
+        "KB-002",
+        "KB-028",
+        "KB-027"
+      ],
+      "top_chunks": [
+        {
+          "chunk_id": "KB-026#c2",
+          "article_id": "KB-026",
+          "similarity_score": 0.782809994167575
+        },
+        {
+          "chunk_id": "KB-025#c1",
+          "article_id": "KB-025",
+          "similarity_score": 0.6464442854916288
+        },
+        {
+          "chunk_id": "KB-002#c2",
+          "article_id": "KB-002",
+          "similarity_score": 0.6162544598409839
+        },
+        {
+          "chunk_id": "KB-028#c3",
+          "article_id": "KB-028",
+          "similarity_score": 0.6162139787174026
+        },
+        {
+          "chunk_id": "KB-027#c5",
+          "article_id": "KB-027",
+          "similarity_score": 0.6102265229177074
+        }
+      ],
+      "searches": [
+        {
+          "query": "Our pump must never run slower than about 20 Hz even if the speed signal drops to zero. Which parameter does that?",
+          "k": 20,
+          "n_chunks": 20
+        }
+      ],
+      "model_called": true,
+      "recall_hit": true,
+      "both_hit": null
+    },
+    {
+      "ticket_id": "T-030",
+      "split": "holdout",
+      "expected": "answer",
+      "category": "parameters",
+      "expected_article_ids": [
+        "KB-026",
+        "KB-001"
+      ],
+      "article_match": "all",
+      "query_sent": "i put the max frequency up from 50 to 70 last week and since then the drive trips with E-01 on start. didnt touch anything else. why would that do it?",
+      "top_score": 0.8205470056006614,
+      "top_article_ids": [
+        "KB-001",
+        "KB-002",
+        "KB-003",
+        "KB-025",
+        "KB-009"
+      ],
+      "top_chunks": [
+        {
+          "chunk_id": "KB-001#c1",
+          "article_id": "KB-001",
+          "similarity_score": 0.8205470056006614
+        },
+        {
+          "chunk_id": "KB-002#c2",
+          "article_id": "KB-002",
+          "similarity_score": 0.7577855918351262
+        },
+        {
+          "chunk_id": "KB-003#c2",
+          "article_id": "KB-003",
+          "similarity_score": 0.7405907183458795
+        },
+        {
+          "chunk_id": "KB-025#c3",
+          "article_id": "KB-025",
+          "similarity_score": 0.7300460410818153
+        },
+        {
+          "chunk_id": "KB-009#c2",
+          "article_id": "KB-009",
+          "similarity_score": 0.7166480013514995
+        }
+      ],
+      "searches": [
+        {
+          "query": "i put the max frequency up from 50 to 70 last week and since then the drive trips with E-01 on start. didnt touch anything else. why would that do it?",
+          "k": 20,
+          "n_chunks": 20
+        },
+        {
+          "query": "E-01 Overcurrent during acceleration",
+          "k": 20,
+          "n_chunks": 20
+        }
+      ],
+      "model_called": true,
+      "recall_hit": true,
+      "both_hit": false
+    },
+    {
+      "ticket_id": "T-031",
+      "split": "calibration",
+      "expected": "answer",
+      "category": "parameters",
+      "expected_article_ids": [
+        "KB-028"
+      ],
+      "article_match": "all",
+      "query_sent": "how do i see what the last few trips were? and can the list be wiped afterwards",
+      "top_score": 0.6435305582825936,
+      "top_article_ids": [
+        "KB-028",
+        "KB-029",
+        "KB-017",
+        "KB-023",
+        "KB-009"
+      ],
+      "top_chunks": [
+        {
+          "chunk_id": "KB-028#c1",
+          "article_id": "KB-028",
+          "similarity_score": 0.6435305582825936
+        },
+        {
+          "chunk_id": "KB-029#c4",
+          "article_id": "KB-029",
+          "similarity_score": 0.6095505754844838
+        },
+        {
+          "chunk_id": "KB-017#c6",
+          "article_id": "KB-017",
+          "similarity_score": 0.5681917728074944
+        },
+        {
+          "chunk_id": "KB-023#c4",
+          "article_id": "KB-023",
+          "similarity_score": 0.566368181481667
+        },
+        {
+          "chunk_id": "KB-009#c3",
+          "article_id": "KB-009",
+          "similarity_score": 0.5632837756806657
+        }
+      ],
+      "searches": [
+        {
+          "query": "how do i see what the last few trips were? and can the list be wiped afterwards",
+          "k": 20,
+          "n_chunks": 20
+        }
+      ],
+      "model_called": true,
+      "recall_hit": true,
+      "both_hit": null
+    },
+    {
+      "ticket_id": "T-032",
+      "split": "holdout",
+      "expected": "answer",
+      "category": "parameters",
+      "expected_article_ids": [
+        "KB-028",
+        "KB-024"
+      ],
+      "article_match": "all",
+      "query_sent": "Inherited a drive off another machine, no idea what the previous settings are. How do I wipe it back to how it left the factory, and what do I then need to set up again before running our motor?",
+      "top_score": 0.7304195499108057,
+      "top_article_ids": [
+        "KB-028",
+        "KB-015",
+        "KB-003",
+        "KB-009",
+        "KB-001"
+      ],
+      "top_chunks": [
+        {
+          "chunk_id": "KB-028#c2",
+          "article_id": "KB-028",
+          "similarity_score": 0.7304195499108057
+        },
+        {
+          "chunk_id": "KB-015#c3",
+          "article_id": "KB-015",
+          "similarity_score": 0.6962606056020832
+        },
+        {
+          "chunk_id": "KB-003#c3",
+          "article_id": "KB-003",
+          "similarity_score": 0.6868996070107373
+        },
+        {
+          "chunk_id": "KB-009#c3",
+          "article_id": "KB-009",
+          "similarity_score": 0.684355829833902
+        },
+        {
+          "chunk_id": "KB-001#c3",
+          "article_id": "KB-001",
+          "similarity_score": 0.6804132475410366
+        }
+      ],
+      "searches": [
+        {
+          "query": "Inherited a drive off another machine, no idea what the previous settings are. How do I wipe it back to how it left the factory, and what do I then need to set up again before running our motor?",
+          "k": 20,
+          "n_chunks": 20
+        }
+      ],
+      "model_called": true,
+      "recall_hit": true,
+      "both_hit": false
+    },
+    {
+      "ticket_id": "T-033",
+      "split": "calibration",
+      "expected": "answer",
+      "category": "maintenance",
+      "expected_article_ids": [
+        "KB-029"
+      ],
+      "article_match": "all",
+      "query_sent": "Putting together our PM plan. What routine maintenance do these drives need and how often?",
+      "top_score": 0.7055734272787197,
+      "top_article_ids": [
+        "KB-029",
+        "KB-033",
+        "KB-022",
+        "KB-003",
+        "KB-023"
+      ],
+      "top_chunks": [
+        {
+          "chunk_id": "KB-029#c5",
+          "article_id": "KB-029",
+          "similarity_score": 0.7055734272787197
+        },
+        {
+          "chunk_id": "KB-033#c5",
+          "article_id": "KB-033",
+          "similarity_score": 0.6753397916289621
+        },
+        {
+          "chunk_id": "KB-022#c2",
+          "article_id": "KB-022",
+          "similarity_score": 0.6364981596849676
+        },
+        {
+          "chunk_id": "KB-003#c3",
+          "article_id": "KB-003",
+          "similarity_score": 0.6358306975809689
+        },
+        {
+          "chunk_id": "KB-023#c4",
+          "article_id": "KB-023",
+          "similarity_score": 0.6335636863826875
+        }
+      ],
+      "searches": [
+        {
+          "query": "Putting together our PM plan. What routine maintenance do these drives need and how often?",
+          "k": 20,
+          "n_chunks": 20
+        }
+      ],
+      "model_called": true,
+      "recall_hit": true,
+      "both_hit": null
+    },
+    {
+      "ticket_id": "T-034",
+      "split": "holdout",
+      "expected": "answer",
+      "category": "maintenance",
+      "expected_article_ids": [
+        "KB-030"
+      ],
+      "article_match": "all",
+      "query_sent": "ok to blow the drive out with the workshop airline? and can i use contact cleaner spray on the fins, theyre greasy",
+      "top_score": 0.6627121793164013,
+      "top_article_ids": [
+        "KB-030",
+        "KB-018",
+        "KB-008",
+        "KB-007",
+        "KB-009"
+      ],
+      "top_chunks": [
+        {
+          "chunk_id": "KB-030#c5",
+          "article_id": "KB-030",
+          "similarity_score": 0.6627121793164013
+        },
+        {
+          "chunk_id": "KB-018#c5",
+          "article_id": "KB-018",
+          "similarity_score": 0.596767706424222
+        },
+        {
+          "chunk_id": "KB-008#c3",
+          "article_id": "KB-008",
+          "similarity_score": 0.5911947908777289
+        },
+        {
+          "chunk_id": "KB-007#c3",
+          "article_id": "KB-007",
+          "similarity_score": 0.5898497577892381
+        },
+        {
+          "chunk_id": "KB-009#c3",
+          "article_id": "KB-009",
+          "similarity_score": 0.5830949176736239
+        }
+      ],
+      "searches": [
+        {
+          "query": "ok to blow the drive out with the workshop airline? and can i use contact cleaner spray on the fins, theyre greasy",
+          "k": 20,
+          "n_chunks": 20
+        }
+      ],
+      "model_called": true,
+      "recall_hit": true,
+      "both_hit": null
+    },
+    {
+      "ticket_id": "T-035",
+      "split": "calibration",
+      "expected": "answer",
+      "category": "maintenance",
+      "expected_article_ids": [
+        "KB-031"
+      ],
+      "article_match": "all",
+      "query_sent": "fitting a replacement fan. theres an arrow moulded on it - which way should that face? dont want to put it in backwards",
+      "top_score": 0.7654912498211831,
+      "top_article_ids": [
+        "KB-031",
+        "KB-030",
+        "KB-016",
+        "KB-018",
+        "KB-017"
+      ],
+      "top_chunks": [
+        {
+          "chunk_id": "KB-031#c5",
+          "article_id": "KB-031",
+          "similarity_score": 0.7654912498211831
+        },
+        {
+          "chunk_id": "KB-030#c6",
+          "article_id": "KB-030",
+          "similarity_score": 0.6378148588460871
+        },
+        {
+          "chunk_id": "KB-016#c3",
+          "article_id": "KB-016",
+          "similarity_score": 0.6336098379582721
+        },
+        {
+          "chunk_id": "KB-018#c2",
+          "article_id": "KB-018",
+          "similarity_score": 0.6177766468307098
+        },
+        {
+          "chunk_id": "KB-017#c4",
+          "article_id": "KB-017",
+          "similarity_score": 0.6006884919379679
+        }
+      ],
+      "searches": [
+        {
+          "query": "fitting a replacement fan. theres an arrow moulded on it - which way should that face? dont want to put it in backwards",
+          "k": 20,
+          "n_chunks": 20
+        }
+      ],
+      "model_called": true,
+      "recall_hit": true,
+      "both_hit": null
+    },
+    {
+      "ticket_id": "T-036",
+      "split": "holdout",
+      "expected": "answer",
+      "category": "maintenance",
+      "expected_article_ids": [
+        "KB-032"
+      ],
+      "article_match": "all",
+      "query_sent": "During the yearly check I found one of the incoming supply terminals has gone brown and the insulation next to it looks a bit melted. Screw wasn't very tight. Can I just nip it up and carry on?",
+      "top_score": 0.7939489167036624,
+      "top_article_ids": [
+        "KB-032",
+        "KB-017",
+        "KB-019",
+        "KB-010",
+        "KB-018"
+      ],
+      "top_chunks": [
+        {
+          "chunk_id": "KB-032#c3",
+          "article_id": "KB-032",
+          "similarity_score": 0.7939489167036624
+        },
+        {
+          "chunk_id": "KB-017#c4",
+          "article_id": "KB-017",
+          "similarity_score": 0.6785507785945557
+        },
+        {
+          "chunk_id": "KB-019#c5",
+          "article_id": "KB-019",
+          "similarity_score": 0.661897114465573
+        },
+        {
+          "chunk_id": "KB-010#c2",
+          "article_id": "KB-010",
+          "similarity_score": 0.6591310869499474
+        },
+        {
+          "chunk_id": "KB-018#c5",
+          "article_id": "KB-018",
+          "similarity_score": 0.656211921525492
+        }
+      ],
+      "searches": [
+        {
+          "query": "During the yearly check I found one of the incoming supply terminals has gone brown and the insulation next to it looks a bit melted. Screw wasn't very tight. Can I just nip it up and carry on?",
+          "k": 20,
+          "n_chunks": 20
+        }
+      ],
+      "model_called": true,
+      "recall_hit": true,
+      "both_hit": null
+    },
+    {
+      "ticket_id": "T-037",
+      "split": "calibration",
+      "expected": "answer",
+      "category": "maintenance",
+      "expected_article_ids": [
+        "KB-033"
+      ],
+      "article_match": "all",
+      "query_sent": "got a spare vx200 thats been sat on the stores shelf about 18 months, never powered. can i just fit it and run?",
+      "top_score": 0.7062096828243238,
+      "top_article_ids": [
+        "KB-017",
+        "KB-018",
+        "KB-029",
+        "KB-033",
+        "KB-031"
+      ],
+      "top_chunks": [
+        {
+          "chunk_id": "KB-017#c4",
+          "article_id": "KB-017",
+          "similarity_score": 0.7062096828243238
+        },
+        {
+          "chunk_id": "KB-018#c1",
+          "article_id": "KB-018",
+          "similarity_score": 0.6769660082987403
+        },
+        {
+          "chunk_id": "KB-029#c5",
+          "article_id": "KB-029",
+          "similarity_score": 0.6622781497734329
+        },
+        {
+          "chunk_id": "KB-033#c1",
+          "article_id": "KB-033",
+          "similarity_score": 0.6583406508412406
+        },
+        {
+          "chunk_id": "KB-031#c1",
+          "article_id": "KB-031",
+          "similarity_score": 0.6570604795050428
+        }
+      ],
+      "searches": [
+        {
+          "query": "got a spare vx200 thats been sat on the stores shelf about 18 months, never powered. can i just fit it and run?",
+          "k": 20,
+          "n_chunks": 20
+        }
+      ],
+      "model_called": true,
+      "recall_hit": true,
+      "both_hit": null
+    },
+    {
+      "ticket_id": "T-038",
+      "split": "holdout",
+      "expected": "answer",
+      "category": "safety",
+      "expected_article_ids": [
+        "KB-034"
+      ],
+      "article_match": "all",
+      "query_sent": "How long do I have to wait after turning the supply off before I can touch the terminals? Display goes dark almost straight away so I assume its dead by then.",
+      "top_score": 0.7163367516025261,
+      "top_article_ids": [
+        "KB-032",
+        "KB-022",
+        "KB-019",
+        "KB-034",
+        "KB-029"
+      ],
+      "top_chunks": [
+        {
+          "chunk_id": "KB-032#c2",
+          "article_id": "KB-032",
+          "similarity_score": 0.7163367516025261
+        },
+        {
+          "chunk_id": "KB-022#c3",
+          "article_id": "KB-022",
+          "similarity_score": 0.7056456133771924
+        },
+        {
+          "chunk_id": "KB-019#c1",
+          "article_id": "KB-019",
+          "similarity_score": 0.7047178955919695
+        },
+        {
+          "chunk_id": "KB-034#c1",
+          "article_id": "KB-034",
+          "similarity_score": 0.6856332518814349
+        },
+        {
+          "chunk_id": "KB-029#c3",
+          "article_id": "KB-029",
+          "similarity_score": 0.6814301471564496
+        }
+      ],
+      "searches": [
+        {
+          "query": "How long do I have to wait after turning the supply off before I can touch the terminals? Display goes dark almost straight away so I assume its dead by then.",
+          "k": 20,
+          "n_chunks": 20
+        }
+      ],
+      "model_called": true,
+      "recall_hit": true,
+      "both_hit": null
+    },
+    {
+      "ticket_id": "T-039",
+      "split": "calibration",
+      "expected": "answer",
+      "category": "safety",
+      "expected_article_ids": [
+        "KB-034"
+      ],
+      "article_match": "all",
+      "query_sent": "motor is stopped, i pressed the stop button on the drive. is it safe to re-make the connections on the output terminals now or do i need to do more than that",
+      "top_score": 0.7860781604151821,
+      "top_article_ids": [
+        "KB-011",
+        "KB-036",
+        "KB-003",
+        "KB-012",
+        "KB-032"
+      ],
+      "top_chunks": [
+        {
+          "chunk_id": "KB-011#c3",
+          "article_id": "KB-011",
+          "similarity_score": 0.7860781604151821
+        },
+        {
+          "chunk_id": "KB-036#c5",
+          "article_id": "KB-036",
+          "similarity_score": 0.7545843897586737
+        },
+        {
+          "chunk_id": "KB-003#c3",
+          "article_id": "KB-003",
+          "similarity_score": 0.7544225328962841
+        },
+        {
+          "chunk_id": "KB-012#c3",
+          "article_id": "KB-012",
+          "similarity_score": 0.7520528206486022
+        },
+        {
+          "chunk_id": "KB-032#c6",
+          "article_id": "KB-032",
+          "similarity_score": 0.7497709128965475
+        }
+      ],
+      "searches": [
+        {
+          "query": "motor is stopped, i pressed the stop button on the drive. is it safe to re-make the connections on the output terminals now or do i need to do more than that",
+          "k": 20,
+          "n_chunks": 20
+        }
+      ],
+      "model_called": true,
+      "recall_hit": false,
+      "both_hit": null
+    },
+    {
+      "ticket_id": "T-040",
+      "split": "holdout",
+      "expected": "answer",
+      "category": "safety",
+      "expected_article_ids": [
+        "KB-035"
+      ],
+      "article_match": "all",
+      "query_sent": "what does the sticker with the lightning bolt and '5 min' on the front cover mean",
+      "top_score": 0.664218257204879,
+      "top_article_ids": [
+        "KB-035",
+        "KB-025",
+        "KB-009",
+        "KB-008",
+        "KB-023"
+      ],
+      "top_chunks": [
+        {
+          "chunk_id": "KB-035#c3",
+          "article_id": "KB-035",
+          "similarity_score": 0.664218257204879
+        },
+        {
+          "chunk_id": "KB-025#c3",
+          "article_id": "KB-025",
+          "similarity_score": 0.5596601221940072
+        },
+        {
+          "chunk_id": "KB-009#c1",
+          "article_id": "KB-009",
+          "similarity_score": 0.5569945917777132
+        },
+        {
+          "chunk_id": "KB-008#c1",
+          "article_id": "KB-008",
+          "similarity_score": 0.5500167585514857
+        },
+        {
+          "chunk_id": "KB-023#c1",
+          "article_id": "KB-023",
+          "similarity_score": 0.5405587190590428
+        }
+      ],
+      "searches": [
+        {
+          "query": "what does the sticker with the lightning bolt and '5 min' on the front cover mean",
+          "k": 20,
+          "n_chunks": 20
+        }
+      ],
+      "model_called": true,
+      "recall_hit": true,
+      "both_hit": null
+    },
+    {
+      "ticket_id": "T-041",
+      "split": "calibration",
+      "expected": "answer",
+      "category": "safety",
+      "expected_article_ids": [
+        "KB-035"
+      ],
+      "article_match": "all",
+      "query_sent": "There is a triangle symbol with wavy lines on the side of the unit. One of the apprentices asked what it means and I wasn't sure.",
+      "top_score": 0.6806368771140866,
+      "top_article_ids": [
+        "KB-035",
+        "KB-008",
+        "KB-003",
+        "KB-001",
+        "KB-016"
+      ],
+      "top_chunks": [
+        {
+          "chunk_id": "KB-035#c2",
+          "article_id": "KB-035",
+          "similarity_score": 0.6806368771140866
+        },
+        {
+          "chunk_id": "KB-008#c1",
+          "article_id": "KB-008",
+          "similarity_score": 0.5845929194405486
+        },
+        {
+          "chunk_id": "KB-003#c1",
+          "article_id": "KB-003",
+          "similarity_score": 0.5845097095082594
+        },
+        {
+          "chunk_id": "KB-001#c1",
+          "article_id": "KB-001",
+          "similarity_score": 0.5808770647461303
+        },
+        {
+          "chunk_id": "KB-016#c1",
+          "article_id": "KB-016",
+          "similarity_score": 0.5739963854219194
+        }
+      ],
+      "searches": [
+        {
+          "query": "There is a triangle symbol with wavy lines on the side of the unit. One of the apprentices asked what it means and I wasn't sure.",
+          "k": 20,
+          "n_chunks": 20
+        }
+      ],
+      "model_called": true,
+      "recall_hit": true,
+      "both_hit": null
+    },
+    {
+      "ticket_id": "T-042",
+      "split": "holdout",
+      "expected": "answer",
+      "category": "safety",
+      "expected_article_ids": [
+        "KB-036"
+      ],
+      "article_match": "all",
+      "query_sent": "can we just wire the e-stop button into the external fault input and use that as the emergency stop for the machine? would save putting in a safety relay",
+      "top_score": 0.8844271282632645,
+      "top_article_ids": [
+        "KB-036",
+        "KB-014",
+        "KB-006",
+        "KB-012",
+        "KB-020"
+      ],
+      "top_chunks": [
+        {
+          "chunk_id": "KB-036#c3",
+          "article_id": "KB-036",
+          "similarity_score": 0.8844271282632645
+        },
+        {
+          "chunk_id": "KB-014#c2",
+          "article_id": "KB-014",
+          "similarity_score": 0.7719428761654872
+        },
+        {
+          "chunk_id": "KB-006#c3",
+          "article_id": "KB-006",
+          "similarity_score": 0.6681139761686432
+        },
+        {
+          "chunk_id": "KB-012#c1",
+          "article_id": "KB-012",
+          "similarity_score": 0.6608648224767597
+        },
+        {
+          "chunk_id": "KB-020#c3",
+          "article_id": "KB-020",
+          "similarity_score": 0.6608419983983169
+        }
+      ],
+      "searches": [
+        {
+          "query": "can we just wire the e-stop button into the external fault input and use that as the emergency stop for the machine? would save putting in a safety relay",
+          "k": 20,
+          "n_chunks": 20
+        }
+      ],
+      "model_called": true,
+      "recall_hit": true,
+      "both_hit": null
+    },
+    {
+      "ticket_id": "T-043",
+      "split": "calibration",
+      "expected": "escalate",
+      "category": "out_of_scope",
+      "expected_article_ids": [],
+      "article_match": "all",
+      "query_sent": "how do i check what firmware version the drive is on",
+      "top_score": 0.6728703661188509,
+      "top_article_ids": [
+        "KB-017",
+        "KB-003",
+        "KB-014",
+        "KB-009",
+        "KB-028"
+      ],
+      "top_chunks": [
+        {
+          "chunk_id": "KB-017#c5",
+          "article_id": "KB-017",
+          "similarity_score": 0.6728703661188509
+        },
+        {
+          "chunk_id": "KB-003#c3",
+          "article_id": "KB-003",
+          "similarity_score": 0.6574311678100638
+        },
+        {
+          "chunk_id": "KB-014#c3",
+          "article_id": "KB-014",
+          "similarity_score": 0.6572389039611579
+        },
+        {
+          "chunk_id": "KB-009#c3",
+          "article_id": "KB-009",
+          "similarity_score": 0.6446386388177034
+        },
+        {
+          "chunk_id": "KB-028#c1",
+          "article_id": "KB-028",
+          "similarity_score": 0.6385973618616707
+        }
+      ],
+      "searches": [
+        {
+          "query": "how do i check what firmware version the drive is on",
+          "k": 20,
+          "n_chunks": 20
+        }
+      ],
+      "model_called": true,
+      "recall_hit": null,
+      "both_hit": null
+    },
+    {
+      "ticket_id": "T-044",
+      "split": "holdout",
+      "expected": "escalate",
+      "category": "out_of_scope",
+      "expected_article_ids": [],
+      "article_match": "all",
+      "query_sent": "We have two VX-200s that behave slightly differently and suspect one has older software. Is there an update file and what's the procedure to load it onto the drive?",
+      "top_score": 0.7659307130041815,
+      "top_article_ids": [
+        "KB-017",
+        "KB-015",
+        "KB-029",
+        "KB-028",
+        "KB-033"
+      ],
+      "top_chunks": [
+        {
+          "chunk_id": "KB-017#c5",
+          "article_id": "KB-017",
+          "similarity_score": 0.7659307130041815
+        },
+        {
+          "chunk_id": "KB-015#c1",
+          "article_id": "KB-015",
+          "similarity_score": 0.7065202840491209
+        },
+        {
+          "chunk_id": "KB-029#c6",
+          "article_id": "KB-029",
+          "similarity_score": 0.6975234254295939
+        },
+        {
+          "chunk_id": "KB-028#c1",
+          "article_id": "KB-028",
+          "similarity_score": 0.688215989370765
+        },
+        {
+          "chunk_id": "KB-033#c1",
+          "article_id": "KB-033",
+          "similarity_score": 0.669441560044374
+        }
+      ],
+      "searches": [
+        {
+          "query": "We have two VX-200s that behave slightly differently and suspect one has older software. Is there an update file and what's the procedure to load it onto the drive?",
+          "k": 20,
+          "n_chunks": 20
+        }
+      ],
+      "model_called": true,
+      "recall_hit": null,
+      "both_hit": null
+    },
+    {
+      "ticket_id": "T-045",
+      "split": "calibration",
+      "expected": "escalate",
+      "category": "out_of_scope",
+      "expected_article_ids": [],
+      "article_match": "all",
+      "query_sent": "need to hook the drive up to our plc over modbus. which terminals and what are the comms settings (baud, address)?",
+      "top_score": 0.675470178737469,
+      "top_article_ids": [
+        "KB-019",
+        "KB-027",
+        "KB-020",
+        "KB-022",
+        "KB-023"
+      ],
+      "top_chunks": [
+        {
+          "chunk_id": "KB-019#c2",
+          "article_id": "KB-019",
+          "similarity_score": 0.675470178737469
+        },
+        {
+          "chunk_id": "KB-027#c5",
+          "article_id": "KB-027",
+          "similarity_score": 0.6737809709266067
+        },
+        {
+          "chunk_id": "KB-020#c4",
+          "article_id": "KB-020",
+          "similarity_score": 0.6732326560537828
+        },
+        {
+          "chunk_id": "KB-022#c2",
+          "article_id": "KB-022",
+          "similarity_score": 0.6651491214799634
+        },
+        {
+          "chunk_id": "KB-023#c4",
+          "article_id": "KB-023",
+          "similarity_score": 0.641770277583803
+        }
+      ],
+      "searches": [
+        {
+          "query": "need to hook the drive up to our plc over modbus. which terminals and what are the comms settings (baud, address)?",
+          "k": 20,
+          "n_chunks": 20
+        }
+      ],
+      "model_called": true,
+      "recall_hit": null,
+      "both_hit": null
+    },
+    {
+      "ticket_id": "T-046",
+      "split": "holdout",
+      "expected": "escalate",
+      "category": "out_of_scope",
+      "expected_article_ids": [],
+      "article_match": "all",
+      "query_sent": "Does the VX-200 have an Ethernet port or an option card so we can read speed and fault status into the control system over the network?",
+      "top_score": 0.6979830543154251,
+      "top_article_ids": [
+        "KB-014",
+        "KB-023",
+        "KB-017",
+        "KB-009",
+        "KB-027"
+      ],
+      "top_chunks": [
+        {
+          "chunk_id": "KB-014#c1",
+          "article_id": "KB-014",
+          "similarity_score": 0.6979830543154251
+        },
+        {
+          "chunk_id": "KB-023#c1",
+          "article_id": "KB-023",
+          "similarity_score": 0.6978260809873593
+        },
+        {
+          "chunk_id": "KB-017#c2",
+          "article_id": "KB-017",
+          "similarity_score": 0.6881436313919818
+        },
+        {
+          "chunk_id": "KB-009#c1",
+          "article_id": "KB-009",
+          "similarity_score": 0.6778577358176787
+        },
+        {
+          "chunk_id": "KB-027#c1",
+          "article_id": "KB-027",
+          "similarity_score": 0.6777682375969352
+        }
+      ],
+      "searches": [
+        {
+          "query": "Does the VX-200 have an Ethernet port or an option card so we can read speed and fault status into the control system over the network?",
+          "k": 20,
+          "n_chunks": 20
+        }
+      ],
+      "model_called": true,
+      "recall_hit": null,
+      "both_hit": null
+    },
+    {
+      "ticket_id": "T-047",
+      "split": "calibration",
+      "expected": "escalate",
+      "category": "out_of_scope",
+      "expected_article_ids": [],
+      "article_match": "all",
+      "query_sent": "want the drive to hold constant pressure on a booster pump using a pressure transducer. how do i set up the pid",
+      "top_score": 0.6336383442628799,
+      "top_article_ids": [
+        "KB-022",
+        "KB-001",
+        "KB-003",
+        "KB-033",
+        "KB-002"
+      ],
+      "top_chunks": [
+        {
+          "chunk_id": "KB-022#c4",
+          "article_id": "KB-022",
+          "similarity_score": 0.6336383442628799
+        },
+        {
+          "chunk_id": "KB-001#c3",
+          "article_id": "KB-001",
+          "similarity_score": 0.6228163173317847
+        },
+        {
+          "chunk_id": "KB-003#c3",
+          "article_id": "KB-003",
+          "similarity_score": 0.622713070386649
+        },
+        {
+          "chunk_id": "KB-033#c4",
+          "article_id": "KB-033",
+          "similarity_score": 0.6166816567402742
+        },
+        {
+          "chunk_id": "KB-002#c3",
+          "article_id": "KB-002",
+          "similarity_score": 0.6124333296148061
+        }
+      ],
+      "searches": [
+        {
+          "query": "want the drive to hold constant pressure on a booster pump using a pressure transducer. how do i set up the pid",
+          "k": 20,
+          "n_chunks": 20
+        }
+      ],
+      "model_called": true,
+      "recall_hit": null,
+      "both_hit": null
+    },
+    {
+      "ticket_id": "T-048",
+      "split": "holdout",
+      "expected": "escalate",
+      "category": "out_of_scope",
+      "expected_article_ids": [],
+      "article_match": "all",
+      "query_sent": "We feed a 4-20 mA flow signal into the drive. Can it regulate the motor speed on its own to keep the flow at a setpoint, and which parameters are the gain settings?",
+      "top_score": 0.7177006917483952,
+      "top_article_ids": [
+        "KB-026",
+        "KB-027",
+        "KB-020",
+        "KB-023",
+        "KB-001"
+      ],
+      "top_chunks": [
+        {
+          "chunk_id": "KB-026#c1",
+          "article_id": "KB-026",
+          "similarity_score": 0.7177006917483952
+        },
+        {
+          "chunk_id": "KB-027#c5",
+          "article_id": "KB-027",
+          "similarity_score": 0.6793891788302368
+        },
+        {
+          "chunk_id": "KB-020#c4",
+          "article_id": "KB-020",
+          "similarity_score": 0.6752609914096818
+        },
+        {
+          "chunk_id": "KB-023#c4",
+          "article_id": "KB-023",
+          "similarity_score": 0.6669004613109184
+        },
+        {
+          "chunk_id": "KB-001#c3",
+          "article_id": "KB-001",
+          "similarity_score": 0.6558921900086785
+        }
+      ],
+      "searches": [
+        {
+          "query": "We feed a 4-20 mA flow signal into the drive. Can it regulate the motor speed on its own to keep the flow at a setpoint, and which parameters are the gain settings?",
+          "k": 20,
+          "n_chunks": 20
+        }
+      ],
+      "model_called": true,
+      "recall_hit": null,
+      "both_hit": null
+    },
+    {
+      "ticket_id": "T-049",
+      "split": "calibration",
+      "expected": "escalate",
+      "category": "out_of_scope",
+      "expected_article_ids": [],
+      "article_match": "all",
+      "query_sent": "keep getting E-05 on a high inertia load and we cant make the stop any longer. want to fit a braking resistor - where does it connect and what do i set?",
+      "top_score": 0.8853467587533242,
+      "top_article_ids": [
+        "KB-005",
+        "KB-004",
+        "KB-002",
+        "KB-006",
+        "KB-025"
+      ],
+      "top_chunks": [
+        {
+          "chunk_id": "KB-005#c2",
+          "article_id": "KB-005",
+          "similarity_score": 0.8853467587533242
+        },
+        {
+          "chunk_id": "KB-004#c1",
+          "article_id": "KB-004",
+          "similarity_score": 0.8003808675905618
+        },
+        {
+          "chunk_id": "KB-002#c3",
+          "article_id": "KB-002",
+          "similarity_score": 0.798930810720542
+        },
+        {
+          "chunk_id": "KB-006#c1",
+          "article_id": "KB-006",
+          "similarity_score": 0.7594699042789494
+        },
+        {
+          "chunk_id": "KB-025#c3",
+          "article_id": "KB-025",
+          "similarity_score": 0.7494323320871794
+        }
+      ],
+      "searches": [
+        {
+          "query": "keep getting E-05 on a high inertia load and we cant make the stop any longer. want to fit a braking resistor - where does it connect and what do i set?",
+          "k": 20,
+          "n_chunks": 20
+        },
+        {
+          "query": "E-05 DC bus overvoltage during fast deceleration",
+          "k": 20,
+          "n_chunks": 20
+        }
+      ],
+      "model_called": true,
+      "recall_hit": null,
+      "both_hit": null
+    },
+    {
+      "ticket_id": "T-050",
+      "split": "holdout",
+      "expected": "escalate",
+      "category": "out_of_scope",
+      "expected_article_ids": [],
+      "article_match": "all",
+      "query_sent": "What ohm value and wattage brake resistor is right for the 7.5 kW drive?",
+      "top_score": 0.6627250600794802,
+      "top_article_ids": [
+        "KB-017",
+        "KB-007",
+        "KB-032",
+        "KB-022",
+        "KB-011"
+      ],
+      "top_chunks": [
+        {
+          "chunk_id": "KB-017#c3",
+          "article_id": "KB-017",
+          "similarity_score": 0.6627250600794802
+        },
+        {
+          "chunk_id": "KB-007#c1",
+          "article_id": "KB-007",
+          "similarity_score": 0.6535453448141677
+        },
+        {
+          "chunk_id": "KB-032#c4",
+          "article_id": "KB-032",
+          "similarity_score": 0.6437034819740847
+        },
+        {
+          "chunk_id": "KB-022#c2",
+          "article_id": "KB-022",
+          "similarity_score": 0.6353724214345644
+        },
+        {
+          "chunk_id": "KB-011#c3",
+          "article_id": "KB-011",
+          "similarity_score": 0.6331575297804092
+        }
+      ],
+      "searches": [
+        {
+          "query": "What ohm value and wattage brake resistor is right for the 7.5 kW drive?",
+          "k": 20,
+          "n_chunks": 20
+        }
+      ],
+      "model_called": true,
+      "recall_hit": null,
+      "both_hit": null
+    },
+    {
+      "ticket_id": "T-051",
+      "split": "calibration",
+      "expected": "escalate",
+      "category": "out_of_scope",
+      "expected_article_ids": [],
+      "article_match": "all",
+      "query_sent": "only got 230v single phase in the workshop. can i run the vx200 off that if i just use L1 and L2?",
+      "top_score": 0.7053228793498562,
+      "top_article_ids": [
+        "KB-010",
+        "KB-021",
+        "KB-017",
+        "KB-022",
+        "KB-011"
+      ],
+      "top_chunks": [
+        {
+          "chunk_id": "KB-010#c1",
+          "article_id": "KB-010",
+          "similarity_score": 0.7053228793498562
+        },
+        {
+          "chunk_id": "KB-021#c2",
+          "article_id": "KB-021",
+          "similarity_score": 0.6978390369635924
+        },
+        {
+          "chunk_id": "KB-017#c3",
+          "article_id": "KB-017",
+          "similarity_score": 0.6901190884837747
+        },
+        {
+          "chunk_id": "KB-022#c1",
+          "article_id": "KB-022",
+          "similarity_score": 0.6768572990687112
+        },
+        {
+          "chunk_id": "KB-011#c1",
+          "article_id": "KB-011",
+          "similarity_score": 0.6732705094913203
+        }
+      ],
+      "searches": [
+        {
+          "query": "only got 230v single phase in the workshop. can i run the vx200 off that if i just use L1 and L2?",
+          "k": 20,
+          "n_chunks": 20
+        }
+      ],
+      "model_called": true,
+      "recall_hit": null,
+      "both_hit": null
+    },
+    {
+      "ticket_id": "T-052",
+      "split": "holdout",
+      "expected": "escalate",
+      "category": "out_of_scope",
+      "expected_article_ids": [],
+      "article_match": "all",
+      "query_sent": "Site has no three phase available at the pump house. Is there a way to feed the drive from a single phase supply with reduced output, and how much would it need derating?",
+      "top_score": 0.7111868732695459,
+      "top_article_ids": [
+        "KB-010",
+        "KB-022",
+        "KB-011",
+        "KB-030",
+        "KB-019"
+      ],
+      "top_chunks": [
+        {
+          "chunk_id": "KB-010#c3",
+          "article_id": "KB-010",
+          "similarity_score": 0.7111868732695459
+        },
+        {
+          "chunk_id": "KB-022#c2",
+          "article_id": "KB-022",
+          "similarity_score": 0.6726509386318844
+        },
+        {
+          "chunk_id": "KB-011#c3",
+          "article_id": "KB-011",
+          "similarity_score": 0.6610109851903392
+        },
+        {
+          "chunk_id": "KB-030#c6",
+          "article_id": "KB-030",
+          "similarity_score": 0.6591382240643118
+        },
+        {
+          "chunk_id": "KB-019#c2",
+          "article_id": "KB-019",
+          "similarity_score": 0.651699192787547
+        }
+      ],
+      "searches": [
+        {
+          "query": "Site has no three phase available at the pump house. Is there a way to feed the drive from a single phase supply with reduced output, and how much would it need derating?",
+          "k": 20,
+          "n_chunks": 20
+        }
+      ],
+      "model_called": true,
+      "recall_hit": null,
+      "both_hit": null
+    },
+    {
+      "ticket_id": "T-053",
+      "split": "calibration",
+      "expected": "escalate",
+      "category": "fault",
+      "expected_article_ids": [],
+      "article_match": "all",
+      "query_sent": "drive showing E-21, not in any list i can find. what is it",
+      "top_score": 0.6635236384240546,
+      "top_article_ids": [
+        "KB-009",
+        "KB-014",
+        "KB-007",
+        "KB-015",
+        "KB-001"
+      ],
+      "top_chunks": [
+        {
+          "chunk_id": "KB-009#c1",
+          "article_id": "KB-009",
+          "similarity_score": 0.6635236384240546
+        },
+        {
+          "chunk_id": "KB-014#c4",
+          "article_id": "KB-014",
+          "similarity_score": 0.6536997941903337
+        },
+        {
+          "chunk_id": "KB-007#c2",
+          "article_id": "KB-007",
+          "similarity_score": 0.6520540955501992
+        },
+        {
+          "chunk_id": "KB-015#c4",
+          "article_id": "KB-015",
+          "similarity_score": 0.651345282717779
+        },
+        {
+          "chunk_id": "KB-001#c4",
+          "article_id": "KB-001",
+          "similarity_score": 0.6356696688133516
+        }
+      ],
+      "searches": [
+        {
+          "query": "drive showing E-21, not in any list i can find. what is it",
+          "k": 20,
+          "n_chunks": 20
+        }
+      ],
+      "model_called": false,
+      "recall_hit": null,
+      "both_hit": null
+    },
+    {
+      "ticket_id": "T-054",
+      "split": "holdout",
+      "expected": "escalate",
+      "category": "fault",
+      "expected_article_ids": [],
+      "article_match": "all",
+      "query_sent": "Display is flashing E-33 after a thunderstorm last night and it will not reset. What does that code mean and how do we clear it?",
+      "top_score": 0.6629897367468103,
+      "top_article_ids": [
+        "KB-015",
+        "KB-016",
+        "KB-001",
+        "KB-010",
+        "KB-011"
+      ],
+      "top_chunks": [
+        {
+          "chunk_id": "KB-015#c3",
+          "article_id": "KB-015",
+          "similarity_score": 0.6629897367468103
+        },
+        {
+          "chunk_id": "KB-016#c1",
+          "article_id": "KB-016",
+          "similarity_score": 0.6621255155238096
+        },
+        {
+          "chunk_id": "KB-001#c1",
+          "article_id": "KB-001",
+          "similarity_score": 0.662022625048463
+        },
+        {
+          "chunk_id": "KB-010#c1",
+          "article_id": "KB-010",
+          "similarity_score": 0.65420382674864
+        },
+        {
+          "chunk_id": "KB-011#c1",
+          "article_id": "KB-011",
+          "similarity_score": 0.6531525163352838
+        }
+      ],
+      "searches": [
+        {
+          "query": "Display is flashing E-33 after a thunderstorm last night and it will not reset. What does that code mean and how do we clear it?",
+          "k": 20,
+          "n_chunks": 20
+        }
+      ],
+      "model_called": false,
+      "recall_hit": null,
+      "both_hit": null
+    },
+    {
+      "ticket_id": "T-055",
+      "split": "calibration",
+      "expected": "escalate",
+      "category": "fault",
+      "expected_article_ids": [],
+      "article_match": "all",
+      "query_sent": "getting E-18 on power up, fault light on. is that the fan one?",
+      "top_score": 0.722058627034152,
+      "top_article_ids": [
+        "KB-016",
+        "KB-031",
+        "KB-014",
+        "KB-022",
+        "KB-011"
+      ],
+      "top_chunks": [
+        {
+          "chunk_id": "KB-016#c1",
+          "article_id": "KB-016",
+          "similarity_score": 0.722058627034152
+        },
+        {
+          "chunk_id": "KB-031#c6",
+          "article_id": "KB-031",
+          "similarity_score": 0.6821866911954846
+        },
+        {
+          "chunk_id": "KB-014#c1",
+          "article_id": "KB-014",
+          "similarity_score": 0.680347784066663
+        },
+        {
+          "chunk_id": "KB-022#c3",
+          "article_id": "KB-022",
+          "similarity_score": 0.6722124148779984
+        },
+        {
+          "chunk_id": "KB-011#c1",
+          "article_id": "KB-011",
+          "similarity_score": 0.6590820173163854
+        }
+      ],
+      "searches": [
+        {
+          "query": "getting E-18 on power up, fault light on. is that the fan one?",
+          "k": 20,
+          "n_chunks": 20
+        }
+      ],
+      "model_called": false,
+      "recall_hit": null,
+      "both_hit": null
+    },
+    {
+      "ticket_id": "T-056",
+      "split": "holdout",
+      "expected": "escalate",
+      "category": "out_of_scope",
+      "expected_article_ids": [],
+      "article_match": "all",
+      "query_sent": "Which size VX-200 do I need for a 3 kW conveyor motor that starts fully loaded about 30 times an hour?",
+      "top_score": 0.7011258452313482,
+      "top_article_ids": [
+        "KB-017",
+        "KB-026",
+        "KB-029",
+        "KB-024",
+        "KB-009"
+      ],
+      "top_chunks": [
+        {
+          "chunk_id": "KB-017#c3",
+          "article_id": "KB-017",
+          "similarity_score": 0.7011258452313482
+        },
+        {
+          "chunk_id": "KB-026#c3",
+          "article_id": "KB-026",
+          "similarity_score": 0.6806543453887471
+        },
+        {
+          "chunk_id": "KB-029#c3",
+          "article_id": "KB-029",
+          "similarity_score": 0.6730993442856821
+        },
+        {
+          "chunk_id": "KB-024#c1",
+          "article_id": "KB-024",
+          "similarity_score": 0.6672900808533795
+        },
+        {
+          "chunk_id": "KB-009#c1",
+          "article_id": "KB-009",
+          "similarity_score": 0.6670631867640668
+        }
+      ],
+      "searches": [
+        {
+          "query": "Which size VX-200 do I need for a 3 kW conveyor motor that starts fully loaded about 30 times an hour?",
+          "k": 20,
+          "n_chunks": 20
+        }
+      ],
+      "model_called": true,
+      "recall_hit": null,
+      "both_hit": null
+    },
+    {
+      "ticket_id": "T-057",
+      "split": "calibration",
+      "expected": "escalate",
+      "category": "out_of_scope",
+      "expected_article_ids": [],
+      "article_match": "all",
+      "query_sent": "can you work out what decel time i need to stop a 40 kg flywheel from 1450 rpm without tripping",
+      "top_score": 0.6827881869979097,
+      "top_article_ids": [
+        "KB-005",
+        "KB-002",
+        "KB-025",
+        "KB-008",
+        "KB-003"
+      ],
+      "top_chunks": [
+        {
+          "chunk_id": "KB-005#c3",
+          "article_id": "KB-005",
+          "similarity_score": 0.6827881869979097
+        },
+        {
+          "chunk_id": "KB-002#c3",
+          "article_id": "KB-002",
+          "similarity_score": 0.6826066718418748
+        },
+        {
+          "chunk_id": "KB-025#c4",
+          "article_id": "KB-025",
+          "similarity_score": 0.6813060049827491
+        },
+        {
+          "chunk_id": "KB-008#c3",
+          "article_id": "KB-008",
+          "similarity_score": 0.679197621523741
+        },
+        {
+          "chunk_id": "KB-003#c3",
+          "article_id": "KB-003",
+          "similarity_score": 0.6624721650856007
+        }
+      ],
+      "searches": [
+        {
+          "query": "can you work out what decel time i need to stop a 40 kg flywheel from 1450 rpm without tripping",
+          "k": 20,
+          "n_chunks": 20
+        }
+      ],
+      "model_called": true,
+      "recall_hit": null,
+      "both_hit": null
+    },
+    {
+      "ticket_id": "T-058",
+      "split": "holdout",
+      "expected": "escalate",
+      "category": "out_of_scope",
+      "expected_article_ids": [],
+      "article_match": "all",
+      "query_sent": "how much is a replacement fan for the frame B and whats the price of a complete 4 kW drive",
+      "top_score": 0.789290034085474,
+      "top_article_ids": [
+        "KB-031",
+        "KB-016",
+        "KB-030",
+        "KB-017",
+        "KB-007"
+      ],
+      "top_chunks": [
+        {
+          "chunk_id": "KB-031#c2",
+          "article_id": "KB-031",
+          "similarity_score": 0.789290034085474
+        },
+        {
+          "chunk_id": "KB-016#c3",
+          "article_id": "KB-016",
+          "similarity_score": 0.6511493829491259
+        },
+        {
+          "chunk_id": "KB-030#c6",
+          "article_id": "KB-030",
+          "similarity_score": 0.6443070119748987
+        },
+        {
+          "chunk_id": "KB-017#c4",
+          "article_id": "KB-017",
+          "similarity_score": 0.6007727776032017
+        },
+        {
+          "chunk_id": "KB-007#c3",
+          "article_id": "KB-007",
+          "similarity_score": 0.5940696221622661
+        }
+      ],
+      "searches": [
+        {
+          "query": "how much is a replacement fan for the frame B and whats the price of a complete 4 kW drive",
+          "k": 20,
+          "n_chunks": 20
+        }
+      ],
+      "model_called": true,
+      "recall_hit": null,
+      "both_hit": null
+    },
+    {
+      "ticket_id": "T-059",
+      "split": "calibration",
+      "expected": "escalate",
+      "category": "out_of_scope",
+      "expected_article_ids": [],
+      "article_match": "all",
+      "query_sent": "We ordered two drives over three weeks ago and nothing has arrived. When will they be delivered?",
+      "top_score": 0.6343899321527906,
+      "top_article_ids": [
+        "KB-017",
+        "KB-014",
+        "KB-033",
+        "KB-029",
+        "KB-030"
+      ],
+      "top_chunks": [
+        {
+          "chunk_id": "KB-017#c6",
+          "article_id": "KB-017",
+          "similarity_score": 0.6343899321527906
+        },
+        {
+          "chunk_id": "KB-014#c4",
+          "article_id": "KB-014",
+          "similarity_score": 0.5759475299829574
+        },
+        {
+          "chunk_id": "KB-033#c3",
+          "article_id": "KB-033",
+          "similarity_score": 0.5717161166080476
+        },
+        {
+          "chunk_id": "KB-029#c6",
+          "article_id": "KB-029",
+          "similarity_score": 0.5685336151408796
+        },
+        {
+          "chunk_id": "KB-030#c6",
+          "article_id": "KB-030",
+          "similarity_score": 0.565453596843108
+        }
+      ],
+      "searches": [
+        {
+          "query": "We ordered two drives over three weeks ago and nothing has arrived. When will they be delivered?",
+          "k": 20,
+          "n_chunks": 20
+        }
+      ],
+      "model_called": true,
+      "recall_hit": null,
+      "both_hit": null
+    },
+    {
+      "ticket_id": "T-060",
+      "split": "holdout",
+      "expected": "escalate",
+      "category": "out_of_scope",
+      "expected_article_ids": [],
+      "article_match": "all",
+      "query_sent": "bit off topic but we also have an old inverter from a different manufacturer on the next line showing OC3. any idea what that means?",
+      "top_score": 0.6889905201370435,
+      "top_article_ids": [
+        "KB-003",
+        "KB-011",
+        "KB-001",
+        "KB-010",
+        "KB-004"
+      ],
+      "top_chunks": [
+        {
+          "chunk_id": "KB-003#c1",
+          "article_id": "KB-003",
+          "similarity_score": 0.6889905201370435
+        },
+        {
+          "chunk_id": "KB-011#c1",
+          "article_id": "KB-011",
+          "similarity_score": 0.6610582726492898
+        },
+        {
+          "chunk_id": "KB-001#c1",
+          "article_id": "KB-001",
+          "similarity_score": 0.6607484927858227
+        },
+        {
+          "chunk_id": "KB-010#c1",
+          "article_id": "KB-010",
+          "similarity_score": 0.6596108027939253
+        },
+        {
+          "chunk_id": "KB-004#c1",
+          "article_id": "KB-004",
+          "similarity_score": 0.6554633567344018
+        }
+      ],
+      "searches": [
+        {
+          "query": "bit off topic but we also have an old inverter from a different manufacturer on the next line showing OC3. any idea what that means?",
+          "k": 20,
+          "n_chunks": 20
+        }
+      ],
+      "model_called": true,
+      "recall_hit": null,
+      "both_hit": null
+    },
+    {
+      "ticket_id": "T-101",
+      "split": "calibration",
+      "expected": "answer",
+      "category": "installation",
+      "expected_article_ids": [
+        "KB-019",
+        "KB-022"
+      ],
+      "article_match": "any",
+      "query_sent": "commissioned new vx200 today, motor running in reverse direction. what is the correct way to fix, change wiring or parameter??",
+      "top_score": 0.69745631003881,
+      "top_article_ids": [
+        "KB-020",
+        "KB-001",
+        "KB-011",
+        "KB-017",
+        "KB-029"
+      ],
+      "top_chunks": [
+        {
+          "chunk_id": "KB-020#c4",
+          "article_id": "KB-020",
+          "similarity_score": 0.69745631003881
+        },
+        {
+          "chunk_id": "KB-001#c3",
+          "article_id": "KB-001",
+          "similarity_score": 0.6957488395924087
+        },
+        {
+          "chunk_id": "KB-011#c3",
+          "article_id": "KB-011",
+          "similarity_score": 0.690298462083124
+        },
+        {
+          "chunk_id": "KB-017#c3",
+          "article_id": "KB-017",
+          "similarity_score": 0.6881048043441385
+        },
+        {
+          "chunk_id": "KB-029#c3",
+          "article_id": "KB-029",
+          "similarity_score": 0.6846341101833194
+        }
+      ],
+      "searches": [
+        {
+          "query": "commissioned new vx200 today, motor running in reverse direction. what is the correct way to fix, change wiring or parameter??",
+          "k": 20,
+          "n_chunks": 20
+        }
+      ],
+      "model_called": true,
+      "recall_hit": false,
+      "both_hit": null
+    },
+    {
+      "ticket_id": "T-102",
+      "split": "holdout",
+      "expected": "answer",
+      "category": "fault",
+      "expected_article_ids": [
+        "KB-001"
+      ],
+      "article_match": "all",
+      "query_sent": "Conveyor fully loaded with material, drive trips immediately on start. Empty conveyor starts fine.",
+      "top_score": 0.62460936793601,
+      "top_article_ids": [
+        "KB-033",
+        "KB-019",
+        "KB-011",
+        "KB-009",
+        "KB-036"
+      ],
+      "top_chunks": [
+        {
+          "chunk_id": "KB-033#c2",
+          "article_id": "KB-033",
+          "similarity_score": 0.62460936793601
+        },
+        {
+          "chunk_id": "KB-019#c1",
+          "article_id": "KB-019",
+          "similarity_score": 0.6245074482158515
+        },
+        {
+          "chunk_id": "KB-011#c2",
+          "article_id": "KB-011",
+          "similarity_score": 0.6212998162050356
+        },
+        {
+          "chunk_id": "KB-009#c2",
+          "article_id": "KB-009",
+          "similarity_score": 0.6140938228570184
+        },
+        {
+          "chunk_id": "KB-036#c2",
+          "article_id": "KB-036",
+          "similarity_score": 0.6104358538462191
+        }
+      ],
+      "searches": [
+        {
+          "query": "Conveyor fully loaded with material, drive trips immediately on start. Empty conveyor starts fine.",
+          "k": 20,
+          "n_chunks": 20
+        }
+      ],
+      "model_called": true,
+      "recall_hit": false,
+      "both_hit": null
+    },
+    {
+      "ticket_id": "T-103",
+      "split": "calibration",
+      "expected": "answer",
+      "category": "safety",
+      "expected_article_ids": [
+        "KB-034"
+      ],
+      "article_match": "all",
+      "query_sent": "how many minutes to wait after switching off before i open the front cover to check terminals",
+      "top_score": 0.7619235053354111,
+      "top_article_ids": [
+        "KB-020",
+        "KB-032",
+        "KB-011",
+        "KB-034",
+        "KB-019"
+      ],
+      "top_chunks": [
+        {
+          "chunk_id": "KB-020#c1",
+          "article_id": "KB-020",
+          "similarity_score": 0.7619235053354111
+        },
+        {
+          "chunk_id": "KB-032#c2",
+          "article_id": "KB-032",
+          "similarity_score": 0.7093954471013422
+        },
+        {
+          "chunk_id": "KB-011#c3",
+          "article_id": "KB-011",
+          "similarity_score": 0.701300734121651
+        },
+        {
+          "chunk_id": "KB-034#c2",
+          "article_id": "KB-034",
+          "similarity_score": 0.690253002679224
+        },
+        {
+          "chunk_id": "KB-019#c1",
+          "article_id": "KB-019",
+          "similarity_score": 0.6811375503454417
+        }
+      ],
+      "searches": [
+        {
+          "query": "how many minutes to wait after switching off before i open the front cover to check terminals",
+          "k": 20,
+          "n_chunks": 20
+        }
+      ],
+      "model_called": true,
+      "recall_hit": true,
+      "both_hit": null
+    },
+    {
+      "ticket_id": "T-104",
+      "split": "holdout",
+      "expected": "answer",
+      "category": "parameters",
+      "expected_article_ids": [
+        "KB-028"
+      ],
+      "article_match": "all",
+      "query_sent": "Someone changed many settings and now nobody knows what was set. How to go back to factory settings from keypad?",
+      "top_score": 0.7376192019346259,
+      "top_article_ids": [
+        "KB-028",
+        "KB-023",
+        "KB-027",
+        "KB-015",
+        "KB-032"
+      ],
+      "top_chunks": [
+        {
+          "chunk_id": "KB-028#c3",
+          "article_id": "KB-028",
+          "similarity_score": 0.7376192019346259
+        },
+        {
+          "chunk_id": "KB-023#c2",
+          "article_id": "KB-023",
+          "similarity_score": 0.7099643279643764
+        },
+        {
+          "chunk_id": "KB-027#c2",
+          "article_id": "KB-027",
+          "similarity_score": 0.6935299403867031
+        },
+        {
+          "chunk_id": "KB-015#c3",
+          "article_id": "KB-015",
+          "similarity_score": 0.6752021440117297
+        },
+        {
+          "chunk_id": "KB-032#c6",
+          "article_id": "KB-032",
+          "similarity_score": 0.601663484126836
+        }
+      ],
+      "searches": [
+        {
+          "query": "Someone changed many settings and now nobody knows what was set. How to go back to factory settings from keypad?",
+          "k": 20,
+          "n_chunks": 20
+        }
+      ],
+      "model_called": true,
+      "recall_hit": true,
+      "both_hit": null
+    },
+    {
+      "ticket_id": "T-105",
+      "split": "calibration",
+      "expected": "answer",
+      "category": "fault",
+      "expected_article_ids": [
+        "KB-006"
+      ],
+      "article_match": "all",
+      "query_sent": "during rainy season our supply voltage dips sometimes and drive stops with fault. after supply ok it doesnt start again by itself",
+      "top_score": 0.728159326559928,
+      "top_article_ids": [
+        "KB-006",
+        "KB-010",
+        "KB-015",
+        "KB-012",
+        "KB-011"
+      ],
+      "top_chunks": [
+        {
+          "chunk_id": "KB-006#c2",
+          "article_id": "KB-006",
+          "similarity_score": 0.728159326559928
+        },
+        {
+          "chunk_id": "KB-010#c2",
+          "article_id": "KB-010",
+          "similarity_score": 0.7226228355519584
+        },
+        {
+          "chunk_id": "KB-015#c2",
+          "article_id": "KB-015",
+          "similarity_score": 0.6954817981495935
+        },
+        {
+          "chunk_id": "KB-012#c1",
+          "article_id": "KB-012",
+          "similarity_score": 0.6950507102893724
+        },
+        {
+          "chunk_id": "KB-011#c2",
+          "article_id": "KB-011",
+          "similarity_score": 0.6930086970646365
+        }
+      ],
+      "searches": [
+        {
+          "query": "during rainy season our supply voltage dips sometimes and drive stops with fault. after supply ok it doesnt start again by itself",
+          "k": 20,
+          "n_chunks": 20
+        }
+      ],
+      "model_called": true,
+      "recall_hit": true,
+      "both_hit": null
+    },
+    {
+      "ticket_id": "T-106",
+      "split": "holdout",
+      "expected": "answer",
+      "category": "fault",
+      "expected_article_ids": [
+        "KB-007",
+        "KB-030"
+      ],
+      "article_match": "all",
+      "query_sent": "Drive in cement plant panel trips on high temperature every afternoon. Heatsink looks very dusty. How often should we clean it and what is the fault telling us",
+      "top_score": 0.7825252982079383,
+      "top_article_ids": [
+        "KB-030",
+        "KB-007",
+        "KB-035",
+        "KB-032",
+        "KB-029"
+      ],
+      "top_chunks": [
+        {
+          "chunk_id": "KB-030#c1",
+          "article_id": "KB-030",
+          "similarity_score": 0.7825252982079383
+        },
+        {
+          "chunk_id": "KB-007#c2",
+          "article_id": "KB-007",
+          "similarity_score": 0.733819751814218
+        },
+        {
+          "chunk_id": "KB-035#c4",
+          "article_id": "KB-035",
+          "similarity_score": 0.6908980269007897
+        },
+        {
+          "chunk_id": "KB-032#c3",
+          "article_id": "KB-032",
+          "similarity_score": 0.689275252663534
+        },
+        {
+          "chunk_id": "KB-029#c5",
+          "article_id": "KB-029",
+          "similarity_score": 0.6821233001763755
+        }
+      ],
+      "searches": [
+        {
+          "query": "Drive in cement plant panel trips on high temperature every afternoon. Heatsink looks very dusty. How often should we clean it and what is the fault telling us",
+          "k": 20,
+          "n_chunks": 20
+        }
+      ],
+      "model_called": true,
+      "recall_hit": true,
+      "both_hit": true
+    },
+    {
+      "ticket_id": "T-107",
+      "split": "calibration",
+      "expected": "escalate",
+      "category": "fault",
+      "expected_article_ids": [],
+      "article_match": "all",
+      "query_sent": "display shows E-47 then drive stops. not in my copy of manual. what is this",
+      "top_score": 0.7313501373942126,
+      "top_article_ids": [
+        "KB-003",
+        "KB-010",
+        "KB-001",
+        "KB-002",
+        "KB-023"
+      ],
+      "top_chunks": [
+        {
+          "chunk_id": "KB-003#c1",
+          "article_id": "KB-003",
+          "similarity_score": 0.7313501373942126
+        },
+        {
+          "chunk_id": "KB-010#c1",
+          "article_id": "KB-010",
+          "similarity_score": 0.7199480378255317
+        },
+        {
+          "chunk_id": "KB-001#c1",
+          "article_id": "KB-001",
+          "similarity_score": 0.716111124950208
+        },
+        {
+          "chunk_id": "KB-002#c1",
+          "article_id": "KB-002",
+          "similarity_score": 0.7112143845118066
+        },
+        {
+          "chunk_id": "KB-023#c1",
+          "article_id": "KB-023",
+          "similarity_score": 0.7100654192888474
+        }
+      ],
+      "searches": [
+        {
+          "query": "display shows E-47 then drive stops. not in my copy of manual. what is this",
+          "k": 20,
+          "n_chunks": 20
+        }
+      ],
+      "model_called": false,
+      "recall_hit": null,
+      "both_hit": null
+    },
+    {
+      "ticket_id": "T-108",
+      "split": "holdout",
+      "expected": "escalate",
+      "category": "out_of_scope",
+      "expected_article_ids": [],
+      "article_match": "all",
+      "query_sent": "We want to run a 15 kW crusher motor. Which VX-200 size should we order and will it handle the starting torque?",
+      "top_score": 0.6791666801875795,
+      "top_article_ids": [
+        "KB-017",
+        "KB-024",
+        "KB-015",
+        "KB-026",
+        "KB-009"
+      ],
+      "top_chunks": [
+        {
+          "chunk_id": "KB-017#c3",
+          "article_id": "KB-017",
+          "similarity_score": 0.6791666801875795
+        },
+        {
+          "chunk_id": "KB-024#c1",
+          "article_id": "KB-024",
+          "similarity_score": 0.6664351448445052
+        },
+        {
+          "chunk_id": "KB-015#c1",
+          "article_id": "KB-015",
+          "similarity_score": 0.6498543017495285
+        },
+        {
+          "chunk_id": "KB-026#c3",
+          "article_id": "KB-026",
+          "similarity_score": 0.6452980200265739
+        },
+        {
+          "chunk_id": "KB-009#c1",
+          "article_id": "KB-009",
+          "similarity_score": 0.6246303303884063
+        }
+      ],
+      "searches": [
+        {
+          "query": "We want to run a 15 kW crusher motor. Which VX-200 size should we order and will it handle the starting torque?",
+          "k": 20,
+          "n_chunks": 20
+        }
+      ],
+      "model_called": true,
+      "recall_hit": null,
+      "both_hit": null
+    },
+    {
+      "ticket_id": "T-109",
+      "split": "calibration",
+      "expected": "escalate",
+      "category": "out_of_scope",
+      "expected_article_ids": [],
+      "article_match": "all",
+      "query_sent": "what is the price and delivery time for a spare cooling fan for vx200",
+      "top_score": 0.7741283794564947,
+      "top_article_ids": [
+        "KB-031",
+        "KB-017",
+        "KB-016",
+        "KB-029",
+        "KB-030"
+      ],
+      "top_chunks": [
+        {
+          "chunk_id": "KB-031#c1",
+          "article_id": "KB-031",
+          "similarity_score": 0.7741283794564947
+        },
+        {
+          "chunk_id": "KB-017#c4",
+          "article_id": "KB-017",
+          "similarity_score": 0.7115995403927005
+        },
+        {
+          "chunk_id": "KB-016#c1",
+          "article_id": "KB-016",
+          "similarity_score": 0.6818338067923593
+        },
+        {
+          "chunk_id": "KB-029#c5",
+          "article_id": "KB-029",
+          "similarity_score": 0.6799069534794171
+        },
+        {
+          "chunk_id": "KB-030#c1",
+          "article_id": "KB-030",
+          "similarity_score": 0.6456223678354613
+        }
+      ],
+      "searches": [
+        {
+          "query": "what is the price and delivery time for a spare cooling fan for vx200",
+          "k": 20,
+          "n_chunks": 20
+        }
+      ],
+      "model_called": true,
+      "recall_hit": null,
+      "both_hit": null
+    },
+    {
+      "ticket_id": "T-110",
+      "split": "holdout",
+      "expected": "escalate",
+      "category": "out_of_scope",
+      "expected_article_ids": [],
+      "article_match": "all",
+      "query_sent": "Replacing an old drive of another brand with VX-200. Can you give the matching parameter numbers so we can copy the old settings",
+      "top_score": 0.7369231181000804,
+      "top_article_ids": [
+        "KB-017",
+        "KB-015",
+        "KB-028",
+        "KB-033",
+        "KB-035"
+      ],
+      "top_chunks": [
+        {
+          "chunk_id": "KB-017#c5",
+          "article_id": "KB-017",
+          "similarity_score": 0.7369231181000804
+        },
+        {
+          "chunk_id": "KB-015#c1",
+          "article_id": "KB-015",
+          "similarity_score": 0.7047085132031068
+        },
+        {
+          "chunk_id": "KB-028#c1",
+          "article_id": "KB-028",
+          "similarity_score": 0.6892165076586951
+        },
+        {
+          "chunk_id": "KB-033#c1",
+          "article_id": "KB-033",
+          "similarity_score": 0.6855018616634159
+        },
+        {
+          "chunk_id": "KB-035#c1",
+          "article_id": "KB-035",
+          "similarity_score": 0.6806033817876744
+        }
+      ],
+      "searches": [
+        {
+          "query": "Replacing an old drive of another brand with VX-200. Can you give the matching parameter numbers so we can copy the old settings",
+          "k": 20,
+          "n_chunks": 20
+        }
+      ],
+      "model_called": true,
+      "recall_hit": null,
+      "both_hit": null
+    }
+  ],
+  "against_part_a2": {
+    "part_a2_report": "/home/shailesh1914/projects/voltrix-support-bot/evals/reports/2026-10-17-part-a2-retrieval-experiments.json",
+    "part_a2_report_sha256": "dba5be51f7b73308dfe4f2bbb7d7268ab7b6c95d13249cfd960e1105768a2466",
+    "part_a2_git_commit": "18d3de790e1cc6bf4d673ef82b69e61b7b10e158",
+    "part_a2_git_dirty": true,
+    "experiment": "E1+E2+E3",
+    "score_tolerance": 1e-09,
+    "max_score_difference": 0.0,
+    "tickets_compared": 70,
+    "tickets_matching": 70,
+    "match": true,
+    "summary": {
+      "calibration": {
+        "part_a": {
+          "recall": {
+            "passed": 22,
+            "total": 24,
+            "rate": 0.9166666666666666
+          },
+          "both_recall": {
+            "passed": 3,
+            "total": 3,
+            "rate": 1.0
+          }
+        },
+        "part_a2": {
+          "recall": {
+            "passed": 22,
+            "total": 24,
+            "rate": 0.9166666666666666
+          },
+          "both_recall": {
+            "passed": 3,
+            "total": 3,
+            "rate": 1.0
+          }
+        }
+      },
+      "holdout": {
+        "part_a": {
+          "recall": {
+            "passed": 23,
+            "total": 24,
+            "rate": 0.9583333333333334
+          },
+          "both_recall": {
+            "passed": 4,
+            "total": 6,
+            "rate": 0.6666666666666666
+          }
+        },
+        "part_a2": {
+          "recall": {
+            "passed": 23,
+            "total": 24,
+            "rate": 0.9583333333333334
+          },
+          "both_recall": {
+            "passed": 4,
+            "total": 6,
+            "rate": 0.6666666666666666
+          }
+        }
+      },
+      "full": {
+        "part_a": {
+          "recall": {
+            "passed": 45,
+            "total": 48,
+            "rate": 0.9375
+          },
+          "both_recall": {
+            "passed": 7,
+            "total": 9,
+            "rate": 0.7777777777777778
+          }
+        },
+        "part_a2": {
+          "recall": {
+            "passed": 45,
+            "total": 48,
+            "rate": 0.9375
+          },
+          "both_recall": {
+            "passed": 7,
+            "total": 9,
+            "rate": 0.7777777777777778
+          }
+        }
+      }
+    },
+    "differences": []
+  }
+}
