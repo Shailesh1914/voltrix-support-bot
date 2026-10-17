@@ -1,6 +1,6 @@
 # Retrieval Contract — Voltrix VX-200 Support Bot
 
-Status: Version 1.4, approved by Shailesh on 2026-10-17
+Status: Version 1.5, approved by Shailesh on 2026-10-17
 
 ## Purpose
 This contract is the ONLY interface between the ingestion side and
@@ -83,6 +83,16 @@ Output:
 Used by the query flow to build the set of known fault codes.
 Read-only. No other metadata is exposed.
 
+## Function 3: article_chunks
+
+Retriever.article_chunks(article_id: str) -> List[Chunk]
+
+- Returns every chunk of that article in chunk order (c1, c2, ...).
+- similarity_score is 0.0 for these chunks (they are read, not
+  ranked; ranking comes from search()).
+- Unknown article_id raises an error.
+- Read-only; same startup checks as search().
+
 ## Startup checks (fail loudly)
 open_retrieval(kb_version) must stop with a clear error (non-zero
 exit or exception) if:
@@ -112,3 +122,6 @@ exit or exception) if:
     fails at startup.
 12. A manifest SHA-256 hash that does not match the index or
     metadata file fails at startup.
+13. article_chunks(article_id) returns every chunk of that article,
+    in chunk order (c1, c2, ...), with exactly the same text as
+    stored by ingestion; an unknown article_id raises an error.

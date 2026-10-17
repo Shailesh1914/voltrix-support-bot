@@ -1,6 +1,6 @@
 # Evaluation Spec — Voltrix VX-200 Support Bot
 
-Status: Version 1.5, approved by Shailesh on 2026-10-17
+Status: Version 1.6, approved by Shailesh on 2026-10-17
 
 ## Purpose
 Measure spec 02 acceptance criteria 1-2 and metrics, and produce
@@ -32,6 +32,10 @@ diversity):
   expected article is among the final retrieved chunks; for
   two-article tickets, whether both are.
 - Score distributions for "answer" and "escalate" tickets.
+- Part A reports the selected ARTICLES and the top score (from step
+  3d). The comparison with the Part A2 simulation compares article
+  ids, recall and top score, not chunk ids (since spec 02 v1.14 the
+  model reads whole articles).
 
 ## Part A2: Retrieval experiments (no model calls)
 Status: completed 2026-10-17; E1+E2+E3 adopted (spec 02 v1.12-v1.13,

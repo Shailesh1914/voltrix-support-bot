@@ -1,6 +1,6 @@
 # Query and Escalation Spec — Voltrix VX-200 Support Bot
 
-Status: Version 1.13, approved by Shailesh on 2026-10-17
+Status: Version 1.14, approved by Shailesh on 2026-10-17
 
 ## Goal
 Given one user question, retrieve relevant chunks, generate an answer
@@ -46,6 +46,12 @@ ONLY place an escalation decision is made.
    evidence that the question is about the VX-200. Whether it can
    be answered (scope, partial questions) is decided by the model
    in step 5b. There is no limit on the number of boost searches.
+   e. Reading (adopted after Part B run 1, Step 9): the model is
+      given ALL chunks of the selected articles (up to 5 articles
+      from step d), in article order and chunk order, not only the
+      best chunk of each. Steps a-d choose WHICH articles; step e
+      decides WHAT the model reads. The retrieval check (5a) still
+      uses the highest score from step d.
 4. Unknown fault codes (after retrieval): at startup, build the set
    of known fault codes from the E-xx codes in the article titles
    returned by kb_info() (specs/03-retrieval-contract.md). If the
@@ -192,7 +198,8 @@ Structural (must hold 100% of the time):
    an escalation_reason, a handoff_id, and an answer containing the
    fixed escalation message with that handoff_id.
 7. Every E-xx code, P-xx code and number with a unit in an answer
-   must appear in the chunks of the CITED articles.
+   must appear in the chunks of the CITED articles, or in the
+   (masked, normalised) question itself.
 8. Unknown fault codes (Processing step 4) always escalate without
    a model call, and their handoff record includes the retrieved
    chunks.
@@ -250,3 +257,12 @@ will be measured by an evaluation designed at Step 9.
     with no ticket lost; calibration improved and holdout confirmed.
     Part A and the threshold sweep must be re-run on the real
     implementation before the threshold is chosen.
+14. Changes after Part B run 1 (pilot, AC1 25/48, AC2 22/22): the
+    diagnosis showed 12 of 21 wrong escalations came from the model
+    seeing only one chunk per article, and 4 from the grounding check
+    rejecting values the customer wrote in the question. Fixes: the
+    model reads whole selected articles (step 3e), and criterion 7
+    accepts values from the question. Two rejected drafts (T-005,
+    T-027) were wrong because sections were missing; reading whole
+    articles addresses that root cause. Content correctness beyond
+    criterion 7 is checked in the Step 10 human review.
