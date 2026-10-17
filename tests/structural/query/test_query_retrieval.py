@@ -221,14 +221,17 @@ def boosted(scripted_retriever):
 
 
 FINAL = ["KB-002#c1", "KB-020#c1", "KB-001#c1"]
+READ = ["KB-002#c1", "KB-002#c2", "KB-020#c1", "KB-020#c2", "KB-001#c1"]
 
 
 def test_retrieval_check_uses_the_top_score_of_the_final_list(make_flow, boosted, stub_generator):
     # Main search alone (0.40) is below 0.5; the boost chunk (0.90) is not.
     with pytest.raises(AssertionError, match="generator called"):
         make_flow(threshold=0.5, retriever=boosted).ask(QUESTION)
+    # The model reads the whole selected articles (step 3e), in the order
+    # of FINAL, chunk order within each.
     (question, chunks), = stub_generator.calls
-    assert ids(chunks) == FINAL
+    assert ids(chunks) == READ
 
 
 def test_retrieval_check_escalates_when_final_top_score_is_low(make_flow, boosted, stub_generator, memory_store):

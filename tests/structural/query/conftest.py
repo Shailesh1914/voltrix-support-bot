@@ -6,7 +6,7 @@ clashes with the ingestion one when both suites run together.
 
 import re
 import socket
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -123,14 +123,21 @@ class FakeRetriever:
     results ({query: chunks}), each query returns its own list (none if
     not listed). Either way the list is cut to k and sorted as spec 03
     says, like the real search().
+
+    article_chunks() (spec 03 v1.5) reads the "stored" chunks: every chunk
+    search can return, plus any given in stored= (chunks no search
+    returns). Like the real one: chunk order c1, c2, ..., score 0.0, an
+    unknown article raises. Every read is recorded in .read.
     """
 
-    def __init__(self, chunks=(), articles=FAKE_ARTICLES, kb_version="v1", results=None):
+    def __init__(self, chunks=(), articles=FAKE_ARTICLES, kb_version="v1", results=None, stored=()):
         self.chunks = list(chunks)
         self.results = results
         self.articles = list(articles)
         self.kb_version = kb_version
+        self.stored = list(stored)
         self.queries: list[tuple[str, int]] = []
+        self.read: list[str] = []
 
     def search(self, query: str, k: int):
         self.queries.append((query, k))
@@ -139,6 +146,15 @@ class FakeRetriever:
 
     def kb_info(self):
         return KBInfo(kb_version=self.kb_version, articles=sorted(self.articles))
+
+    def article_chunks(self, article_id: str):
+        self.read.append(article_id)
+        searchable = self.chunks if self.results is None else [c for r in self.results.values() for c in r]
+        found = {c.chunk_id: c for c in [*searchable, *self.stored] if c.article_id == article_id}
+        if not found:
+            raise ValueError(f"unknown article_id {article_id!r}")
+        ordered = sorted(found.values(), key=lambda c: int(c.chunk_id.rsplit("#c", 1)[1]))
+        return [replace(c, similarity_score=0.0) for c in ordered]
 
 
 class StubGenerator:

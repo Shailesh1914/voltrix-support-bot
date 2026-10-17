@@ -5,19 +5,23 @@ Order for one question:
 2. normalise fault codes
 3. retrieval (query/retrieval.py): main search plus one code-boost search
    per known E-xx code, merged, then the best chunk of each of up to 5
-   articles. These final chunks are used by every later step: the
-   retrieval check, the model, the checks on the answer and the handoff.
+   articles (steps a-d). These retrieved chunks are used by the retrieval
+   check, the citation check, the citations and the handoff record.
+   Step e: the model reads ALL chunks of those articles (article order,
+   then chunk order); the grounding check and the safety warnings use
+   these read chunks (spec 02 v1.14).
 4. unknown fault code -> escalate "insufficient_context", no model call
 5a. highest similarity_score below the threshold -> escalate
     "low_similarity", no model call
-5b. one generator call:
+5b. one generator call, over the read chunks (step 3e):
     - service error -> escalate "service_error" (decision 6)
     - malformed output -> escalate "insufficient_context" (decision 6)
     - decision insufficient_context / out_of_scope -> escalate with it
     - decision answer, then in the order of spec 02 (d, c, e, then f):
       5d. no used_article_ids -> "insufficient_context" (decision 7)
       5c. citation check: a used article not retrieved -> "insufficient_context"
-      5e. grounding check (criterion 7) fails -> "insufficient_context" (decision 4)
+      5e. grounding check (criterion 7: cited articles' read chunks or the
+          masked, normalised question) fails -> "insufficient_context" (decision 4)
       each of these three stores the draft and the check's name in the
       handoff (decision 11)
       5f. missing safety warnings added word for word at the start (decision 5)
@@ -36,15 +40,16 @@ from query.generator import Generator, GeneratorServiceError, MalformedOutput
 from query.handoff import HandoffStore, build_handoff, utc_now
 from query.masking import mask_personal_data
 from query.normalise import normalise_codes
-from query.retrieval import retrieve
+from query.retrieval import read_articles, retrieve
 from query.response import QueryResponse, answered_response, citations_for, escalated_response
 
 
 class Retriever(Protocol):
-    """The two retrieval-contract functions the flow uses (spec 03)."""
+    """The retrieval-contract functions the flow uses (spec 03)."""
 
     def search(self, query: str, k: int) -> list[Chunk]: ...
     def kb_info(self) -> KBInfo: ...
+    def article_chunks(self, article_id: str) -> list[Chunk]: ...
 
 
 class QueryFlow:
@@ -92,8 +97,11 @@ class QueryFlow:
         if top_score is None or top_score < self._threshold:
             return escalate("low_similarity")
 
+        # Step 3e: only needed once the model is called. The handoff keeps
+        # the retrieved chunks (step d) with their scores.
+        read = read_articles(self._retriever, chunks)
         try:
-            output = self._generator.generate(normalised, chunks)
+            output = self._generator.generate(normalised, read)
         except GeneratorServiceError:
             return escalate("service_error")
         except MalformedOutput:
@@ -104,13 +112,13 @@ class QueryFlow:
         failed_check = (
             "no_citations" if not output.used_article_ids
             else "citation" if uncited_retrieved(output.used_article_ids, chunks)
-            else "grounding" if ungrounded(output.answer, output.used_article_ids, chunks)
+            else "grounding" if ungrounded(output.answer, output.used_article_ids, read, question=normalised)
             else ""
         )
         if failed_check:
             return escalate("insufficient_context", output.answer, failed_check)
 
-        warnings = safety_warnings(output.used_article_ids, chunks)
+        warnings = safety_warnings(output.used_article_ids, read)
         return answered_response(
             with_safety_warnings(output.answer, warnings),
             citations_for(output.used_article_ids, chunks),

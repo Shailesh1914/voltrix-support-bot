@@ -3,11 +3,14 @@ decisions 4, 5 and 7).
 
 - Citation check: every used_article_id is among the retrieved chunks.
 - Grounding check: every E-xx code, P-xx code and number with a unit in
-  the answer appears in the chunks of the CITED articles. Never edits
-  the answer.
-- Safety warnings: WARNING / DANGER / CAUTION lines in the retrieved
-  chunks of used articles, added word for word at the START of the
-  answer if the answer lacks them.
+  the answer appears in the chunks of the CITED articles or in the
+  (masked, normalised) question. Never edits the answer.
+- Safety warnings: WARNING / DANGER / CAUTION lines in the chunks of
+  used articles, added word for word at the START of the answer if the
+  answer lacks them.
+
+The flow passes the chunks the model read (spec 02 step 3e: all chunks
+of each selected article) to the grounding check and safety warnings.
 """
 
 import re
@@ -87,12 +90,15 @@ def codes_in(text: str) -> set[str]:
     return set(CODE_PATTERN.findall(normalise_codes(text)))
 
 
-def ungrounded(answer: str, used_article_ids, chunks: list[Chunk]) -> list[str]:
-    """Codes and quantities in the answer that no chunk of a cited
-    article has. Empty list = criterion 7 holds.
+def ungrounded(answer: str, used_article_ids, chunks: list[Chunk], *, question: str) -> list[str]:
+    """Codes and quantities in the answer that neither a chunk of a cited
+    article nor the question has. Empty list = criterion 7 holds.
+
+    question is the masked, normalised question (spec 02 v1.14). It is
+    required, so no caller can forget it.
     """
     used = set(used_article_ids)
-    chunk_text = "\n".join(c.text for c in chunks if c.article_id in used)
+    chunk_text = "\n".join([*(c.text for c in chunks if c.article_id in used), question])
     chunk_codes = codes_in(chunk_text)
     chunk_quantities = quantities_in(chunk_text)
 
@@ -112,8 +118,8 @@ SAFETY_LINE_PATTERN = re.compile(r"^[ \t>*_\-]*(?:WARNING|DANGER|CAUTION)\b")
 
 
 def safety_warnings(used_article_ids, chunks: list[Chunk]) -> list[str]:
-    """Warning lines in every retrieved chunk of a used article, in
-    retrieval order, without repeats."""
+    """Warning lines in every given chunk of a used article, in the
+    order of the chunks, without repeats."""
     used = set(used_article_ids)
     lines = [
         line.strip()

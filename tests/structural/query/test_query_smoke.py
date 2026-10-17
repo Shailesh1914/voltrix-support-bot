@@ -49,7 +49,9 @@ def run(fake_retriever, make_chunk):
             return httpx2.Response(status, json=body, request=request)
 
         chunks = [make_chunk("KB-001", n=i, score=0.8 - i / 10, text="E-01 — Check P-05.") for i in (1, 2)]
-        retriever = fake_retriever(chunks=chunks)
+        # A chunk search never returns: read only through article_chunks().
+        stored = [make_chunk("KB-001", n=3, text="E-01 — Fixes\n\nLengthen P-05.")]
+        retriever = fake_retriever(chunks=chunks, stored=stored)
 
         def open_index(version):
             opened.append(version)
@@ -144,3 +146,31 @@ def test_default_generator_is_the_real_one():
     defaults = smoke.main.__defaults__
     assert defaults[0] is smoke.open_retrieval
     assert defaults[1] == AnthropicGenerator.from_environment
+
+
+def test_reads_the_whole_selected_articles_like_the_bot(run, fake_retriever, make_chunk):
+    """Spec 02 step 3e: smoke.py gives the model the same reading as the flow
+    (all chunks of the selected articles), built by the same function."""
+    from query.fault_codes import code_titles
+    from query.prompt import build_user_message
+    from query.retrieval import read_articles, retrieve
+
+    code, text, requests, *_ = run()
+    assert code == 0
+    assert "chunks:     KB-001#c1 (0.700)\n" in text  # step d: best chunk only
+    assert "reading:    KB-001#c1, KB-001#c2, KB-001#c3\n" in text
+    content = json.loads(requests[0].content)["messages"][0]["content"]
+    assert 'chunk_id="KB-001#c3"' in content and "Lengthen P-05." in content
+
+    # Exactly the message the flow's reading produces.
+    chunks = [make_chunk("KB-001", n=i, score=0.8 - i / 10, text="E-01 — Check P-05.") for i in (1, 2)]
+    stored = [make_chunk("KB-001", n=3, text="E-01 — Fixes\n\nLengthen P-05.")]
+    retriever = fake_retriever(chunks=chunks, stored=stored)
+    retrieved = retrieve(retriever, smoke.SMOKE_QUESTION, code_titles(retriever.kb_info()))
+    assert content == build_user_message(smoke.SMOKE_QUESTION, read_articles(retriever, retrieved))
+
+
+def test_uses_the_flow_reading_function():
+    source = open(smoke.__file__, encoding="utf-8").read()
+    assert "read_articles(retriever, chunks)" in source
+    assert "generate_with_usage(question, read)" in source

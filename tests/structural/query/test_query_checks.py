@@ -114,7 +114,7 @@ def chunks(make_chunk):
     ],
 )
 def test_grounded_answers(chunks, answer):
-    assert ungrounded(answer, ["KB-002", "KB-020"], chunks) == []
+    assert ungrounded(answer, ["KB-002", "KB-020"], chunks, question="") == []
 
 
 @pytest.mark.parametrize(
@@ -130,20 +130,20 @@ def test_grounded_answers(chunks, answer):
     ],
 )
 def test_ungrounded_answers(chunks, answer, missing):
-    assert ungrounded(answer, ["KB-002", "KB-020"], chunks) == missing
+    assert ungrounded(answer, ["KB-002", "KB-020"], chunks, question="") == missing
 
 
 def test_grounding_uses_only_chunks_of_cited_articles(chunks):
     # Criterion 7 (v1.6): "in the chunks of the CITED articles". P-07 and
     # 10 s are only in the KB-020 chunk.
-    assert ungrounded("P-07: 10 s", ["KB-002"], chunks) == ["P-07", "10 s"]
-    assert ungrounded("P-07: 10 s", ["KB-020"], chunks) == []
-    assert ungrounded("P-07: 10 s", [], chunks) == ["P-07", "10 s"]
+    assert ungrounded("P-07: 10 s", ["KB-002"], chunks, question="") == ["P-07", "10 s"]
+    assert ungrounded("P-07: 10 s", ["KB-020"], chunks, question="") == []
+    assert ungrounded("P-07: 10 s", [], chunks, question="") == ["P-07", "10 s"]
 
 
 def test_grounding_uses_every_chunk_of_a_cited_article(make_chunk):
     chunks = [make_chunk("KB-002", n=1, text="Set P-06."), make_chunk("KB-002", n=4, text="Up to 600 s.")]
-    assert ungrounded("Set P-06 up to 600 s.", ["KB-002"], chunks) == []
+    assert ungrounded("Set P-06 up to 600 s.", ["KB-002"], chunks, question="") == []
 
 
 # --- Safety warnings (decision 5) -------------------------------------------------------
@@ -193,3 +193,30 @@ def test_warning_already_in_answer_not_repeated():
 
 def test_paraphrased_warning_still_added():
     assert with_safety_warnings("Warning: a", ["WARNING: A."]) == "WARNING: A.\n\nWarning: a"
+
+
+# --- Criterion 7 v1.14: values from the (masked, normalised) question ------------------
+
+
+def test_values_from_the_question_are_grounded(chunks):
+    # 480 V and P-11 are in no chunk; the customer wrote them.
+    question = "My supply is 480 V and P-11 is set to 2 s, E-02 on stop."
+    assert ungrounded("With your 480 V supply and P-11 at 2 s: lengthen P-06.", ["KB-002"], chunks, question=question) == []
+    assert ungrounded("With your 480 V supply: lengthen P-06.", ["KB-002"], chunks, question="") == ["480 V"]
+
+
+def test_question_values_are_matched_like_chunk_values(chunks):
+    # Same canonical forms as for chunks: units by alias, V matched by V AC.
+    assert ungrounded("Wait 3 minutes at 400 V.", ["KB-002"], chunks, question="waited 3 min, 400 V AC supply") == []
+    # Still not a different value: 4 mm in the question does not ground 6 mm.
+    assert ungrounded("Use 6 mm cable.", ["KB-002"], chunks, question="I have 4 mm cable") == ["6 mm"]
+
+
+def test_question_does_not_widen_to_uncited_articles(chunks):
+    # The question adds only its own values; uncited chunks still do not count.
+    assert ungrounded("P-07: 10 s", ["KB-002"], chunks, question="ramp question") == ["P-07", "10 s"]
+
+
+def test_question_is_a_required_argument(chunks):
+    with pytest.raises(TypeError):
+        ungrounded("P-06", ["KB-002"], chunks)

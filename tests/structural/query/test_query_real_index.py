@@ -161,3 +161,24 @@ def test_known_code_article_is_retrieved_first_through_the_boost(
     assert chunks[0].chunk_id == title_top.chunk_id
     assert chunks[0].similarity_score == title_top.similarity_score
     assert_final_chunks(chunks, spec_retrieval)
+
+
+# --- Step 3e over the real index (spec 02 v1.14) ----------------------------------
+
+
+@pytest.mark.parametrize("version", ["v1", "v2"])
+def test_model_reads_every_chunk_of_the_selected_articles(make_flow, real_retrievers, memory_store, spec_retrieval, version):
+    from query.generator import FakeGenerator
+
+    retriever = real_retrievers[version]
+    generator = FakeGenerator({"decision": "out_of_scope", "answer": "", "used_article_ids": []})
+    make_flow(threshold=-1.0, retriever=retriever, generator=generator, kb_version=version).ask(QUESTIONS[0])
+
+    record = memory_store.records[0]
+    assert_final_chunks(record.retrieved_chunks, spec_retrieval)  # handoff: step d, with scores
+    selected = [c.article_id for c in record.retrieved_chunks]
+    (_, read), = generator.calls
+    assert read == [c for a in selected for c in retriever.article_chunks(a)]
+    # The real articles have several chunks: more is read than retrieved.
+    assert len(read) > len(record.retrieved_chunks)
+    assert {c.chunk_id for c in record.retrieved_chunks} <= {c.chunk_id for c in read}

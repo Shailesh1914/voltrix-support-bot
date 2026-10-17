@@ -216,7 +216,11 @@ def test_model_escalation_decision(flow_with, memory_store, decision):
     flow, generator, retriever = flow_with({"decision": decision, "answer": "", "used_article_ids": []}, memory_store)
     response = flow.ask("e2 when stopping, call 020 7946 0958")
     record = assert_complete_escalation(response, memory_store, decision)
-    assert generator.calls == [("E-02 when stopping, call [PHONE]", retriever.chunks)]
+    # The model gets the masked, normalised question and the whole selected
+    # articles (step 3e: read chunks, score 0.0).
+    (question, read), = generator.calls
+    assert question == "E-02 when stopping, call [PHONE]"
+    assert [(c.chunk_id, c.similarity_score) for c in read] == [("KB-001#c1", 0.0), ("KB-020#c1", 0.0)]
     assert [c.chunk_id for c in record.retrieved_chunks] == ["KB-001#c1", "KB-020#c1"]
 
 
@@ -267,7 +271,7 @@ def answer_chunks(make_chunk):
         ),
         make_chunk("KB-034", n=2, score=0.7, text=SAFE_TEXT),
         # A second, lower KB-002 chunk: dropped by the diversity step (best
-        # chunk of each article only), so the flow never sees it.
+        # chunk of each article only), but read with the whole article (3e).
         make_chunk("KB-002", n=3, score=0.6, text=DROPPED_TEXT),
     ]
 
@@ -296,7 +300,12 @@ def test_answered_with_citations_in_model_order(answer_flow, memory_store):
     flow, generator = answer_flow("Lengthen P-06, up to 600 s.", ["KB-002"])
     response = flow.ask("e2 on stop")
     assert_answered(response, memory_store)
-    assert response.answer == "CAUTION: The motor may coast for 30 s.\n\nLengthen P-06, up to 600 s."
+    # Warnings from every chunk of KB-002 (step 3e), in chunk order.
+    assert response.answer == (
+        "CAUTION: The motor may coast for 30 s.\n"
+        "DANGER: Never bridge the brake resistor terminals. Fit 47 Ω.\n\n"
+        "Lengthen P-06, up to 600 s."
+    )
     assert [(c.article_id, c.title) for c in response.citations] == [
         ("KB-002", "E-02 Overcurrent during deceleration")
     ]
@@ -341,6 +350,7 @@ def test_criterion_7_ungrounded_answer_escalates_and_is_never_edited(answer_flow
 
 def test_criterion_7_value_from_retrieved_but_uncited_article_escalates(answer_flow, memory_store):
     # "5 minutes" is only in the KB-034 chunk, which the answer does not cite.
+    # The model read KB-034 too: having read it is not enough, it must be cited.
     flow, _ = answer_flow("Lengthen P-06 and wait 5 minutes.", ["KB-002"])
     record = assert_complete_escalation(flow.ask("q"), memory_store, "insufficient_context")
     assert record.failed_check == "grounding"
@@ -369,17 +379,20 @@ def test_decision_5_unused_article_warnings_not_added(answer_flow, memory_store)
     assert "DC bus stays charged" not in flow.ask("q").answer
 
 
-def test_decision_5_and_grounding_see_only_the_kept_chunk_of_each_article(answer_flow, memory_store):
-    # Spec 02 step 3d keeps the best chunk of each article. A warning line or
-    # a value that is only in a lower chunk of a cited article is therefore
-    # not retrieved: no warning is added from it, and the value is ungrounded.
-    flow, generator = answer_flow("Lengthen P-06.", ["KB-002"])
+def test_v1_14_model_grounding_and_warnings_see_every_chunk_of_the_selected_articles(answer_flow, memory_store):
+    # Spec 02 step 3e: steps a-d choose the articles (KB-002 best at c1, KB-034
+    # at c2); the model reads ALL their chunks, articles in that order, chunks
+    # in chunk order. KB-002#c3 is not a retrieved chunk but is read.
+    flow, generator = answer_flow("Fit 47 Ω.", ["KB-002"])
     response = flow.ask("q")
-    assert [c.chunk_id for c in generator.calls[0][1]] == ["KB-002#c1", "KB-034#c2"]
-    assert "DANGER" not in response.answer
-    flow, _ = answer_flow("Fit 47 Ω.", ["KB-002"])
-    record = assert_complete_escalation(flow.ask("q"), memory_store, "insufficient_context")
-    assert record.failed_check == "grounding"
+    (_, read), = generator.calls
+    assert [c.chunk_id for c in read] == ["KB-002#c1", "KB-002#c3", "KB-034#c2"]
+    # Criterion 7: 47 Ω is only in KB-002#c3, a chunk of the cited article.
+    assert_answered(response, memory_store)
+    # Decision 5: the DANGER line of KB-002#c3 is added at the start too.
+    assert response.answer.startswith(
+        "CAUTION: The motor may coast for 30 s.\nDANGER: Never bridge the brake resistor terminals. Fit 47 Ω.\n\n"
+    )
 
 
 # --- Answer-path order (spec 02 v1.7, step 5: "The first check that fails decides
@@ -458,10 +471,119 @@ def test_every_route(route, make_flow, make_chunk, fake_retriever, memory_store)
         assert {c.article_id for c in response.citations} <= {c.article_id for c in chunks}
         from query.checks import ungrounded
 
-        assert ungrounded(response.answer, [c.article_id for c in response.citations], chunks) == []
+        assert ungrounded(response.answer, [c.article_id for c in response.citations], chunks, question=question) == []
 
 
 def test_routes_cover_every_escalation_reason():
     from query.handoff import ESCALATION_REASONS
 
     assert {r[5] for r in ROUTES if r[4] == "escalated"} == ESCALATION_REASONS
+
+
+# --- Spec 02 v1.14: step 3e (whole articles read), criterion 7 question values ------
+# Steps a-d choose WHICH articles; step e decides WHAT the model reads.
+# Selection order (by best score) differs from article_id order, each
+# article's best chunk is not its c1, and some chunks are never returned
+# by search: only article_chunks() gives them.
+
+
+@pytest.fixture
+def reading_flow(make_flow, make_chunk, fake_retriever):
+    from query.generator import FakeGenerator
+
+    searched = [
+        make_chunk("KB-034", n=3, score=0.9, text="Safe isolation — Checks\n\nMeasure the DC bus before work."),
+        make_chunk("KB-002", n=2, score=0.8, text="E-02 — Causes\n\nThe ramp in P-06 is too short."),
+        make_chunk("KB-034", n=2, score=0.6, text="Safe isolation — Wait\n\nWait 5 minutes after switch-off."),
+    ]
+    stored = [
+        make_chunk("KB-034", n=1, text="Safe isolation — Overview\n\nWARNING: Lethal voltage on the DC bus."),
+        make_chunk("KB-002", n=1, text="E-02 — Overview\n\nCAUTION: The motor may coast."),
+        make_chunk("KB-002", n=3, text="E-02 — Fixes\n\nSet P-06 to 12 s."),
+    ]
+
+    def _make(answer, used, threshold=0.5):
+        retriever = fake_retriever(chunks=searched, stored=stored)
+        generator = FakeGenerator({"decision": "answer", "answer": answer, "used_article_ids": used})
+        flow = make_flow(threshold=threshold, retriever=retriever, generator=generator)
+        return flow, generator, retriever
+
+    return _make
+
+
+READ_ORDER = ["KB-034#c1", "KB-034#c2", "KB-034#c3", "KB-002#c1", "KB-002#c2", "KB-002#c3"]
+
+
+def test_step_3e_model_reads_all_chunks_in_article_then_chunk_order(reading_flow):
+    flow, generator, retriever = reading_flow("Measure the DC bus.", ["KB-034"])
+    flow.ask("q")
+    (_, read), = generator.calls
+    assert [c.chunk_id for c in read] == READ_ORDER
+    assert retriever.read == ["KB-034", "KB-002"]  # each selected article read once
+
+
+def test_step_3e_retrieval_check_still_uses_the_step_d_score(reading_flow, memory_store):
+    # Read chunks have score 0.0 (spec 03); 5a uses the best step d score 0.9.
+    flow, generator, _ = reading_flow("Measure the DC bus.", ["KB-034"], threshold=0.85)
+    assert flow.ask("q").status == "answered"
+    flow, generator, _ = reading_flow("Measure the DC bus.", ["KB-034"], threshold=0.95)
+    assert flow.ask("q").escalation_reason == "low_similarity"
+    assert generator.calls == []
+
+
+def test_handoff_keeps_the_step_d_chunks_with_scores(reading_flow, memory_store):
+    # "the retrieved chunks" in the handoff = step d, not the read chunks.
+    flow, _, _ = reading_flow("Set P-99.", ["KB-002"])
+    record = assert_complete_escalation(flow.ask("q"), memory_store, "insufficient_context")
+    assert record.failed_check == "grounding"
+    assert [(c.chunk_id, c.similarity_score) for c in record.retrieved_chunks] == [
+        ("KB-034#c3", 0.9),
+        ("KB-002#c2", 0.8),
+    ]
+
+
+def test_criterion_7_value_in_an_unretrieved_chunk_of_a_cited_article_is_grounded(reading_flow, memory_store):
+    # P-06 to 12 s is only in KB-002#c3, which search never returned.
+    flow, _, _ = reading_flow("Set P-06 to 12 s.", ["KB-002"])
+    assert_answered(flow.ask("q"), memory_store)
+
+
+def test_criterion_7_value_read_from_an_uncited_article_is_not_grounded(reading_flow, memory_store):
+    # 5 minutes is read (KB-034#c2) but KB-034 is not cited.
+    flow, _, _ = reading_flow("Set P-06 to 12 s and wait 5 minutes.", ["KB-002"])
+    record = assert_complete_escalation(flow.ask("q"), memory_store, "insufficient_context")
+    assert record.failed_check == "grounding"
+
+
+def test_criterion_7_values_from_the_masked_normalised_question_are_grounded(reading_flow, memory_store):
+    # 480 V and P-11 are in no chunk; the customer wrote them ("p11" -> P-11).
+    flow, _, _ = reading_flow("With 480 V and P-11 as you say, set P-06 to 12 s.", ["KB-002"])
+    assert_answered(flow.ask("my 480 V drive, p11 changed, E-02 on stop"), memory_store)
+
+
+def test_criterion_7_masked_question_text_never_grounds_a_value(reading_flow, memory_store):
+    # "5V@example.com" holds 5 V before masking; after masking it is [EMAIL].
+    flow, _, _ = reading_flow("Use 5 V and set P-06 to 12 s.", ["KB-002"])
+    record = assert_complete_escalation(flow.ask("E-02, mail 5V@example.com"), memory_store, "insufficient_context")
+    assert record.failed_check == "grounding"
+
+
+def test_decision_5_warnings_from_every_chunk_of_cited_articles_only(reading_flow, memory_store):
+    flow, _, _ = reading_flow("Set P-06 to 12 s.", ["KB-002"])
+    response = flow.ask("q")
+    # KB-002#c1 is not a retrieved chunk; its CAUTION line is added.
+    assert response.answer == "CAUTION: The motor may coast.\n\nSet P-06 to 12 s."
+    # KB-034 is read but not cited: its WARNING is not added.
+    assert "Lethal" not in response.answer
+    flow, _, _ = reading_flow("Measure the DC bus. Set P-06 to 12 s.", ["KB-002", "KB-034"])
+    # Both cited: warnings in reading order (KB-034 first, it was selected first).
+    assert flow.ask("q").answer.startswith(
+        "WARNING: Lethal voltage on the DC bus.\nCAUTION: The motor may coast.\n\n"
+    )
+
+
+def test_citations_are_the_cited_articles_titles(reading_flow, memory_store):
+    flow, _, _ = reading_flow("Set P-06 to 12 s.", ["KB-002"])
+    assert [(c.article_id, c.title) for c in flow.ask("q").citations] == [
+        ("KB-002", "E-02 Overcurrent during deceleration")
+    ]
