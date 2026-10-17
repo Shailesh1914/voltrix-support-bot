@@ -1,6 +1,6 @@
 # Evaluation Spec — Voltrix VX-200 Support Bot
 
-Status: Version 1.4, approved by Shailesh on 2026-10-17
+Status: Version 1.5, approved by Shailesh on 2026-10-17
 
 ## Purpose
 Measure spec 02 acceptance criteria 1-2 and metrics, and produce
@@ -22,14 +22,23 @@ This spec is written BEFORE any evaluation results exist.
 - Results are reported for calibration, holdout and the full set.
 
 ## Part A: Retrieval report (no model calls)
-For every ticket, using kb_v1 and search(k=5):
-- the top similarity score and the top 5 article_ids.
+For every ticket, using kb_v1 and the query flow's own retrieval
+(spec 02 Processing step 3: main search, code boost, merge,
+diversity):
+- the top score = the highest score among the final retrieved
+  chunks (the score the retrieval check uses), and the article_ids
+  of the final retrieved chunks.
 - Retrieval recall: for "answer" tickets, whether at least one
-  expected article is in the top 5; for two-article tickets,
-  whether both are.
+  expected article is among the final retrieved chunks; for
+  two-article tickets, whether both are.
 - Score distributions for "answer" and "escalate" tickets.
 
 ## Part A2: Retrieval experiments (no model calls)
+Status: completed 2026-10-17; E1+E2+E3 adopted (spec 02 v1.12-v1.13,
+spec 03 v1.3-v1.4). Its simulation assumed search() WITHOUT the
+prefix, so it cannot be re-run as written. Its committed report
+remains the evidence for the decision.
+
 Each experiment is simulated through the public retrieval contract
 only (open_retrieval, search, kb_info), without changing query/:
 - E1: BGE retrieval prefix added to the query text.
