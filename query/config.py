@@ -22,7 +22,7 @@ from dotenv import dotenv_values
 # The ONE config setting for the escalation threshold (spec 02,
 # decision 1). NOT YET SET: Shailesh chooses it at Step 9 and records it
 # in spec 02 as "Value: <number>". Never choose or change it here alone.
-ESCALATION_THRESHOLD: float | None = None
+ESCALATION_THRESHOLD: float | None = 0.60
 
 # Generation model via the Anthropic API (spec 02, Processing step 7 and
 # decision 2).

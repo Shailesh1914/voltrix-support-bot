@@ -36,3 +36,7 @@
   ingestion package). CI must use a command or pytest config that
   runs every folder reliably, e.g. python -m pytest per folder.
   Ingestion suite takes ~4.5 min.
+- Step 11 note: test_query_cli.py:46 now always skips ("would run
+  the real bot") because the threshold is set. Ask Session Q to
+  rewrite it so it still tests the refusal without calling the
+  real model.

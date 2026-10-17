@@ -92,3 +92,12 @@ Report: evals/reports/2026-10-17-part-a-retrieval.md (clean commit).
 - Hard escalate tickets the model must catch: T-049, T-058, T-109,
   T-044. Watch them in Part B.
 - Threshold to be chosen from the Part B sweep, not from this.
+
+## First live questions (2026-10-18)
+- "drive shows E-04 when idle, supply measured 535 V" (statement,
+  no question) -> escalated (insufficient_context).
+- T-004's exact wording (ends with "Is that the problem?") ->
+  answered, KB-004, consistent with all 3 evaluation runs.
+- Step 10 idea: add a few "statement without a question" tickets,
+  and decide whether the bot should answer them (e.g. explain the
+  fault) or escalate.

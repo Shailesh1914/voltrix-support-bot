@@ -1,6 +1,6 @@
 # Query and Escalation Spec — Voltrix VX-200 Support Bot
 
-Status: Version 1.14, approved by Shailesh on 2026-10-17
+Status: Version 1.15, approved by Shailesh on 2026-10-18
 
 ## Goal
 Given one user question, retrieve relevant chunks, generate an answer
@@ -161,12 +161,25 @@ This number trades off two costs:
 Given the safety risk in industrial equipment, wrong answers are
 treated as more costly than extra escalations.
 
-Value: NOT YET SET. To be set by Shailesh at Step 9, using the
-method in specs/05-evaluation-spec.md (threshold chosen on the
-calibration set only; holdout set measured, never used to choose).
-Record here: the value, the date, and a short reason.
-The value lives in this spec and in ONE config setting.
-It must never be changed in code without updating this spec.
+Value: 0.60
+
+How it was chosen: set by Shailesh on 2026-10-18 at Step 9, using
+the method in specs/05-evaluation-spec.md (chosen on the calibration
+set only; the holdout set was measured, never used to choose).
+Evidence: the Part C sweep over runs labelled whole-articles
+(3 identical runs).
+- Every threshold from 0.50 to 0.64 gives the same calibration
+  results (AC1 19/24, AC2 11/11). AC2 is met by the model at every
+  threshold; higher thresholds only lower AC1.
+- 0.60 keeps a margin below the lowest answer scores (0.6435 for
+  answer tickets whose article was found; 0.6246 overall) while
+  still stopping clearly unrelated questions before a model call.
+- Holdout unchanged at 0.60 (AC1 21/24, AC2 11/11).
+- AC1 target not yet met at any threshold; see Step 10.
+
+The value lives in this spec and in ONE config setting
+(query/config.py). It must never be changed in code without
+updating this spec.
 
 
 ## Acceptance criteria
