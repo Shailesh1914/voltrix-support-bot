@@ -1,6 +1,6 @@
 # Evaluation Spec — Voltrix VX-200 Support Bot
 
-Status: Version 1.1, approved by Shailesh on 2026-10-16
+Status: Version 1.3, approved by Shailesh on 2026-10-17
 
 ## Purpose
 Measure spec 02 acceptance criteria 1-2 and metrics, and produce
@@ -28,6 +28,21 @@ For every ticket, using kb_v1 and search(k=5):
   expected article is in the top 5; for two-article tickets,
   whether both are.
 - Score distributions for "answer" and "escalate" tickets.
+
+## Part A2: Retrieval experiments (no model calls)
+Each experiment is simulated through the public retrieval contract
+only (open_retrieval, search, kb_info), without changing query/:
+- E1: BGE retrieval prefix added to the query text.
+- E2: diversity: search(k=20), then the best chunks from up to 5
+  different articles.
+- E3: code boost: if the normalised question contains a known
+  E-xx code, also search with that article's title (from kb_info)
+  and merge the results.
+- E2+E3 combined.
+For each: recall and both-articles recall on calibration, holdout
+and full sets, compared with the baseline. Choose using the
+calibration set; the holdout set must confirm the improvement.
+Adopting an experiment is a spec 02 change, approved by Shailesh.
 
 ## Part B: Full-flow run (real model)
 - Every ticket goes through QueryFlow with threshold -1.0, so the
@@ -64,10 +79,13 @@ For every ticket, using kb_v1 and search(k=5):
   All answers are saved for human review in Step 10.
 
 ## Clarifications (Version 1.1)
-1. WORST result: for each metric, the lowest value across the 3
-   runs. For the sweep, each run is simulated separately and the
-   lowest value per threshold is reported. Also reported (not a
-   gate): the number of tickets that passed in all 3 runs.
+1. WORST result: for each metric, the worst value across the 3
+   runs: the LOWEST value for success rates (AC1, AC2,
+   both-articles-cited rate) and the HIGHEST value for error rates
+   (wrong-escalation rate). For the sweep, each run is simulated
+   separately and the worst value per threshold is reported, using
+   the same rule. Also reported (not a gate): the number of tickets
+   that passed in all 3 runs.
 2. Tickets with "article_match": "any" (e.g. T-101): any one
    expected article counts as correct. They are excluded from the
    both-articles-cited metric and reported separately.
