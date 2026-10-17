@@ -1,9 +1,10 @@
 """Evaluation runner (spec 05). Run from the repository root:
 
     python -m evals.run_eval part-a
+    python -m evals.run_eval part-a2
     python -m evals.run_eval sweep --runs RUN1.json RUN2.json RUN3.json
 
-Both commands are free: they never call the model. The paid parts
+All three commands are free: they never call the model. The paid parts
 (Part B and the confirmation run) are not implemented yet.
 """
 
@@ -13,8 +14,24 @@ import sys
 from datetime import date
 from pathlib import Path
 
+from evals.eval_experiments import (
+    BGE_QUERY_PREFIX,
+    DESCRIPTIONS,
+    EXPERIMENTS,
+    boost_queries,
+    code_titles,
+    experiment_summary,
+    run_experiment,
+)
 from evals.eval_recorders import EvalError, MemoryHandoffStore, NoCallGenerator, RecordingRetriever
-from evals.eval_report import REPORTS_DIR, ReportExists, part_a_markdown, sweep_markdown, write_report
+from evals.eval_report import (
+    REPORTS_DIR,
+    ReportExists,
+    part_a2_markdown,
+    part_a_markdown,
+    sweep_markdown,
+    write_report,
+)
 from evals.eval_scoring import retrieval_row, retrieval_summary
 from evals.eval_sweep import load_run, sweep, thresholds_meeting_targets
 from evals.eval_tickets import (
@@ -37,6 +54,7 @@ NO_ESCALATION_THRESHOLD = -1.0
 RUNS_REQUIRED = 3
 
 PART_A_NAME = "part-a-retrieval"
+PART_A2_NAME = "part-a2-retrieval-experiments"
 SWEEP_NAME = "part-c-sweep"
 
 EXIT_FAILED = 1
@@ -134,6 +152,70 @@ def run_part_a(args) -> int:
     return 0
 
 
+# --- Part A2 ---------------------------------------------------------------------------
+
+
+def part_a2(tickets: list[Ticket], retriever) -> dict:
+    """Retrieval experiments E1, E2, E3 and E2+E3 against the baseline.
+    Each starts from the flow's own query (recorded by Part A); after that
+    only search() and kb_info() are used."""
+    queries = {r["ticket_id"]: r["query_sent"] for r in part_a(tickets, retriever)["tickets"]}
+    titles_by_code = code_titles(retriever.kb_info())
+    rows = []
+    for ticket in tickets:
+        query = queries[ticket.ticket_id]
+        results = {}
+        for name in EXPERIMENTS:
+            chunks = run_experiment(name, retriever, query, titles_by_code)
+            if not chunks:
+                raise EvalError(f"{ticket.ticket_id}: experiment {name} returned no chunks")
+            top_ids = [c.article_id for c in chunks]
+            results[name] = {
+                "top_score": chunks[0].similarity_score,
+                "top_article_ids": top_ids,
+                "top_chunk_ids": [c.chunk_id for c in chunks],
+                **retrieval_row(ticket, top_ids),
+            }
+        rows.append(
+            {
+                "ticket_id": ticket.ticket_id,
+                "split": ticket.split,
+                "expected": ticket.expected,
+                "category": ticket.category,
+                "expected_article_ids": list(ticket.expected_article_ids),
+                "article_match": ticket.article_match,
+                "query_sent": query,
+                "boost_titles": boost_queries(query, titles_by_code),
+                "results": results,
+            }
+        )
+    return {
+        "kind": "part-a2",
+        "kb_version": KB_VERSION,
+        "experiments": {name: DESCRIPTIONS[name] for name in EXPERIMENTS},
+        "bge_query_prefix": BGE_QUERY_PREFIX,
+        "summary": experiment_summary(tickets, {r["ticket_id"]: r for r in rows}),
+        "tickets": rows,
+    }
+
+
+def run_part_a2(args) -> int:
+    from ingestion import open_retrieval
+
+    sha_before = file_sha256(args.tickets)
+    tickets = load_tickets(args.tickets)
+    data = part_a2(tickets, open_retrieval(KB_VERSION))
+    if file_sha256(args.tickets) != sha_before:
+        raise EvalError("the ticket file changed during the run")
+    commit, dirty = git_state()
+    data = {"date": args.date, "git_commit": commit, "git_dirty": dirty, "ticket_file_sha256": sha_before, **data}
+    paths = write_report(args.reports_dir, args.date, PART_A2_NAME, data, part_a2_markdown(data), args.overwrite)
+    print("Part A2 written (no model calls):")
+    for p in paths:
+        print(f"  {p}")
+    return 0
+
+
 # --- Part C ----------------------------------------------------------------------------
 
 
@@ -179,6 +261,7 @@ def parser() -> argparse.ArgumentParser:
         sp.add_argument("--overwrite", action="store_true", help="replace existing report files")
 
     common(sub.add_parser("part-a", help="retrieval report (free, no model calls)"))
+    common(sub.add_parser("part-a2", help="retrieval experiments E1, E2, E3, E2+E3 (free, no model calls)"))
     sweep_parser = sub.add_parser("sweep", help="threshold sweep from 3 Part B runs (free)")
     sweep_parser.add_argument("--runs", nargs="+", type=Path, required=True, help="the 3 Part B run .json files")
     common(sweep_parser)
@@ -188,7 +271,7 @@ def parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     args = parser().parse_args(argv)
     try:
-        return {"part-a": run_part_a, "sweep": run_sweep}[args.command](args)
+        return {"part-a": run_part_a, "part-a2": run_part_a2, "sweep": run_sweep}[args.command](args)
     except (EvalError, ReportExists, TicketError) as e:
         print(f"error: {e}", file=sys.stderr)
         return EXIT_FAILED

@@ -1,6 +1,6 @@
 # Query and Escalation Spec — Voltrix VX-200 Support Bot
 
-Status: Version 1.11, approved by Shailesh on 2026-10-16
+Status: Version 1.12, approved by Shailesh on 2026-10-17
 
 ## Goal
 Given one user question, retrieve relevant chunks, generate an answer
@@ -31,10 +31,17 @@ ONLY place an escalation decision is made.
    The normalised text replaces the original in the retrieval query.
    The masked question as received is also kept for the handoff
    record.
-3. Retrieval: call search(query, k=5) from the retrieval contract
-   (specs/03-retrieval-contract.md). The query flow never reads
-   index files directly. The score scale and the output of search()
-   are defined in specs/03-retrieval-contract.md (Step 5).
+3. Retrieval (chosen at Step 9, experiments E2 and E3, spec 05):
+   a. Main search: search(query, k=20).
+   b. Code boost: for every known E-xx code in the normalised
+      question (codes from kb_info() titles), also call
+      search(<that article's title>, k=20).
+   c. Merge all results, keep each chunk once at its highest
+      score, and sort as specs/03-retrieval-contract.md says.
+   d. Diversity: keep the best chunk of each article, up to 5
+      different articles. These are the retrieved chunks.
+   The retrieval check (step 5a) uses the highest score among
+   these final retrieved chunks.
 4. Unknown fault codes (after retrieval): at startup, build the set
    of known fault codes from the E-xx codes in the article titles
    returned by kb_info() (specs/03-retrieval-contract.md). If the
@@ -234,3 +241,8 @@ will be measured by an evaluation designed at Step 9.
 12. A test stores a SHA-256 fingerprint of the system prompt. Any
     change to the prompt fails this test until Shailesh approves it
     and the fingerprint is updated in the same commit.
+13. Retrieval changes adopted at Step 9 (E1+E2+E3): full-set recall
+    rose from 38/48 to 45/48, both-articles recall from 5/9 to 7/9,
+    with no ticket lost; calibration improved and holdout confirmed.
+    Part A and the threshold sweep must be re-run on the real
+    implementation before the threshold is chosen.

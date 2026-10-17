@@ -74,6 +74,21 @@ def fake_retriever():
 
 
 @pytest.fixture
+def make_chunk():
+    def _make(chunk_id, score) -> Chunk:
+        article_id = chunk_id.split("#")[0]
+        title = dict(FAKE_ARTICLES).get(article_id, article_id)
+        return Chunk(chunk_id, article_id, title, f"{title} — Section", "v1", score)
+
+    return _make
+
+
+@pytest.fixture
+def fake_articles():
+    return list(FAKE_ARTICLES)
+
+
+@pytest.fixture
 def make_ticket():
     def _make(ticket_id="T-001", expected="answer", ids=("KB-001",), category="fault", question=None, match="all"):
         if expected == "escalate" and ids == ("KB-001",):

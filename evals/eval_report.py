@@ -238,3 +238,131 @@ def sweep_markdown(data: dict) -> str:
             f"{'**yes**' if row['meets_targets'] else 'no'} |"
         )
     return "\n".join(out) + "\n"
+
+
+# --- Part A2 -------------------------------------------------------------------------
+
+
+def fmt_change(n: int) -> str:
+    return f"{n:+d}" if n else "±0"
+
+
+def part_a2_markdown(data: dict) -> str:
+    from evals.eval_experiments import BASELINE, EXPERIMENTS
+
+    summary = data["summary"]
+    out = [
+        "# Part A2: retrieval experiments",
+        "",
+        "Spec 05, Part A2. No model calls. Each experiment starts from the flow's own",
+        "masked and normalised query and is simulated through search() and kb_info()",
+        "only; query/ is unchanged.",
+        "",
+        "**Choose using the calibration set; the holdout set must confirm the",
+        "improvement. Adopting an experiment is a spec 02 change, approved by",
+        "Shailesh. This report does not choose.**",
+        "",
+        f"- KB version: {data['kb_version']}",
+        *provenance_lines(data),
+        f"- E1 prefix: `{data['bge_query_prefix']}`",
+        "",
+        "## Experiments",
+        "",
+    ]
+    out += [f"- **{name}**: {desc}" for name, desc in data["experiments"].items()]
+
+    for title, key in (("Recall (≥1 expected article in top 5)", "recall"),
+                       ("Both articles in top 5 (two-article tickets)", "both_recall")):
+        out += ["", f"## {title}", "", "| Experiment | calibration | holdout | full |", "|---|---|---|---|"]
+        for name in EXPERIMENTS:
+            cells = []
+            for set_name in SETS:
+                r = summary[set_name][name]
+                cell = fmt_rate(r[key])
+                if name != BASELINE:
+                    cell += f" ({fmt_change(r[key + '_change'])})"
+                cells.append(cell)
+            out.append(f"| {name} | " + " | ".join(cells) + " |")
+
+    out += [
+        "",
+        "## Against the baseline",
+        "",
+        "\"Improves\" (summary only) = more recall hits and no fewer both-articles hits",
+        "than the baseline on that set.",
+        "",
+        "| Experiment | Improves on calibration | Holdout confirms | Gained (full set) | Lost (full set) |",
+        "|---|---|---|---|---|",
+    ]
+    for name in EXPERIMENTS:
+        if name == BASELINE:
+            continue
+        full = summary[FULL][name]
+        out.append(
+            f"| {name} | {fmt_flag(summary[CALIBRATION][name]['improves_on_baseline'])} | "
+            f"{fmt_flag(summary[HOLDOUT][name]['improves_on_baseline'])} | "
+            f"{', '.join(full['gained']) or '–'} | {', '.join(full['lost']) or '–'} |"
+        )
+
+    any_ids = [t["ticket_id"] for t in summary[FULL][BASELINE]["any_match_tickets"]]
+    if any_ids:
+        out += ["", 'Tickets with `article_match: "any"` (excluded from both-articles recall, clarification 2):', ""]
+        for tid in any_ids:
+            hits = []
+            for name in EXPERIMENTS:
+                hit = next(t["recall_hit"] for t in summary[FULL][name]["any_match_tickets"] if t["ticket_id"] == tid)
+                hits.append(f"{name}: {fmt_flag(hit)}")
+            out.append(f"- {tid}: " + ", ".join(hits))
+
+    boosted = [t for t in data["tickets"] if t["boost_titles"]]
+    out += ["", "## E3 code boost: where it applied", ""]
+    if boosted:
+        out += ["| Ticket | Set | Expected | Titles searched |", "|---|---|---|---|"]
+        for t in boosted:
+            out.append(
+                f"| {t['ticket_id']} | {t['split']} | {t['expected']} | {'; '.join(t['boost_titles'])} |"
+            )
+    else:
+        out.append("No ticket contained a known E-xx code.")
+
+    def cell(t, name):
+        r = t["results"][name]
+        text = fmt_flag(r["recall_hit"])
+        if r["both_hit"] is not None:
+            text += f" (both: {fmt_flag(r['both_hit'])})"
+        return text
+
+    # Any change from the baseline means a miss somewhere (in the baseline
+    # or in the experiment), so listing every ticket with a miss shows both.
+    changed = [
+        t for t in data["tickets"]
+        if t["expected"] == "answer"
+        and any(t["results"][n]["recall_hit"] is False or t["results"][n]["both_hit"] is False for n in EXPERIMENTS)
+    ]
+    out += [
+        "",
+        "## Answer tickets with a miss in any experiment",
+        "",
+    ]
+    if changed:
+        out += [
+            "| Ticket | Set | Expected | " + " | ".join(EXPERIMENTS) + " |",
+            "|---|---|---|" + "---|" * len(EXPERIMENTS),
+        ]
+        for t in changed:
+            out.append(
+                f"| {t['ticket_id']} | {t['split']} | {', '.join(t['expected_article_ids'])} | "
+                + " | ".join(cell(t, n) for n in EXPERIMENTS) + " |"
+            )
+    else:
+        out.append("None.")
+
+    out += [
+        "",
+        "## Note on scores",
+        "",
+        "Recall is the only measure here. Top scores are saved in the .json, but E1 and",
+        "E3 change the scores the threshold would see (E3 merges scores of title",
+        "searches), so the sweep must be redone on any adopted experiment.",
+    ]
+    return "\n".join(out) + "\n"

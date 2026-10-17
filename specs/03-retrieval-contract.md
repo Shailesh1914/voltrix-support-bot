@@ -1,6 +1,6 @@
 # Retrieval Contract — Voltrix VX-200 Support Bot
 
-Status: Version 1.2, approved by Shailesh on 2026-10-10
+Status: Version 1.3, approved by Shailesh on 2026-10-17
 
 ## Purpose
 This contract is the ONLY interface between the ingestion side and
@@ -45,11 +45,11 @@ Input:
 Behaviour:
 - Embeds the query with the SAME pinned embedding model used for
   ingestion.
-- Query instruction prefix: no prefix (Version 1.0). To be confirmed
-  by experiment at Step 9: compare retrieval with and without the
-  BGE retrieval prefix on the eval tickets, BEFORE the escalation
-  threshold is calibrated. If the prefix is chosen, its exact text
-  is written into this contract.
+- Query instruction prefix: search() adds the BGE retrieval prefix
+  "Represent this sentence for searching relevant passages: "
+  in front of every query before embedding it. Chunks in the index
+  are embedded WITHOUT a prefix, so no re-indexing is needed.
+  Chosen at Step 9 by experiment E1 (spec 05, Part A2).
 - Searches the index of the kb_version passed to open_retrieval()
   only.
 - Caps every similarity_score to the range -1.0 to 1.0.

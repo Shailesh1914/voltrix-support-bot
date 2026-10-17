@@ -1,6 +1,6 @@
 # Evaluation Spec — Voltrix VX-200 Support Bot
 
-Status: Version 1.3, approved by Shailesh on 2026-10-17
+Status: Version 1.4, approved by Shailesh on 2026-10-17
 
 ## Purpose
 Measure spec 02 acceptance criteria 1-2 and metrics, and produce
@@ -38,7 +38,7 @@ only (open_retrieval, search, kb_info), without changing query/:
 - E3: code boost: if the normalised question contains a known
   E-xx code, also search with that article's title (from kb_info)
   and merge the results.
-- E2+E3 combined.
+- Combinations: E2+E3, E1+E3, and E1+E2+E3.
 For each: recall and both-articles recall on calibration, holdout
 and full sets, compared with the baseline. Choose using the
 calibration set; the holdout set must confirm the improvement.
