@@ -1,6 +1,6 @@
 # Query and Escalation Spec — Voltrix VX-200 Support Bot
 
-Status: Version 1.12, approved by Shailesh on 2026-10-17
+Status: Version 1.13, approved by Shailesh on 2026-10-17
 
 ## Goal
 Given one user question, retrieve relevant chunks, generate an answer
@@ -41,7 +41,11 @@ ONLY place an escalation decision is made.
    d. Diversity: keep the best chunk of each article, up to 5
       different articles. These are the retrieved chunks.
    The retrieval check (step 5a) uses the highest score among
-   these final retrieved chunks.
+   these final retrieved chunks.Because the code boost searches with the article's own title, a question naming a KNOWN fault code usually passes the
+   retrieval check. This is intended: a known code is strong
+   evidence that the question is about the VX-200. Whether it can
+   be answered (scope, partial questions) is decided by the model
+   in step 5b. There is no limit on the number of boost searches.
 4. Unknown fault codes (after retrieval): at startup, build the set
    of known fault codes from the E-xx codes in the article titles
    returned by kb_info() (specs/03-retrieval-contract.md). If the
