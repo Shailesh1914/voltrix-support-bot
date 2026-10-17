@@ -41,12 +41,34 @@ def no_network(monkeypatch):
 
 
 class FakeRetriever:
-    """Returns scripted chunks: scores(query) -> [(article_id, score), ...]."""
+    """Returns scripted chunks: scores(query) -> [(article_id, score), ...].
 
-    def __init__(self, scores=None, kb_version="v1"):
+    article_chunks() (spec 03 v1.5) returns chunks_per_article chunks of an
+    article (c1, c2, ...), score 0.0; unknown articles raise."""
+
+    def __init__(self, scores=None, kb_version="v1", chunks_per_article=3):
         self._scores = scores or (lambda query: [("KB-001", 0.80), ("KB-020", 0.60)])
         self._kb_version = kb_version
+        self._chunks_per_article = chunks_per_article
         self.queries: list[tuple[str, int]] = []
+        self.reads: list[str] = []
+
+    def article_chunks(self, article_id: str) -> list[Chunk]:
+        titles = dict(FAKE_ARTICLES)
+        if article_id not in titles:
+            raise KeyError(f"unknown article_id {article_id!r}")
+        self.reads.append(article_id)
+        return [
+            Chunk(
+                chunk_id=f"{article_id}#c{n}",
+                article_id=article_id,
+                title=titles[article_id],
+                text=f"{titles[article_id]} — Section {n}\n\nText of {article_id}, part {n}. " + "word " * 40,
+                kb_version=self._kb_version,
+                similarity_score=0.0,
+            )
+            for n in range(1, self._chunks_per_article + 1)
+        ]
 
     def search(self, query: str, k: int) -> list[Chunk]:
         self.queries.append((query, k))

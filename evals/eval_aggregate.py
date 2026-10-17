@@ -19,8 +19,13 @@ from evals.eval_scoring import AC1_TARGET_PCT, AC2_TARGET_PCT, Rate, passes, sco
 from evals.eval_sweep import PART_B_KIND, PART_B_THRESHOLD, outcome_from_record
 from evals.eval_tickets import SETS, Ticket, select
 
-# Every run must have been made with the same bot on the same tickets.
-MUST_MATCH = ("code_trees", "model_id", "temperature", "system_prompt_sha256", "ticket_file_sha256", "kb_version")
+# Every run must have been made with the same bot on the same tickets, and
+# belong to the same labelled set of runs. code_trees covers query/,
+# ingestion/ and evals/*.py. A missing value refuses too, so runs made
+# before labels existed (the old run 1) are never combined with new ones.
+MUST_MATCH = (
+    "label", "code_trees", "model_id", "temperature", "system_prompt_sha256", "ticket_file_sha256", "kb_version",
+)
 
 # Escalate tickets only the model can catch (notes/step9-retrieval-review.md,
 # 2026-10-17). Highlighted in the report; scored like every other ticket.

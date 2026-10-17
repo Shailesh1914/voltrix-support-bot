@@ -8,11 +8,29 @@ The unknown-fault-code check stays active.
 Cost control (spec 05):
 - plan() is free: a stand-in generator builds each request the real
   generator would send (AnthropicGenerator.request(), no key, no
-  network), counts the calls and estimates the cost.
+  network), counts the calls and estimates the cost. The request holds
+  what the model reads: every chunk of the selected articles (spec 02
+  step 3e), so the estimate follows the size of those articles.
 - UsageRecordingGenerator wraps the real generator, records each call's
   output and token usage, and refuses a call beyond MAX_MODEL_CALLS.
 - run_tickets() stops at the first service_error: the run is invalid
   anyway (spec 02 decision 6) and every later call would be wasted.
+
+Retrieved chunks and top score (spec 02 v1.14): the model now reads whole
+articles (article_chunks(), score 0.0), so its chunks no longer carry the
+step-d scores. The free planning pass escalates every ticket, so its
+handoff records hold each ticket's step-d chunks with their scores (spec
+02: the handoff holds all retrieved chunks). run_tickets() takes the
+retrieved chunks and the top score from there, and checks the paid run
+against it: an escalation's own handoff must hold the same chunks, and
+the model must have read exactly the step-d articles, in order. Retrieval
+is deterministic (spec 03, contract test 5), so any difference is an
+error, never noise.
+
+Run names (2026-10-17): every new run has a label, e.g.
+<date>-part-b-<label>-run1.json, so runs of different code never clash.
+The unlabelled run 1 (old code) stays as it is; the aggregate and the
+sweep refuse to combine runs with different labels or code trees.
 
 Token gap (approved 2026-10-17): when the model's output is malformed,
 AnthropicGenerator.generate_with_usage() raises before it returns usage,
@@ -23,6 +41,7 @@ counts them and says the cost is slightly underestimated.
 import hashlib
 import json
 import math
+import re
 import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -56,6 +75,15 @@ ESTIMATE_OUTPUT_TOKENS = 500
 # 2026-10-17): every run must map to a commit.
 PROTECTED_PATHSPECS = ("query", "ingestion", "specs", ":(glob)evals/*.py")
 CODE_TREES = ("query", "ingestion")
+# The evaluation's own code is part of what must match across runs; its
+# reports/ folder changes between runs, so only evals/*.py counts.
+EVALS_CODE = "evals/*.py"
+
+# Run labels: lowercase words joined by hyphens. Words that already mean
+# something in a run file name are not allowed.
+LABEL_PATTERN = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
+LABEL_MAX_LENGTH = 40
+RESERVED_LABEL_WORD = re.compile(r"^(run\d*|invalid|handoffs|aggregate|sweep)$")
 
 RUN_MALFORMED_NOTE = (
     "Malformed model outputs have no token counts (the generator raises before "
@@ -147,12 +175,15 @@ def request_settings(generator) -> dict:
 @dataclass
 class PlannedCall:
     estimated_input_tokens: int
+    articles_read: int
+    chunks_read: int
 
 
 class PlanningGenerator:
     """Free stand-in: builds the exact request the real generator would
-    send (no key, no network), estimates its size and declines, so the
-    flow escalates without an answer."""
+    send (no key, no network), over the chunks the flow passes it (every
+    chunk of the selected articles, spec 02 step 3e), estimates its size
+    and declines, so the flow escalates without an answer."""
 
     def __init__(self):
         from query.anthropic_api import AnthropicGenerator
@@ -166,7 +197,7 @@ class PlanningGenerator:
         sent = {k: request[k] for k in ("system", "messages", "tools", "tool_choice")}
         chars = len(json.dumps(sent, ensure_ascii=False))
         tokens = math.ceil(chars / ESTIMATE_CHARS_PER_TOKEN) + ESTIMATE_TOOL_OVERHEAD_TOKENS
-        self.planned.append(PlannedCall(tokens))
+        self.planned.append(PlannedCall(tokens, len({c.article_id for c in chunks}), len(chunks)))
         return GeneratorOutput(decision="insufficient_context", answer="", used_article_ids=())
 
 
@@ -177,10 +208,37 @@ def cost_usd(input_tokens: int, output_tokens: int) -> float:
     return (input_tokens * PRICE_INPUT_PER_MTOK + output_tokens * PRICE_OUTPUT_PER_MTOK) / 1_000_000
 
 
-def plan(tickets: list[Ticket], flow, planner: PlanningGenerator) -> dict:
-    """Planned model calls and estimated cost; nothing is called or written."""
+@dataclass(frozen=True)
+class TicketRetrieval:
+    """One ticket's retrieval from the free planning pass (its handoff)."""
+
+    question_normalised: str
+    chunks: tuple[tuple[str, str, float], ...]  # (chunk_id, article_id, similarity_score), step d
+
+    @property
+    def article_ids(self) -> list[str]:
+        return [a for _, a, _ in self.chunks]
+
+
+def chunk_triples(chunks) -> tuple[tuple[str, str, float], ...]:
+    return tuple((c.chunk_id, c.article_id, c.similarity_score) for c in chunks)
+
+
+def plan(tickets: list[Ticket], flow, planner: PlanningGenerator, store: MemoryHandoffStore
+         ) -> tuple[dict, dict[str, TicketRetrieval]]:
+    """Planned model calls and estimated cost, and each ticket's retrieval
+    (step-d chunks with scores, from its handoff record). Nothing is called
+    or written. The planner declines every call, so every ticket escalates
+    and has a handoff record."""
+    retrieval: dict[str, TicketRetrieval] = {}
     for ticket in tickets:
-        flow.ask(ticket.question)
+        response = flow.ask(ticket.question)
+        record = store.by_id(response.handoff_id) if response.handoff_id else None
+        if record is None:
+            raise EvalError(f"{ticket.ticket_id}: the planning pass left no handoff record (status {response.status!r})")
+        if not record.retrieved_chunks:
+            raise EvalError(f"{ticket.ticket_id}: the flow retrieved no chunks")
+        retrieval[ticket.ticket_id] = TicketRetrieval(record.question_normalised, chunk_triples(record.retrieved_chunks))
     n = len(planner.planned)
     input_tokens = sum(p.estimated_input_tokens for p in planner.planned)
     expected_output = n * ESTIMATE_OUTPUT_TOKENS
@@ -195,14 +253,21 @@ def plan(tickets: list[Ticket], flow, planner: PlanningGenerator) -> dict:
         "worst_case_output_tokens": worst_output,
         "estimated_cost_usd": cost_usd(input_tokens, expected_output),
         "worst_case_cost_usd": cost_usd(input_tokens, worst_output),
-    }
+        # What the requests carry (spec 02 step 3e: whole selected articles).
+        "articles_read": sum(p.articles_read for p in planner.planned),
+        "chunks_read": sum(p.chunks_read for p in planner.planned),
+        "max_estimated_input_tokens_per_call": max((p.estimated_input_tokens for p in planner.planned), default=0),
+    }, retrieval
 
 
 def plan_lines(p: dict) -> list[str]:
     return [
         f"tickets:              {p['tickets']}",
         f"planned model calls:  {p['planned_model_calls']} (limit {p['max_model_calls']} per run)",
-        f"input tokens (est.):  {p['estimated_input_tokens']:,}",
+        f"model reads (total):  {p['articles_read']} whole articles, {p['chunks_read']} chunks "
+        f"(avg {p['chunks_read'] / max(p['planned_model_calls'], 1):.1f} chunks per call)",
+        f"input tokens (est.):  {p['estimated_input_tokens']:,} "
+        f"(largest call {p['max_estimated_input_tokens_per_call']:,})",
         f"output tokens (est.): {p['estimated_output_tokens']:,} typical, {p['worst_case_output_tokens']:,} worst case",
         f"cost (est.):          ${p['estimated_cost_usd']:.2f} typical, ${p['worst_case_cost_usd']:.2f} worst case "
         f"(${PRICE_INPUT_PER_MTOK:.2f} / ${PRICE_OUTPUT_PER_MTOK:.2f} per million input / output tokens)",
@@ -221,19 +286,30 @@ class RunOutcome:
     extra: dict = field(default_factory=dict)
 
 
-def ticket_row(ticket: Ticket, response, record, call: ModelCall | None) -> dict:
-    # The final retrieved chunks: what the model saw, or else the handoff
-    # record (spec 02: it holds all retrieved chunks).
-    if call is not None:
-        chunks = [(c.chunk_id, c.article_id, c.similarity_score) for c in call.chunks]
-        question_sent = call.question
-    elif record is not None:
-        chunks = [(c.chunk_id, c.article_id, c.similarity_score) for c in record.retrieved_chunks]
-        question_sent = record.question_normalised
-    else:
-        raise EvalError(f"{ticket.ticket_id}: answered without a model call")
-    if not chunks:
-        raise EvalError(f"{ticket.ticket_id}: the flow retrieved no chunks")
+def read_article_ids(chunks) -> list[str]:
+    """The articles the model read, in the order it read them."""
+    return list(dict.fromkeys(c.article_id for c in chunks))
+
+
+def ticket_row(ticket: Ticket, response, record, call: ModelCall | None, planned: TicketRetrieval) -> dict:
+    """planned is this ticket's retrieval from the free planning pass: the
+    step-d chunks with their scores. The paid run must agree with it."""
+    tid = ticket.ticket_id
+    if call is None and record is None:
+        raise EvalError(f"{tid}: answered without a model call")
+    if not planned.chunks:
+        raise EvalError(f"{tid}: the flow retrieved no chunks")
+    if record is not None and chunk_triples(record.retrieved_chunks) != planned.chunks:
+        raise EvalError(f"{tid}: the handoff's retrieved chunks differ from the planning pass (retrieval not repeatable)")
+    question_sent = call.question if call is not None else record.question_normalised
+    if question_sent != planned.question_normalised:
+        raise EvalError(f"{tid}: the question sent differs from the planning pass")
+    read = read_article_ids(call.chunks) if call is not None else []
+    if call is not None and read != planned.article_ids:
+        raise EvalError(
+            f"{tid}: the model read articles {read}, but step d selected {planned.article_ids} (spec 02 step 3e)"
+        )
+    chunks = planned.chunks
     output = call.output if call else None
     row = {
         "ticket_id": ticket.ticket_id,
@@ -244,7 +320,11 @@ def ticket_row(ticket: Ticket, response, record, call: ModelCall | None) -> dict
         "article_match": ticket.article_match,
         "question_sent": question_sent,
         "top_score": max(s for _, _, s in chunks),
+        # Step d (spec 02): the chunks the retrieval check and citations use.
         "retrieved_chunks": [{"chunk_id": c, "article_id": a, "similarity_score": s} for c, a, s in chunks],
+        # Step e: what the model read (whole articles), if it was called.
+        "read_article_ids": read,
+        "read_chunks": len(call.chunks) if call is not None else 0,
         "status": response.status,
         "escalation_reason": response.escalation_reason,
         "citations": [{"article_id": c.article_id, "title": c.title} for c in response.citations],
@@ -265,8 +345,10 @@ def ticket_row(ticket: Ticket, response, record, call: ModelCall | None) -> dict
     return row
 
 
-def run_tickets(tickets: list[Ticket], flow, generator: UsageRecordingGenerator, store: MemoryHandoffStore) -> RunOutcome:
+def run_tickets(tickets: list[Ticket], flow, generator: UsageRecordingGenerator, store: MemoryHandoffStore,
+                retrieval: dict[str, TicketRetrieval]) -> RunOutcome:
     """Every ticket once, in file order. Stops at the first service_error.
+    retrieval comes from plan() (the free planning pass).
 
     Any other failure after a paid call is returned as a stopped run (so
     the paid results are kept as an invalid run); a failure before the
@@ -283,7 +365,9 @@ def run_tickets(tickets: list[Ticket], flow, generator: UsageRecordingGenerator,
             record = store.by_id(response.handoff_id) if response.handoff_id else None
             if response.status == ESCALATED and record is None:
                 raise EvalError(f"{ticket.ticket_id}: escalated without a handoff record")
-            rows.append(ticket_row(ticket, response, record, call))
+            if ticket.ticket_id not in retrieval:
+                raise EvalError(f"{ticket.ticket_id}: not in the planning pass")
+            rows.append(ticket_row(ticket, response, record, call, retrieval[ticket.ticket_id]))
             if response.escalation_reason == SERVICE_ERROR:
                 stopped = {"reason": "service_error", "ticket_id": ticket.ticket_id}
                 break
@@ -299,7 +383,7 @@ def run_tickets(tickets: list[Ticket], flow, generator: UsageRecordingGenerator,
     )
 
 
-def run_data(tickets: list[Ticket], outcome: RunOutcome, run_number: int) -> dict:
+def run_data(tickets: list[Ticket], outcome: RunOutcome, run_number: int, label: str | None = None) -> dict:
     """The run file body (provenance is added by the runner)."""
     rows = outcome.rows
     called = [r for r in rows if r["model_called"]]
@@ -311,6 +395,7 @@ def run_data(tickets: list[Ticket], outcome: RunOutcome, run_number: int) -> dic
     data = {
         "kind": PART_B_KIND,
         "run": run_number,
+        "label": label,
         "threshold": PART_B_THRESHOLD,
         "valid": valid,
         "stopped": outcome.stopped,
@@ -354,32 +439,60 @@ def uncommitted_code_changes(repo_root: Path = REPO_ROOT) -> list[str]:
     return [line[3:] for line in out.splitlines() if line.strip()]
 
 
+def evals_code_id(repo_root: Path = REPO_ROOT) -> str | None:
+    """One id for evals/*.py at HEAD: SHA-256 of their names and blob ids
+    (equal ids = identical evaluation code; reports/ is left out)."""
+    try:
+        out = git(["ls-tree", "HEAD", "evals/"], repo_root)
+    except (OSError, subprocess.CalledProcessError):
+        return None
+    lines = sorted(line for line in out.splitlines() if line.split("\t")[-1].endswith(".py"))
+    if not lines:
+        return None
+    return hashlib.sha256("\n".join(lines).encode("utf-8")).hexdigest()
+
+
 def code_trees(repo_root: Path = REPO_ROOT) -> dict[str, str | None]:
-    """Git tree id of each code folder at HEAD (equal ids = identical code)."""
+    """Git tree id of each code folder at HEAD, and the id of evals/*.py
+    (equal ids = identical code)."""
     trees = {}
     for name in CODE_TREES:
         try:
             trees[name] = git(["rev-parse", f"HEAD:{name}"], repo_root).strip()
         except (OSError, subprocess.CalledProcessError):
             trees[name] = None
+    trees[EVALS_CODE] = evals_code_id(repo_root)
     return trees
 
 
-def run_name(run_number: int) -> str:
-    return f"part-b-run{run_number}"
+def check_label(label: str) -> str:
+    """A run label, or EvalError. Lowercase words joined by hyphens."""
+    if not isinstance(label, str) or not LABEL_PATTERN.match(label) or len(label) > LABEL_MAX_LENGTH:
+        raise EvalError(
+            f"label {label!r}: use lowercase letters and digits, words joined by single hyphens, "
+            f"at most {LABEL_MAX_LENGTH} characters (e.g. whole-articles)"
+        )
+    reserved = [w for w in label.split("-") if RESERVED_LABEL_WORD.match(w)]
+    if reserved:
+        raise EvalError(f"label {label!r}: {', '.join(reserved)} already means something in report names")
+    return label
 
 
-def existing_valid_runs(reports_dir: Path, run_number: int) -> list[Path]:
-    """Valid run files for this run number, any date. Invalid attempts are
-    named ...-invalid-<k> and never block a re-run."""
-    return sorted(Path(reports_dir).glob(f"*-{run_name(run_number)}.json"))
+def run_name(label: str, run_number: int) -> str:
+    return f"part-b-{check_label(label)}-run{run_number}"
 
 
-def invalid_name(reports_dir: Path, date: str, run_number: int) -> str:
+def existing_valid_runs(reports_dir: Path, label: str, run_number: int) -> list[Path]:
+    """Valid run files for this label and run number, any date. Invalid
+    attempts are named ...-invalid-<k> and never block a re-run."""
+    return sorted(Path(reports_dir).glob(f"*-{run_name(label, run_number)}.json"))
+
+
+def invalid_name(reports_dir: Path, date: str, label: str, run_number: int) -> str:
     k = 1
-    while (Path(reports_dir) / f"{date}-{run_name(run_number)}-invalid-{k}.json").exists():
+    while (Path(reports_dir) / f"{date}-{run_name(label, run_number)}-invalid-{k}.json").exists():
         k += 1
-    return f"{run_name(run_number)}-invalid-{k}"
+    return f"{run_name(label, run_number)}-invalid-{k}"
 
 
 def handoffs_path(reports_dir: Path, date: str, name: str) -> Path:

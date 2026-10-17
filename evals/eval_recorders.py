@@ -26,13 +26,22 @@ class SearchCall:
         return self.chunks[0].similarity_score if self.chunks else None
 
 
+@dataclass(frozen=True)
+class ReadCall:
+    article_id: str
+    chunks: tuple[Chunk, ...]
+
+
 class RecordingRetriever:
     """Records the exact query the flow sends to search() and the result
-    (spec 05 clarification 3: Part A uses the flow's own query)."""
+    (spec 05 clarification 3: Part A uses the flow's own query), and the
+    articles it reads whole with article_chunks() (spec 02 step 3e,
+    spec 03 v1.5)."""
 
     def __init__(self, inner):
         self._inner = inner
         self.calls: list[SearchCall] = []
+        self.reads: list[ReadCall] = []
 
     def search(self, query: str, k: int) -> list[Chunk]:
         chunks = self._inner.search(query, k)
@@ -42,10 +51,20 @@ class RecordingRetriever:
     def kb_info(self) -> KBInfo:
         return self._inner.kb_info()
 
+    def article_chunks(self, article_id: str) -> list[Chunk]:
+        chunks = self._inner.article_chunks(article_id)
+        self.reads.append(ReadCall(article_id, tuple(chunks)))
+        return chunks
+
     def take(self) -> list[SearchCall]:
-        """The calls since the last take()."""
+        """The search() calls since the last take()."""
         calls, self.calls = self.calls, []
         return calls
+
+    def take_reads(self) -> list[ReadCall]:
+        """The article_chunks() calls since the last take_reads()."""
+        reads, self.reads = self.reads, []
+        return reads
 
 
 class NoCallGenerator:

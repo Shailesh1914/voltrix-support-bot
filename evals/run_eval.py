@@ -1,8 +1,8 @@
 """Evaluation runner (spec 05). Run from the repository root:
 
-    python -m evals.run_eval part-a
-    python -m evals.run_eval part-b --run 1            (free dry run)
-    python -m evals.run_eval part-b --run 1 --confirm  (PAID: Shailesh only)
+    python -m evals.run_eval part-a [--label LABEL]
+    python -m evals.run_eval part-b --label LABEL --run 1            (free dry run)
+    python -m evals.run_eval part-b --label LABEL --run 1 --confirm  (PAID: Shailesh only)
     python -m evals.run_eval aggregate --runs RUN1.json RUN2.json RUN3.json
     python -m evals.run_eval sweep --runs RUN1.json RUN2.json RUN3.json
 
@@ -20,7 +20,7 @@ from datetime import date
 from pathlib import Path
 
 from evals import eval_part_b as pb
-from evals.eval_aggregate import aggregate, load_part_b
+from evals.eval_aggregate import aggregate, check_runs, load_part_b
 from evals.eval_compare import PART_A2_REPORT, compare_with_part_a2
 from evals.eval_experiments import BGE_QUERY_PREFIX
 from evals.eval_recorders import EvalError, MemoryHandoffStore, NoCallGenerator, RecordingRetriever
@@ -34,7 +34,7 @@ from evals.eval_report import (
     write_report,
 )
 from evals.eval_scoring import retrieval_row, retrieval_summary
-from evals.eval_sweep import load_run, sweep, thresholds_meeting_targets
+from evals.eval_sweep import run_from_json, sweep, thresholds_meeting_targets
 from evals.eval_tickets import (
     CALIBRATION,
     REPO_ROOT,
@@ -54,8 +54,18 @@ NO_ESCALATION_THRESHOLD = -1.0
 RUNS_REQUIRED = 3
 
 PART_A_NAME = "part-a-retrieval"
-SWEEP_NAME = "part-c-sweep"
-AGGREGATE_NAME = "part-b-aggregate"
+
+
+def part_a_name(label: str | None) -> str:
+    return PART_A_NAME if label is None else f"{PART_A_NAME}-{pb.check_label(label)}"
+
+
+def aggregate_name(label: str) -> str:
+    return f"part-b-{pb.check_label(label)}-aggregate"
+
+
+def sweep_name(label: str) -> str:
+    return f"part-c-{pb.check_label(label)}-sweep"
 
 # Handoffs of evaluation runs never go here (spec 05, Part B).
 HANDOFFS_DIR = REPO_ROOT / "handoffs"
@@ -103,6 +113,10 @@ def part_a(tickets: list[Ticket], retriever) -> dict:
     (spec 02: it holds all retrieved chunks), so Part A follows whatever
     the flow's retrieval does and never re-implements it. The raw search()
     calls are recorded as information only.
+
+    Step 3e (spec 02 v1.14): before the model call, the flow reads every
+    chunk of the selected articles with article_chunks(). Part A checks it
+    reads exactly the step-d articles, in step-d order.
     """
     recorder = RecordingRetriever(retriever)
     generator = NoCallGenerator()
@@ -113,6 +127,7 @@ def part_a(tickets: list[Ticket], retriever) -> dict:
         calls_before = generator.calls
         response = flow.ask(ticket.question)
         searches = recorder.take()
+        reads = recorder.take_reads()
         # search() adds the prefix itself (spec 03 v1.4); a query that
         # already has it would be embedded with a double prefix.
         if any(BGE_QUERY_PREFIX in call.query for call in searches):
@@ -127,6 +142,13 @@ def part_a(tickets: list[Ticket], retriever) -> dict:
         if not chunks:
             raise EvalError(f"{ticket.ticket_id}: the flow retrieved no chunks")
         top_ids = [c.article_id for c in chunks]
+        model_called = generator.calls > calls_before
+        read_ids = [r.article_id for r in reads]
+        if (model_called or reads) and read_ids != top_ids:
+            raise EvalError(
+                f"{ticket.ticket_id}: the flow read articles {read_ids}, but step d selected {top_ids} "
+                "(spec 02 step 3e)"
+            )
         rows.append(
             {
                 "ticket_id": ticket.ticket_id,
@@ -144,7 +166,10 @@ def part_a(tickets: list[Ticket], retriever) -> dict:
                     for c in chunks
                 ],
                 "searches": [{"query": call.query, "k": call.k, "n_chunks": len(call.chunks)} for call in searches],
-                "model_called": generator.calls > calls_before,
+                # Step 3e: what the model would read (whole articles).
+                "read_article_ids": read_ids,
+                "read_chunks": sum(len(r.chunks) for r in reads),
+                "model_called": model_called,
                 **retrieval_row(ticket, top_ids),
             }
         )
@@ -163,6 +188,7 @@ def part_a(tickets: list[Ticket], retriever) -> dict:
 def run_part_a(args) -> int:
     from ingestion import open_retrieval
 
+    name = part_a_name(args.label)  # a bad label fails before any work
     sha_before = file_sha256(args.tickets)
     tickets = load_tickets(args.tickets)
     data = part_a(tickets, open_retrieval(KB_VERSION))
@@ -172,7 +198,10 @@ def run_part_a(args) -> int:
     data = {"date": args.date, "git_commit": commit, "git_dirty": dirty, "ticket_file_sha256": sha_before, **data}
     comparison = compare_with_part_a2(data, args.part_a2_report)
     data["against_part_a2"] = comparison
-    paths = write_report(args.reports_dir, args.date, PART_A_NAME, data, part_a_markdown(data), args.overwrite)
+    data["label"] = args.label
+    paths = write_report(
+        args.reports_dir, args.date, name, data, part_a_markdown(data), args.overwrite
+    )
     print("Part A written (no model calls):")
     for p in paths:
         print(f"  {p}")
@@ -198,40 +227,49 @@ def make_real_generator():
     return AnthropicGenerator.from_environment()
 
 
-def part_b_plan(tickets: list[Ticket], retriever) -> dict:
-    """Free: no key, no model calls."""
+def part_b_plan(tickets: list[Ticket], retriever) -> tuple[dict, dict]:
+    """Free: no key, no model calls. Returns the plan and each ticket's
+    retrieval (step-d chunks with scores)."""
     planner = pb.PlanningGenerator()
-    return pb.plan(tickets, build_flow(retriever, planner, MemoryHandoffStore()), planner)
+    store = MemoryHandoffStore()
+    return pb.plan(tickets, build_flow(retriever, planner, store), planner, store)
 
 
-def part_b(tickets: list[Ticket], retriever, generator: pb.UsageRecordingGenerator) -> pb.RunOutcome:
-    """One Part B run. The handoffs stay in memory (never handoffs/)."""
+def part_b(tickets: list[Ticket], retriever, generator: pb.UsageRecordingGenerator,
+           retrieval: dict | None = None) -> pb.RunOutcome:
+    """One Part B run. The handoffs stay in memory (never handoffs/).
+    retrieval is from part_b_plan() on the same retriever; computed here
+    (free) if not given."""
+    if retrieval is None:
+        _, retrieval = part_b_plan(tickets, retriever)
     store = MemoryHandoffStore()
     flow = build_flow(retriever, generator, store)
-    return pb.run_tickets(tickets, flow, generator, store)
+    return pb.run_tickets(tickets, flow, generator, store, retrieval)
 
 
 def run_part_b(args) -> int:
     from ingestion import open_retrieval
 
     reports_dir = Path(args.reports_dir)
+    label = pb.check_label(args.label)
     sha_before = file_sha256(args.tickets)
     tickets = load_tickets(args.tickets)
     retriever = open_retrieval(KB_VERSION)
-    plan = part_b_plan(tickets, retriever)
-    print(f"Part B run {args.run}: plan (free: no key loaded, no model calls)")
+    plan, retrieval = part_b_plan(tickets, retriever)
+    print(f"Part B run {args.run} ({label}): plan (free: no key loaded, no model calls)")
     for line in pb.plan_lines(plan):
         print(f"  {line}")
     if not plan["within_limit"]:
         raise EvalError(f"{plan['planned_model_calls']} planned model calls exceed the limit of {pb.MAX_MODEL_CALLS}")
-    existing = pb.existing_valid_runs(reports_dir, args.run)
+    existing = pb.existing_valid_runs(reports_dir, label, args.run)
     if existing:
         raise EvalError(
-            f"a valid run {args.run} already exists ({', '.join(map(str, existing))}); Part B files are never replaced"
+            f"a valid run {args.run} with label {label!r} already exists ({', '.join(map(str, existing))}); "
+            "Part B files are never replaced"
         )
     if not args.confirm:
         print("Dry run: nothing was called or written.")
-        print(f"To make the PAID run: python -m evals.run_eval part-b --run {args.run} --confirm")
+        print(f"To make the PAID run: python -m evals.run_eval part-b --label {label} --run {args.run} --confirm")
         return 0
 
     changes = pb.uncommitted_code_changes()
@@ -250,7 +288,7 @@ def run_part_b(args) -> int:
     generator = pb.UsageRecordingGenerator(real)
 
     print(f"Running {plan['planned_model_calls']} model calls ...")
-    outcome = part_b(tickets, retriever, generator)
+    outcome = part_b(tickets, retriever, generator, retrieval)
     if outcome.stopped is None and file_sha256(args.tickets) != sha_before:
         outcome.stopped = {"reason": "the ticket file changed during the run", "ticket_id": None}
     if outcome.stopped is None and pb.folder_snapshot(HANDOFFS_DIR) != handoffs_before:
@@ -266,9 +304,9 @@ def run_part_b(args) -> int:
         "kb_version": KB_VERSION,
         **settings,
         "plan": plan,
-        **pb.run_data(tickets, outcome, args.run),
+        **pb.run_data(tickets, outcome, args.run, label),
     }
-    name = pb.run_name(args.run) if data["valid"] else pb.invalid_name(reports_dir, args.date, args.run)
+    name = pb.run_name(label, args.run) if data["valid"] else pb.invalid_name(reports_dir, args.date, label, args.run)
     handoffs = pb.handoffs_path(reports_dir, args.date, name)
     data["handoffs_file"] = handoffs.name
     paths = [pb.write_handoffs(handoffs, outcome.handoffs)]
@@ -280,8 +318,8 @@ def run_part_b(args) -> int:
         print(f"VALID run {args.run}.")
         return 0
     reason = data["stopped"]["reason"] if data["stopped"] else "incomplete handoff records"
-    print(f"INVALID run {args.run} ({reason}). Re-run: python -m evals.run_eval part-b --run {args.run} --confirm",
-          file=sys.stderr)
+    print(f"INVALID run {args.run} ({reason}). Re-run: "
+          f"python -m evals.run_eval part-b --label {label} --run {args.run} --confirm", file=sys.stderr)
     return EXIT_INVALID_RUN if data["stopped"] and data["stopped"]["reason"] == "service_error" else EXIT_FAILED
 
 
@@ -298,7 +336,9 @@ def run_aggregate(args) -> int:
         **aggregate(load_tickets(args.tickets), runs, sha),
         "run_files": [{"file": str(p), "sha256": file_sha256(p)} for p in args.runs],
     }
-    paths = write_report(args.reports_dir, args.date, AGGREGATE_NAME, data, aggregate_markdown(data), args.overwrite)
+    paths = write_report(
+        args.reports_dir, args.date, aggregate_name(data["label"]), data, aggregate_markdown(data), args.overwrite
+    )
     print("Part B aggregate written (no model calls):")
     for p in paths:
         print(f"  {p}")
@@ -319,8 +359,14 @@ def run_part_a2(args) -> int:
 def run_sweep(args) -> int:
     if len(args.runs) != RUNS_REQUIRED or len({Path(p).resolve() for p in args.runs}) != RUNS_REQUIRED:
         raise EvalError(f"the sweep needs {RUNS_REQUIRED} different Part B run files (spec 05)")
-    tickets = select(load_tickets(args.tickets), CALIBRATION)
-    runs = [load_run(p) for p in args.runs]
+    sha = file_sha256(args.tickets)
+    all_tickets = load_tickets(args.tickets)
+    tickets = select(all_tickets, CALIBRATION)
+    run_files = [load_part_b(p) for p in args.runs]
+    # Same rule as the aggregate: same label, code trees, model, prompt,
+    # tickets and KB, runs 1, 2 and 3 once each.
+    check_runs(run_files, all_tickets, sha)
+    runs = [run_from_json(data, str(p)) for data, p in zip(run_files, args.runs)]
     rows = sweep(tickets, runs)
     commit, dirty = git_state()
     data = {
@@ -328,7 +374,9 @@ def run_sweep(args) -> int:
         "date": args.date,
         "git_commit": commit,
         "git_dirty": dirty,
-        "ticket_file_sha256": file_sha256(args.tickets),
+        "label": run_files[0]["label"],
+        "code_trees": run_files[0]["code_trees"],
+        "ticket_file_sha256": sha,
         "set": CALIBRATION,
         "n_tickets": len(tickets),
         "n_answer": sum(t.expected == "answer" for t in tickets),
@@ -337,7 +385,9 @@ def run_sweep(args) -> int:
         "thresholds_meeting_targets": thresholds_meeting_targets(rows),
         "rows": rows,
     }
-    paths = write_report(args.reports_dir, args.date, SWEEP_NAME, data, sweep_markdown(data), args.overwrite)
+    paths = write_report(
+        args.reports_dir, args.date, sweep_name(data["label"]), data, sweep_markdown(data), args.overwrite
+    )
     print("Part C sweep written (no model calls):")
     for p in paths:
         print(f"  {p}")
@@ -359,10 +409,15 @@ def parser() -> argparse.ArgumentParser:
 
     part_a_parser = sub.add_parser("part-a", help="retrieval report (free, no model calls)")
     part_a_parser.add_argument("--part-a2-report", type=Path, default=PART_A2_REPORT, help=argparse.SUPPRESS)
+    part_a_parser.add_argument("--label", help="added to the report name, e.g. whole-articles (optional)")
     common(part_a_parser)
     sub.add_parser("part-a2", help="completed 2026-10-17; refuses to run (spec 05 v1.5)")
     part_b_parser = sub.add_parser("part-b", help="full-flow run with the real model (dry run unless --confirm)")
     part_b_parser.add_argument("--run", type=int, choices=pb.RUN_NUMBERS, required=True, help="run number: 1, 2 or 3")
+    part_b_parser.add_argument(
+        "--label", required=True,
+        help="names this set of 3 runs, e.g. whole-articles: <date>-part-b-<label>-runN.json",
+    )
     part_b_parser.add_argument("--confirm", action="store_true", help="make the PAID run (Shailesh only)")
     part_b_parser.add_argument("--date", default=date.today().isoformat(), help="report date (default: today)")
     part_b_parser.add_argument("--reports-dir", type=Path, default=REPORTS_DIR, help=argparse.SUPPRESS)

@@ -4,9 +4,9 @@ Labelled question set for the evaluation suite.
 
 Run from the repository root with the project virtual environment:
 
-    .venv/bin/python -m evals.run_eval part-a
-    .venv/bin/python -m evals.run_eval part-b --run 1              # free dry run
-    .venv/bin/python -m evals.run_eval part-b --run 1 --confirm    # PAID, Shailesh only
+    .venv/bin/python -m evals.run_eval part-a --label LABEL                    # label optional
+    .venv/bin/python -m evals.run_eval part-b --label LABEL --run 1            # free dry run
+    .venv/bin/python -m evals.run_eval part-b --label LABEL --run 1 --confirm  # PAID, Shailesh only
     .venv/bin/python -m evals.run_eval aggregate --runs RUN1.json RUN2.json RUN3.json
     .venv/bin/python -m evals.run_eval sweep --runs RUN1.json RUN2.json RUN3.json
 
@@ -23,8 +23,18 @@ record. The top score is the highest score among them. Part A fails if a
 query reaches `search()` with the BGE prefix already in it, because `search()`
 adds the prefix itself (spec 03 v1.4).
 
+Since spec 02 v1.14 the flow reads every chunk of the selected articles
+(step 3e, `article_chunks()`) before the model call. Part A records what
+would be read and fails if the flow reads anything other than the step-d
+articles in step-d order. The top score is still step d's.
+
 The report also compares every ticket with the committed Part A2 E1+E2+E3
-simulation (query, texts searched, final chunks, top score, recall).
+simulation. Spec 05 v1.6: article ids (in order), recall, both-articles
+recall and top score decide the match; chunk ids, the query and the texts
+searched are listed as information only.
+
+`--label` adds a suffix to the report name (`<date>-part-a-retrieval-<label>`),
+so a report of new code never replaces one of old code.
 
 Exit codes: 0 = report written and it matches Part A2; 3 = report written but
 it differs from Part A2 (see "Against the Part A2 simulation"); 1 = error,
@@ -54,7 +64,21 @@ unknown-fault-code check stays active.
   file for that run number already exists, or if `query/`, `ingestion/`,
   `evals/*.py` or `specs/` have uncommitted changes. A 101st model call is
   refused during the run too.
-- One run per command: `--run 1`, `2`, `3`.
+- One run per command: `--run 1`, `2`, `3`, always with `--label` (lowercase
+  words joined by hyphens, e.g. `whole-articles`). Files are named
+  `<date>-part-b-<label>-runN`. A label is one set of 3 runs: runs with
+  different labels never block each other. The unlabelled
+  `2026-10-17-part-b-run1` (pilot, old code) stays as evidence; it can never
+  be aggregated with labelled runs.
+- Top score and retrieved chunks are step d's (spec 02). The model now reads
+  whole articles (scores 0.0), so they come from the free planning pass that
+  runs before every paid run (its handoff records hold the step-d chunks with
+  scores). The paid run is checked against it: an escalation's handoff must
+  hold the same chunks, and the model must read exactly the step-d articles.
+  Any difference stops the run as invalid.
+- The dry-run estimate is built from the exact requests, which now carry the
+  whole selected articles; it also prints how many articles and chunks the
+  model reads. (Run 1 estimated 169,812 input tokens and used 145,562.)
 - Per ticket: top score, status, escalation_reason, citations, failed_check,
   rejected_answer, the answer text, the model's own output and token counts.
 - Handoffs go to `reports/<date>-part-b-runN-handoffs.jsonl`, never to
@@ -71,12 +95,14 @@ paid calls were already made).
 
 ## Part B aggregate
 
-`aggregate` takes the 3 valid runs (1, 2 and 3, made with the same code,
-model, prompt and tickets) and reports, per set at threshold -1.0: each
+`aggregate` takes the 3 valid runs (1, 2 and 3, with the same label, the
+same code trees for `query/`, `ingestion/` and `evals/*.py`, and the same
+model, prompt, tickets and KB; anything else is refused) and reports, per set at threshold -1.0: each
 metric per run and its worst value (lowest for success rates, highest for
 wrong escalation; clarification 1), unstable tickets (status or AC
 pass/fail differs; clarification 4), tickets that passed in all 3 runs,
-failed_check counts, tokens and cost.
+failed_check counts, tokens and cost. Output: `<date>-part-b-<label>-aggregate`.
+`sweep` applies the same check to its 3 runs; output: `<date>-part-c-<label>-sweep`.
 
 ## Files
 

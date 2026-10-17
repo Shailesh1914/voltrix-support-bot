@@ -93,9 +93,10 @@ def part_a2_comparison_lines(c: dict) -> list[str]:
         "",
         f"## Against the Part A2 simulation ({c['experiment']})",
         "",
-        "For every ticket: the query, the texts searched, the final chunk ids (in",
-        "order), the article ids, recall and the top score (tolerance",
-        f"{c['score_tolerance']:g}) must equal the committed simulation.",
+        "For every ticket the article ids (in order), recall, both-articles",
+        f"recall and the top score (tolerance {c['score_tolerance']:g}) must equal the",
+        "committed simulation (spec 05 v1.6). Chunk ids are not compared: since",
+        "spec 02 v1.14 the model reads whole articles.",
         "",
         f"- Part A2 report: `{c['part_a2_report']}`",
         f"- Part A2 report SHA-256: `{c['part_a2_report_sha256']}`",
@@ -119,6 +120,17 @@ def part_a2_comparison_lines(c: dict) -> list[str]:
             out.append(f"| {d['ticket_id']} | {d['field']} | {fmt_value(d['part_a'])} | {fmt_value(d['part_a2'])} |")
     else:
         out.append("None.")
+    if "information_differences" in c:
+        info = c["information_differences"]
+        out += ["", "### Other differences (information only, not part of the match)", ""]
+        if info:
+            out += ["| Ticket | Field | Real flow | Part A2 |", "|---|---|---|---|"]
+            for d in info:
+                out.append(
+                    f"| {d['ticket_id']} | {d['field']} | {fmt_value(d['part_a'])} | {fmt_value(d['part_a2'])} |"
+                )
+        else:
+            out.append("None (query, texts searched and chunk ids also equal).")
     return out
 
 
@@ -141,14 +153,17 @@ def part_a_markdown(data: dict) -> str:
         "threshold -1.0 and a stand-in generator that never calls the model, so the",
         "query searched is the flow's own masked and normalised query",
         "(clarification 3) and the scores equal those the sweep uses.",
-        "The final retrieved chunks (up to 5 articles, one chunk each) are read",
-        "from each ticket's handoff record; the top score is the highest score",
-        "among them.",
+        "The final retrieved chunks (step d: up to 5 articles, one chunk each) are",
+        "read from each ticket's handoff record; the top score is the highest",
+        "score among them. Before a model call the flow reads every chunk of",
+        "those articles (step 3e); Part A checks it reads exactly those articles.",
         "",
         f"- KB version: {data['kb_version']}",
         f"- Retrieval: {data['retrieval']}",
         *provenance_lines(data),
         f"- Model calls a full-flow run would make: {data['planned_model_calls']} of {len(data['tickets'])} tickets",
+        f"- Chunks the model would read (whole articles, step 3e): "
+        f"{sum(t.get('read_chunks', 0) for t in data['tickets'])} in total",
         "",
         "## Retrieval recall",
         "",
@@ -267,6 +282,9 @@ def sweep_markdown(data: dict) -> str:
         f"- Calibration tickets: {data['n_tickets']} "
         f"({data['n_answer']} answer, {data['n_escalate']} escalate)",
         f"- Targets: AC1 ≥ {AC1_TARGET_PCT}%, AC2 ≥ {AC2_TARGET_PCT}% (worst of the runs)",
+        f"- Runs label: {data.get('label')}",
+        "- Code trees (identical in all runs): "
+        + ", ".join(f"{k} `{(v or 'unknown')[:12]}`" for k, v in (data.get("code_trees") or {}).items()),
         "- Part B runs:",
     ]
     out += [f"  - `{r['file']}` (SHA-256 `{r['sha256'][:16]}…`)" for r in data["runs"]]
@@ -473,7 +491,7 @@ def usage_lines(data: dict) -> list[str]:
 def part_b_markdown(data: dict) -> str:
     verdict = "**VALID**" if data["valid"] else "**INVALID: re-run it (spec 05)**"
     out = [
-        f"# Part B: full-flow run {data['run']}",
+        f"# Part B: full-flow run {data['run']}" + (f" ({data['label']})" if data.get("label") else ""),
         "",
         "Spec 05, Part B. Every ticket through QueryFlow with the real model at",
         "threshold -1.0, so the retrieval check never escalates; the",
@@ -489,7 +507,10 @@ def part_b_markdown(data: dict) -> str:
         out.append(f"- **Incomplete handoff records (criterion 3):** {', '.join(data['incomplete_handoff_records'])}")
     out += [
         *part_b_provenance_lines(data),
+        f"- Label: {data.get('label') or 'none (made before labels existed)'}",
         f"- Handoffs: `{data['handoffs_file']}` ({data['handoff_records']} records)",
+        "- Top score and retrieved chunks: step d of spec 02, from the free planning pass "
+        "(checked against this run); the model read the whole selected articles (step 3e)",
         *usage_lines(data),
     ]
     if data["summary"]:
@@ -559,6 +580,7 @@ def aggregate_markdown(data: dict) -> str:
         "come from a different run. The threshold itself is simulated by the",
         "sweep (Part C).",
         "",
+        f"- Runs label: {data['label']}",
         f"- Model: {data['model_id']}, temperature {data['temperature']}",
         f"- System prompt SHA-256: `{data['system_prompt_sha256']}`",
         f"- Ticket file SHA-256: `{data['ticket_file_sha256']}`",

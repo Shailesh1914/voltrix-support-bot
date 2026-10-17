@@ -44,26 +44,35 @@ def fields(result):
     return [(d["ticket_id"], d["field"]) for d in result["differences"]]
 
 
+def info_fields(result):
+    return [(d["ticket_id"], d["field"]) for d in result["information_differences"]]
+
+
 def test_identical_results_match(compare, tmp_path):
     result = compare()
     assert result["match"] is True
     assert (result["tickets_matching"], result["tickets_compared"]) == (3, 3)
     assert result["differences"] == [] and result["max_score_difference"] == 0.0
+    assert result["information_differences"] == []
+    # Spec 05 v1.6: article ids, recall and top score decide; chunk ids do not.
+    assert result["compared_fields"] == ["article_ids", "recall_hit", "both_hit", "top_score"]
+    assert "chunk_ids" not in result["compared_fields"] and "chunk_ids" in result["information_fields"]
     assert result["part_a2_report"] == str(tmp_path / "a2.json")
     assert len(result["part_a2_report_sha256"]) == 64
     assert (result["part_a2_git_commit"], result["part_a2_git_dirty"]) == ("a2commit", True)
     assert result["summary"]["full"]["part_a"] == result["summary"]["full"]["part_a2"]
 
 
-def test_chunk_order_and_ids_are_compared(compare):
-    def swap(a2):
-        sim = a2["tickets"][1]["results"][E]
-        sim["top_chunk_ids"].reverse()
+def test_chunk_ids_alone_never_make_a_mismatch(compare):
+    # Spec 05 v1.6: the model reads whole articles, so a different best
+    # chunk of the same article is information, not a difference.
+    def other_chunks(a2):
+        a2["tickets"][1]["results"][E]["top_chunk_ids"] = ["KB-001#c7", "KB-020#c9"]
 
-    result = compare(swap)
-    assert result["match"] is False
-    assert fields(result) == [("T-002", "chunk_ids")]
-    assert result["tickets_matching"] == 2
+    result = compare(other_chunks)
+    assert result["match"] is True and fields(result) == []
+    assert info_fields(result) == [("T-002", "chunk_ids")]
+    assert result["tickets_matching"] == 3
 
 
 def test_article_ids_are_compared(compare):
@@ -89,16 +98,27 @@ def test_float_noise_within_tolerance_matches(compare):
     assert compare(noise)["match"] is True
 
 
-def test_query_and_searched_texts_are_compared(compare):
+def test_query_and_searched_texts_are_information_only(compare):
     def change(a2):
         a2["tickets"][0]["query_sent"] = "drive shows e1 when ramping"
         a2["tickets"][1]["boost_titles"] = ["E-01 Overcurrent during acceleration"]
 
-    assert fields(compare(change)) == [
+    result = compare(change)
+    assert result["match"] is True and fields(result) == []
+    assert info_fields(result) == [
         ("T-001", "query_sent"),
         ("T-001", "searched_texts"),
         ("T-002", "searched_texts"),
     ]
+
+
+def test_article_order_is_compared(compare):
+    def swap(a2):
+        a2["tickets"][1]["results"][E]["top_article_ids"].reverse()
+
+    result = compare(swap)
+    assert result["match"] is False and fields(result) == [("T-002", "article_ids")]
+    assert result["tickets_matching"] == 2
 
 
 def test_recall_flags_are_compared(compare):
@@ -142,9 +162,14 @@ def test_markdown_shows_the_comparison(compare, part_a):
     assert "**MATCH**: 3/3 tickets match" in md
     assert "### Differences\n\nNone." in md
 
+    assert "Chunk ids are not compared" in md
+    assert "information only, not part of the match)\n\nNone" in md
+
     def swap(a2):
+        a2["tickets"][1]["results"][E]["top_article_ids"].reverse()
         a2["tickets"][1]["results"][E]["top_chunk_ids"].reverse()
 
     md = part_a_markdown({**part_a, "against_part_a2": compare(swap)})
     assert "**MISMATCH**: 2/3 tickets match" in md
-    assert "| T-002 | chunk_ids | KB-001#c1, KB-020#c2 | KB-020#c2, KB-001#c1 |" in md
+    assert "| T-002 | article_ids | KB-001, KB-020 | KB-020, KB-001 |" in md
+    assert "| T-002 | chunk_ids | KB-001#c1, KB-020#c2 | KB-020#c2, KB-001#c1 |" in md  # information

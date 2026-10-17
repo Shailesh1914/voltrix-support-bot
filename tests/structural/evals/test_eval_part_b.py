@@ -268,7 +268,7 @@ def test_request_settings_come_from_the_generator():
 
 
 def test_plan_counts_calls_and_estimates_cost(tickets, fake_retriever):
-    plan = run_eval.part_b_plan(tickets, fake_retriever())
+    plan, _ = run_eval.part_b_plan(tickets, fake_retriever())
     assert plan["tickets"] == 4 and plan["planned_model_calls"] == 3  # T-003 stops before the model
     assert plan["within_limit"] is True
     assert plan["estimated_input_tokens"] > 3 * pb.ESTIMATE_TOOL_OVERHEAD_TOKENS
@@ -309,8 +309,8 @@ def command(tmp_path, monkeypatch, tickets, fake_retriever):
     monkeypatch.setattr(pb, "uncommitted_code_changes", lambda: list(state.changes))
     monkeypatch.setattr(query.handoff, "JsonlHandoffStore", refuse)
 
-    def run(*extra, run_number=1):
-        argv = ["part-b", "--run", str(run_number), "--date", "2026-10-18",
+    def run(*extra, run_number=1, label="whole-articles"):
+        argv = ["part-b", "--run", str(run_number), "--date", "2026-10-18", *(["--label", label] if label else []),
                 "--reports-dir", str(reports), "--tickets", str(ticket_file), *extra]
         return run_eval.main(argv)
 
@@ -328,7 +328,8 @@ def test_dry_run_loads_no_key_and_writes_nothing(command, monkeypatch, capsys):
     assert command.run() == 0
     out = capsys.readouterr().out
     assert "planned model calls:  3 (limit 100 per run)" in out
-    assert "cost (est.):" in out and "--run 1 --confirm" in out
+    assert "cost (est.):" in out and "--label whole-articles --run 1 --confirm" in out
+    assert "model reads (total):  6 whole articles, 18 chunks (avg 6.0 chunks per call)" in out
     assert command.generators == 0 and command.files() == []
 
 
@@ -342,28 +343,29 @@ def test_dry_run_refuses_more_than_the_limit(command, monkeypatch, capsys):
 def test_confirmed_run_writes_run_files_only_to_reports(command, capsys):
     assert command.run("--confirm") == 0
     assert command.files() == [
-        "2026-10-18-part-b-run1-handoffs.jsonl",
-        "2026-10-18-part-b-run1.json",
-        "2026-10-18-part-b-run1.md",
+        "2026-10-18-part-b-whole-articles-run1-handoffs.jsonl",
+        "2026-10-18-part-b-whole-articles-run1.json",
+        "2026-10-18-part-b-whole-articles-run1.md",
     ]
     assert not command.handoffs.exists()
-    data = json.loads((command.reports / "2026-10-18-part-b-run1.json").read_text(encoding="utf-8"))
+    data = json.loads((command.reports / "2026-10-18-part-b-whole-articles-run1.json").read_text(encoding="utf-8"))
     assert (data["kind"], data["run"], data["threshold"], data["valid"]) == ("part-b", 1, -1.0, True)
+    assert data["label"] == "whole-articles"
     assert data["model_id"] == "claude-haiku-4-5-20251001" and data["temperature"] == 0
     assert data["model_calls"] == 3 and data["tokens"] == {"input": 3600, "output": 450, "calls_without_usage": 0}
     assert data["cost_usd"] == pytest.approx(pb.cost_usd(3600, 450))
     assert data["plan"]["planned_model_calls"] == 3
     assert set(data["summary"]) == {"calibration", "holdout", "full"}
-    assert data["handoffs_file"] == "2026-10-18-part-b-run1-handoffs.jsonl"
+    assert data["handoffs_file"] == "2026-10-18-part-b-whole-articles-run1-handoffs.jsonl"
     lines = (command.reports / data["handoffs_file"]).read_text(encoding="utf-8").splitlines()
     assert len(lines) == data["handoff_records"] == 3  # T-002, T-003, T-004
     assert all(missing_fields(json.loads(line)) == [] for line in lines)
-    md = (command.reports / "2026-10-18-part-b-run1.md").read_text(encoding="utf-8")
+    md = (command.reports / "2026-10-18-part-b-whole-articles-run1.md").read_text(encoding="utf-8")
     assert "**VALID**" in md and "## Answers (for the Step 10 review)" in md
     assert "Malformed model outputs: 0." in md and "slightly underestimated" in md
     assert "Check the motor wiring." in md and "Rejected draft (failed_check citation" in md
     # The sweep reads it.
-    assert set(load_run(command.reports / "2026-10-18-part-b-run1.json")) == {"T-001", "T-002", "T-003", "T-004"}
+    assert set(load_run(command.reports / "2026-10-18-part-b-whole-articles-run1.json")) == {"T-001", "T-002", "T-003", "T-004"}
 
 
 def test_a_valid_run_is_never_replaced(command, capsys):
@@ -380,23 +382,24 @@ def test_service_error_writes_an_invalid_run_that_never_blocks_a_rerun(command, 
     command.script = by_question(**{**DEFAULT_SCRIPT, "backwards": service_error})
     assert command.run("--confirm") == run_eval.EXIT_INVALID_RUN == 4
     assert command.run("--confirm") == 4
-    assert "INVALID run 1 (service_error)" in capsys.readouterr().err
-    data = json.loads((command.reports / "2026-10-18-part-b-run1-invalid-2.json").read_text(encoding="utf-8"))
+    assert "INVALID run 1 (service_error). Re-run: python -m evals.run_eval part-b --label whole-articles --run 1 --confirm" \
+        in capsys.readouterr().err
+    data = json.loads((command.reports / "2026-10-18-part-b-whole-articles-run1-invalid-2.json").read_text(encoding="utf-8"))
     assert data["valid"] is False and data["stopped"] == {"reason": "service_error", "ticket_id": "T-002"}
-    assert "**INVALID" in (command.reports / "2026-10-18-part-b-run1-invalid-1.md").read_text(encoding="utf-8")
+    assert "**INVALID" in (command.reports / "2026-10-18-part-b-whole-articles-run1-invalid-1.md").read_text(encoding="utf-8")
     with pytest.raises(EvalError, match="invalid"):
-        load_run(command.reports / "2026-10-18-part-b-run1-invalid-1.json")
+        load_run(command.reports / "2026-10-18-part-b-whole-articles-run1-invalid-1.json")
 
     command.script = by_question(**DEFAULT_SCRIPT)
     assert command.run("--confirm") == 0
-    assert "2026-10-18-part-b-run1.json" in command.files()
+    assert "2026-10-18-part-b-whole-articles-run1.json" in command.files()
     assert len([f for f in command.files() if "invalid" in f]) == 6
 
 
 def test_aborted_run_is_kept_as_invalid(command, capsys):
     command.script = by_question(**{**DEFAULT_SCRIPT, "backwards": KeyboardInterrupt()})
     assert command.run("--confirm") == 1
-    data = json.loads((command.reports / "2026-10-18-part-b-run1-invalid-1.json").read_text(encoding="utf-8"))
+    data = json.loads((command.reports / "2026-10-18-part-b-whole-articles-run1-invalid-1.json").read_text(encoding="utf-8"))
     assert data["stopped"]["reason"].startswith("aborted: KeyboardInterrupt") and data["model_calls"] == 2
 
 
@@ -426,7 +429,7 @@ def test_handoffs_folder_change_makes_the_run_invalid(command, monkeypatch):
 
     monkeypatch.setattr(run_eval, "part_b", touching)
     assert command.run("--confirm") == 1
-    data = json.loads((command.reports / "2026-10-18-part-b-run1-invalid-1.json").read_text(encoding="utf-8"))
+    data = json.loads((command.reports / "2026-10-18-part-b-whole-articles-run1-invalid-1.json").read_text(encoding="utf-8"))
     assert data["stopped"]["reason"] == "handoffs/ changed during the run"
 
 
@@ -438,11 +441,11 @@ def test_run_number_must_be_1_2_or_3(command):
 def test_three_runs_feed_the_aggregate_and_the_sweep(command, capsys):
     for n in (1, 2, 3):
         assert command.run("--confirm", run_number=n) == 0
-    runs = [str(command.reports / f"2026-10-18-part-b-run{n}.json") for n in (1, 2, 3)]
+    runs = [str(command.reports / f"2026-10-18-part-b-whole-articles-run{n}.json") for n in (1, 2, 3)]
     common = ["--date", "2026-10-18", "--reports-dir", str(command.reports)]
     ticket_file = str(command.reports.parent / "tickets.jsonl")
     assert run_eval.main(["aggregate", "--runs", *runs, *common, "--tickets", ticket_file]) == 0
-    data = json.loads((command.reports / "2026-10-18-part-b-aggregate.json").read_text(encoding="utf-8"))
+    data = json.loads((command.reports / "2026-10-18-part-b-whole-articles-aggregate.json").read_text(encoding="utf-8"))
     assert data["sets"]["full"]["tickets_passed_in_all_runs"] == 3  # all but T-002 (citation check)
     assert data["sets"]["full"]["failed_in_some_run"] == ["T-002"]
     assert data["sets"]["full"]["unstable"] == []
@@ -501,9 +504,185 @@ def test_uncommitted_code_changes(tmp_path):
     (tmp_path / "ingestion/build.py").unlink()
     assert sorted(pb.uncommitted_code_changes(tmp_path)) == [
         "evals/new_module.py", "ingestion/build.py", "query/flow.py", "specs/02.md"]
-    assert set(pb.code_trees(tmp_path)) == {"query", "ingestion"}
+    assert set(pb.code_trees(tmp_path)) == {"query", "ingestion", "evals/*.py"}
 
 
 def test_uncommitted_code_changes_fails_loudly_without_git(tmp_path):
     with pytest.raises(EvalError, match="git"):
         pb.uncommitted_code_changes(tmp_path)  # not a repository
+
+
+# --- Whole articles (spec 02 v1.14): retrieved chunks and top score -----------------------
+
+
+def test_answered_ticket_keeps_the_step_d_top_score_not_the_read_chunks(tickets, fake_retriever):
+    # The model reads whole articles (score 0.0 each); the row must keep
+    # the step-d chunks and their scores, which the sweep uses.
+    outcome, client, _ = run_with(tickets, fake_retriever)
+    t1 = rows_of(outcome)["T-001"]
+    assert t1["status"] == "answered"
+    assert t1["top_score"] == 0.80
+    assert t1["retrieved_chunks"] == [
+        {"chunk_id": "KB-001#c1", "article_id": "KB-001", "similarity_score": 0.80},
+        {"chunk_id": "KB-020#c2", "article_id": "KB-020", "similarity_score": 0.60},
+    ]
+    assert t1["read_article_ids"] == ["KB-001", "KB-020"] and t1["read_chunks"] == 6
+    # The request really carried the whole articles.
+    assert "Text of KB-020, part 3." in client.requests[0]["messages"][0]["content"]
+    t3 = rows_of(outcome)["T-003"]  # unknown code: no model call, nothing read
+    assert t3["read_article_ids"] == [] and t3["read_chunks"] == 0 and t3["top_score"] == 0.80
+
+
+def test_planning_pass_holds_every_tickets_step_d_chunks(tickets, fake_retriever):
+    _, retrieval = run_eval.part_b_plan(tickets, fake_retriever())
+    assert set(retrieval) == {"T-001", "T-002", "T-003", "T-004"}
+    assert retrieval["T-001"].chunks == (("KB-001#c1", "KB-001", 0.80), ("KB-020#c2", "KB-020", 0.60))
+    assert "E-01" in retrieval["T-001"].question_normalised
+
+
+class DriftingRetriever:
+    """Scores change after the planning pass (retrieval not repeatable)."""
+
+    def __init__(self, make, after_searches):
+        self._inner = make()
+        self._make = make
+        self.searches = 0
+        self.after = after_searches
+
+    def search(self, query, k):
+        self.searches += 1
+        if self.searches > self.after:
+            return self._make(lambda q: [("KB-001", 0.70), ("KB-020", 0.60)]).search(query, k)
+        return self._inner.search(query, k)
+
+    def kb_info(self):
+        return self._inner.kb_info()
+
+    def article_chunks(self, article_id):
+        return self._inner.article_chunks(article_id)
+
+
+def test_a_paid_handoff_that_differs_from_the_planning_pass_makes_the_run_invalid(tickets, fake_retriever):
+    # 5 searches in the planning pass (T-001 has a code boost); then drift.
+    retriever = DriftingRetriever(fake_retriever, after_searches=5)
+    _, retrieval = run_eval.part_b_plan(tickets, retriever)
+    client = FakeClient(by_question(**DEFAULT_SCRIPT))
+    generator = pb.UsageRecordingGenerator(AnthropicGenerator(client))
+    outcome = run_eval.part_b(tickets, retriever, generator, retrieval)
+    # T-001 is answered: its scores are not in a handoff, so it cannot be
+    # compared; T-002 escalates and its handoff shows the drift.
+    assert outcome.stopped["ticket_id"] == "T-002"
+    assert "differ from the planning pass" in outcome.stopped["reason"]
+    assert pb.run_data(tickets, outcome, 1, "x")["valid"] is False
+
+
+def test_the_model_must_read_exactly_the_step_d_articles(make_ticket, make_chunk):
+    ticket = make_ticket("T-001")
+    planned = pb.TicketRetrieval("q", (("KB-001#c1", "KB-001", 0.8), ("KB-020#c2", "KB-020", 0.6)))
+    response = SimpleNamespace(status="answered", escalation_reason="", citations=[], answer="a", handoff_id="")
+
+    def call(*chunk_ids):
+        return pb.ModelCall("q", [make_chunk(c, 0.0) for c in chunk_ids],
+                            output=GeneratorOutput("answer", "a", ("KB-001",)), input_tokens=1, output_tokens=1)
+
+    row = pb.ticket_row(ticket, response, None, call("KB-001#c1", "KB-001#c2", "KB-020#c1"), planned)
+    assert row["read_article_ids"] == ["KB-001", "KB-020"] and row["top_score"] == 0.8
+    for wrong in (("KB-001#c1",), ("KB-020#c1", "KB-001#c1"), ("KB-001#c1", "KB-020#c1", "KB-002#c1")):
+        with pytest.raises(EvalError, match="step 3e"):
+            pb.ticket_row(ticket, response, None, call(*wrong), planned)
+    with pytest.raises(EvalError, match="question sent differs"):
+        pb.ticket_row(ticket, response, None, pb.ModelCall("other", call("KB-001#c1", "KB-020#c1").chunks), planned)
+
+
+def test_dry_run_estimate_grows_with_the_articles_read(tickets, fake_retriever):
+    small, _ = run_eval.part_b_plan(tickets, fake_retriever(chunks_per_article=1))
+    large, _ = run_eval.part_b_plan(tickets, fake_retriever(chunks_per_article=6))
+    assert (small["chunks_read"], large["chunks_read"]) == (6, 36)
+    assert small["articles_read"] == large["articles_read"] == 6
+    assert large["estimated_input_tokens"] > small["estimated_input_tokens"] + 30 * 40 // pb.ESTIMATE_CHARS_PER_TOKEN
+    assert large["estimated_cost_usd"] > small["estimated_cost_usd"]
+    assert large["max_estimated_input_tokens_per_call"] > small["max_estimated_input_tokens_per_call"]
+
+
+def test_plan_lines_show_what_the_model_reads(tickets, fake_retriever):
+    plan, _ = run_eval.part_b_plan(tickets, fake_retriever())
+    lines = "\n".join(pb.plan_lines(plan))
+    assert "model reads (total):  6 whole articles, 18 chunks (avg 6.0 chunks per call)" in lines
+    assert f"(largest call {plan['max_estimated_input_tokens_per_call']:,})" in lines
+
+
+# --- Labels ---------------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("label", ["whole-articles", "v114", "prompt-2", "a"])
+def test_good_labels(label):
+    assert pb.check_label(label) == label
+    assert pb.run_name(label, 2) == f"part-b-{label}-run2"
+
+
+@pytest.mark.parametrize(
+    "label", ["", "Whole", "whole_articles", "-x", "x-", "a--b", "x" * 41, "run1", "x-run2", "invalid",
+              "my-aggregate", "handoffs", "sweep", "a/b", "a.json"])
+def test_bad_labels(label):
+    with pytest.raises(EvalError, match="label"):
+        pb.check_label(label)
+
+
+def test_label_is_required_for_part_b(command):
+    with pytest.raises(SystemExit):
+        command.run(label=None)
+
+
+def test_bad_label_writes_nothing(command, capsys):
+    assert command.run("--confirm", label="run2") == 1
+    assert "label" in capsys.readouterr().err
+    assert command.generators == 0 and command.files() == []
+
+
+def test_the_old_unlabelled_run_never_blocks_or_mixes(command, capsys):
+    # The existing run 1 of the OLD code: no label in its name or file.
+    command.reports.mkdir()
+    old = command.reports / "2026-10-17-part-b-run1.json"
+    old.write_text("{}")
+    assert command.run("--confirm") == 0
+    assert "2026-10-18-part-b-whole-articles-run1.json" in command.files()
+    assert old.read_text() == "{}"
+    # Labels are separate sets of runs: one label never blocks another.
+    assert command.run("--confirm", label="second-try") == 0
+    assert command.run("--confirm", label="second-try") == 1
+    assert "with label 'second-try' already exists" in capsys.readouterr().err
+
+
+def test_label_prefix_does_not_match_another_label(tmp_path):
+    for name in ("2026-10-18-part-b-whole-articles-run1.json", "2026-10-18-part-b-articles-run1-invalid-1.json"):
+        (tmp_path / name).write_text("{}")
+    assert pb.existing_valid_runs(tmp_path, "articles", 1) == []
+    assert [p.name for p in pb.existing_valid_runs(tmp_path, "whole-articles", 1)] == [
+        "2026-10-18-part-b-whole-articles-run1.json"]
+
+
+def test_evals_code_id_changes_with_evals_py_only(tmp_path):
+    def git(*args):
+        subprocess.run(["git", "-c", "user.name=t", "-c", "user.email=t@t", *args], cwd=tmp_path,
+                       check=True, capture_output=True)
+
+    for name in ("query/flow.py", "ingestion/build.py", "evals/run_eval.py", "evals/reports/r.md"):
+        (tmp_path / name).parent.mkdir(parents=True, exist_ok=True)
+        (tmp_path / name).write_text("x\n")
+    git("init", "-q")
+    git("add", ".")
+    git("commit", "-q", "-m", "init")
+    first = pb.code_trees(tmp_path)
+    assert all(first.values())
+
+    (tmp_path / "evals/reports/r.md").write_text("new report\n")
+    (tmp_path / "evals/reports/run2.json").write_text("{}\n")
+    git("add", ".")
+    git("commit", "-q", "-m", "reports")
+    assert pb.code_trees(tmp_path) == first  # reports never change the id
+
+    (tmp_path / "evals/run_eval.py").write_text("changed\n")
+    git("commit", "-q", "-am", "code")
+    second = pb.code_trees(tmp_path)
+    assert second["evals/*.py"] != first["evals/*.py"]
+    assert (second["query"], second["ingestion"]) == (first["query"], first["ingestion"])

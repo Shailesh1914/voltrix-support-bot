@@ -125,6 +125,40 @@ def test_recorders(fake_retriever):
     assert MemoryHandoffStore().by_id("x") is None
 
 
+def test_recorder_passes_article_chunks_through(fake_retriever):
+    inner = fake_retriever()
+    recorder = RecordingRetriever(inner)
+    chunks = recorder.article_chunks("KB-020")
+    assert chunks == inner.article_chunks("KB-020")
+    assert [c.chunk_id for c in chunks] == ["KB-020#c1", "KB-020#c2", "KB-020#c3"]
+    reads = recorder.take_reads()
+    assert [(r.article_id, len(r.chunks)) for r in reads] == [("KB-020", 3)]
+    assert recorder.take_reads() == [] and recorder.take() == []
+    with pytest.raises(KeyError):
+        recorder.article_chunks("KB-999")  # the inner error is not hidden
+
+
+def test_part_a_records_what_the_model_would_read(three_tickets, fake_retriever):
+    data = run_eval.part_a(three_tickets, fake_retriever())
+    rows = {r["ticket_id"]: r for r in data["tickets"]}
+    # Step 3e: whole articles, in step-d order; the top score stays step d's.
+    assert rows["T-001"]["read_article_ids"] == ["KB-001", "KB-020"]
+    assert rows["T-001"]["read_chunks"] == 6
+    assert rows["T-001"]["top_score"] == 0.80
+    # The unknown code stops the flow before step 3e.
+    assert rows["T-003"]["read_article_ids"] == [] and rows["T-003"]["read_chunks"] == 0
+
+
+def test_part_a_refuses_when_the_flow_reads_other_articles(make_ticket, fake_retriever, monkeypatch):
+    import query.flow
+
+    real = query.flow.read_articles
+    # Simulate a flow that reads the selected articles in the wrong order.
+    monkeypatch.setattr(query.flow, "read_articles", lambda r, chunks: real(r, list(reversed(chunks))))
+    with pytest.raises(EvalError, match="step 3e"):
+        run_eval.part_a([make_ticket("T-001")], fake_retriever())
+
+
 def handoffs_snapshot(repo_root):
     folder = repo_root / "handoffs"
     if not folder.exists():
@@ -197,6 +231,25 @@ def test_part_a_command_refuses_to_overwrite(tmp_path, monkeypatch, fake_retriev
     assert run_eval.main(argv + ["--overwrite"]) == 0
 
 
+def test_part_a_label_names_a_separate_report(tmp_path, monkeypatch, fake_retriever, make_part_a2, capsys):
+    monkeypatch.setattr(ingestion, "open_retrieval", lambda kb_version: fake_retriever(kb_version=kb_version))
+    a2 = write_fake_part_a2(tmp_path / "a2.json", fake_retriever, make_part_a2)
+    out = tmp_path / "r"
+    argv = ["part-a", "--date", "2026-10-16", "--reports-dir", str(out), "--part-a2-report", str(a2)]
+    assert run_eval.main(argv) == 0
+    assert run_eval.main(argv + ["--label", "whole-articles"]) == 0  # no clash with the unlabelled report
+    assert sorted(p.name for p in out.iterdir()) == [
+        "2026-10-16-part-a-retrieval-whole-articles.json",
+        "2026-10-16-part-a-retrieval-whole-articles.md",
+        "2026-10-16-part-a-retrieval.json",
+        "2026-10-16-part-a-retrieval.md",
+    ]
+    data = json.loads((out / "2026-10-16-part-a-retrieval-whole-articles.json").read_text(encoding="utf-8"))
+    assert data["label"] == "whole-articles"
+    assert run_eval.main(argv + ["--label", "Bad_Label"]) == 1
+    assert "label" in capsys.readouterr().err
+
+
 def test_part_a2_command_refuses(monkeypatch, capsys):
     def no_retrieval(kb_version):
         raise AssertionError("part-a2 must not open retrieval")
@@ -210,7 +263,10 @@ def test_part_a2_command_refuses(monkeypatch, capsys):
     assert sorted(p.name for p in REPORTS_DIR.iterdir()) == before
 
 
-def write_part_b(path, tickets, score=0.75):
+def write_part_b(path, tickets, score=0.75, run=1, **over):
+    """A valid Part B run file over ALL tickets (the sweep then picks the
+    calibration set), with everything the sweep's comparability check needs."""
+    tickets = load_tickets()
     records = [
         {
             "ticket_id": t.ticket_id,
@@ -223,17 +279,25 @@ def write_part_b(path, tickets, score=0.75):
         }
         for t in tickets
     ]
-    path.write_text(json.dumps({"kind": "part-b", "threshold": -1.0, "valid": True, "tickets": records}))
+    data = {
+        "kind": "part-b", "run": run, "label": "whole-articles", "threshold": -1.0, "valid": True,
+        "code_trees": {"query": "q1", "ingestion": "i1", "evals/*.py": "e1"},
+        "model_id": "claude-haiku-4-5-20251001", "temperature": 0, "system_prompt_sha256": "p" * 64,
+        "ticket_file_sha256": file_sha256(TICKETS_PATH), "kb_version": "v1", "tickets": records,
+    }
+    data.update(over)
+    path.write_text(json.dumps(data))
     return path
 
 
 def test_sweep_command(tmp_path):
     calibration = select(load_tickets(), CALIBRATION)
-    runs = [str(write_part_b(tmp_path / f"run{i}.json", calibration)) for i in (1, 2, 3)]
+    runs = [str(write_part_b(tmp_path / f"run{i}.json", calibration, run=i)) for i in (1, 2, 3)]
     out = tmp_path / "reports"
     assert run_eval.main(["sweep", "--runs", *runs, "--date", "2026-10-16", "--reports-dir", str(out)]) == 0
-    data = json.loads((out / "2026-10-16-part-c-sweep.json").read_text(encoding="utf-8"))
-    md = (out / "2026-10-16-part-c-sweep.md").read_text(encoding="utf-8")
+    data = json.loads((out / "2026-10-16-part-c-whole-articles-sweep.json").read_text(encoding="utf-8"))
+    md = (out / "2026-10-16-part-c-whole-articles-sweep.md").read_text(encoding="utf-8")
+    assert data["label"] == "whole-articles" and "- Runs label: whole-articles" in md
     assert data["set"] == "calibration" and data["n_tickets"] == 35
     assert (data["n_answer"], data["n_escalate"]) == (24, 11)
     assert len(data["rows"]) == 41
@@ -246,7 +310,7 @@ def test_sweep_command(tmp_path):
 def test_sweep_command_needs_three_different_runs(tmp_path, capsys):
     calibration = select(load_tickets(), CALIBRATION)
     run = str(write_part_b(tmp_path / "run1.json", calibration))
-    other = str(write_part_b(tmp_path / "run2.json", calibration))
+    other = str(write_part_b(tmp_path / "run2.json", calibration, run=2))
     assert run_eval.main(["sweep", "--runs", run, other, "--reports-dir", str(tmp_path)]) == 1
     assert run_eval.main(["sweep", "--runs", run, run, other, "--reports-dir", str(tmp_path)]) == 1
     assert "3 different Part B run files" in capsys.readouterr().err
@@ -254,12 +318,30 @@ def test_sweep_command_needs_three_different_runs(tmp_path, capsys):
 
 def test_sweep_command_refuses_invalid_run(tmp_path, capsys):
     calibration = select(load_tickets(), CALIBRATION)
-    runs = [write_part_b(tmp_path / f"run{i}.json", calibration) for i in (1, 2, 3)]
+    runs = [write_part_b(tmp_path / f"run{i}.json", calibration, run=i) for i in (1, 2, 3)]
     data = json.loads(runs[2].read_text())
     data["valid"] = False
     runs[2].write_text(json.dumps(data))
     assert run_eval.main(["sweep", "--runs", *map(str, runs), "--reports-dir", str(tmp_path)]) == 1
     assert "invalid" in capsys.readouterr().err
+
+
+@pytest.mark.parametrize(
+    "over, message",
+    [
+        ({"label": "other"}, "label"),
+        ({"code_trees": {"query": "q2", "ingestion": "i1", "evals/*.py": "e1"}}, "code_trees"),
+        ({"label": None}, "label"),  # the old, unlabelled run 1
+        ({"model_id": "other"}, "model_id"),
+    ],
+)
+def test_sweep_refuses_runs_that_do_not_belong_together(tmp_path, capsys, over, message):
+    calibration = select(load_tickets(), CALIBRATION)
+    runs = [write_part_b(tmp_path / f"run{i}.json", calibration, run=i, **(over if i == 3 else {})) for i in (1, 2, 3)]
+    out = tmp_path / "reports"
+    assert run_eval.main(["sweep", "--runs", *map(str, runs), "--reports-dir", str(out)]) == 1
+    assert message in capsys.readouterr().err
+    assert not out.exists()
 
 
 # Spec 05 "Independence": only the bot's public parts (QueryFlow,

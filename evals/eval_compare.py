@@ -1,10 +1,14 @@
-"""Part A against the committed Part A2 simulation (spec 05 v1.5; spec 02
+"""Part A against the committed Part A2 simulation (spec 05 v1.6; spec 02
 decision 13).
 
 Part A2 simulated E1+E2+E3 before the query flow implemented it. Part A
-now measures the real flow. For every ticket this module checks that the
-real flow got the same result as the simulation: the query, the texts
-searched, the final chunks, the top score and recall.
+now measures the real flow. Spec 05 v1.6: the comparison is on article
+ids, recall and top score, NOT chunk ids (since spec 02 v1.14 the model
+reads whole articles, so which chunk of an article was best no longer
+changes what the model sees). Only these fields decide the match.
+
+The query sent, the texts searched and the chunk ids are still compared,
+as information only: they explain a difference, but never make one.
 
 The Part A2 report is only read, never re-computed: its simulation added
 the BGE prefix itself and cannot run against search() that adds it too.
@@ -47,29 +51,41 @@ def searched_texts_a(row: dict) -> list[str]:
     return [s["query"] for s in row["searches"]]
 
 
-def ticket_differences(row_a: dict, row_a2: dict) -> tuple[list[dict], float]:
-    """Differences for one ticket, and the absolute top-score difference."""
+# Spec 05 v1.6: these decide the match (plus the top score).
+COMPARED_FIELDS = ("article_ids", "recall_hit", "both_hit", "top_score")
+# Information only.
+INFORMATION_FIELDS = ("query_sent", "searched_texts", "chunk_ids")
+
+
+def ticket_differences(row_a: dict, row_a2: dict) -> tuple[list[dict], float, list[dict]]:
+    """Differences for one ticket (they decide the match), the absolute
+    top-score difference, and information-only differences."""
     sim = row_a2["results"][ADOPTED_EXPERIMENT]
-    pairs = [
-        ("query_sent", row_a["query_sent"], row_a2["query_sent"]),
-        ("searched_texts", searched_texts_a(row_a), searched_texts_a2(row_a2)),
-        ("chunk_ids", [c["chunk_id"] for c in row_a["top_chunks"]], sim["top_chunk_ids"]),
+
+    def found(pairs):
+        return [
+            {"ticket_id": row_a["ticket_id"], "field": name, "part_a": real, "part_a2": simulated}
+            for name, real, simulated in pairs
+            if real != simulated
+        ]
+
+    diffs = found([
         ("article_ids", row_a["top_article_ids"], sim["top_article_ids"]),
         ("recall_hit", row_a["recall_hit"], sim["recall_hit"]),
         ("both_hit", row_a["both_hit"], sim["both_hit"]),
-    ]
-    diffs = [
-        {"ticket_id": row_a["ticket_id"], "field": name, "part_a": real, "part_a2": simulated}
-        for name, real, simulated in pairs
-        if real != simulated
-    ]
+    ])
+    info = found([
+        ("query_sent", row_a["query_sent"], row_a2["query_sent"]),
+        ("searched_texts", searched_texts_a(row_a), searched_texts_a2(row_a2)),
+        ("chunk_ids", [c["chunk_id"] for c in row_a["top_chunks"]], sim["top_chunk_ids"]),
+    ])
     score_diff = abs(row_a["top_score"] - sim["top_score"])
     if score_diff > SCORE_TOLERANCE:
         diffs.append(
             {"ticket_id": row_a["ticket_id"], "field": "top_score", "part_a": row_a["top_score"],
              "part_a2": sim["top_score"]}
         )
-    return diffs, score_diff
+    return diffs, score_diff, info
 
 
 def compare_with_part_a2(part_a: dict, a2_path: Path | str = PART_A2_REPORT) -> dict:
@@ -93,11 +109,13 @@ def compare_with_part_a2(part_a: dict, a2_path: Path | str = PART_A2_REPORT) -> 
         raise EvalError("Part A and the Part A2 report do not cover the same tickets")
 
     differences: list[dict] = []
+    information: list[dict] = []
     max_score_diff = 0.0
     matching = 0
     for row in part_a["tickets"]:
-        diffs, score_diff = ticket_differences(row, rows_a2[row["ticket_id"]])
+        diffs, score_diff, info = ticket_differences(row, rows_a2[row["ticket_id"]])
         differences += diffs
+        information += info
         max_score_diff = max(max_score_diff, score_diff)
         matching += not diffs
 
@@ -115,6 +133,8 @@ def compare_with_part_a2(part_a: dict, a2_path: Path | str = PART_A2_REPORT) -> 
         "part_a2_git_commit": a2.get("git_commit"),
         "part_a2_git_dirty": a2.get("git_dirty"),
         "experiment": ADOPTED_EXPERIMENT,
+        "compared_fields": list(COMPARED_FIELDS),
+        "information_fields": list(INFORMATION_FIELDS),
         "score_tolerance": SCORE_TOLERANCE,
         "max_score_difference": max_score_diff,
         "tickets_compared": len(ids_a),
@@ -122,4 +142,5 @@ def compare_with_part_a2(part_a: dict, a2_path: Path | str = PART_A2_REPORT) -> 
         "match": not differences and summary_match,
         "summary": summary,
         "differences": differences,
+        "information_differences": information,
     }

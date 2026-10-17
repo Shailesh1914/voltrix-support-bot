@@ -50,8 +50,9 @@ def ok_rows():
 
 def run_file(n, rows=None, **over):
     data = {
-        "kind": "part-b", "run": n, "threshold": -1.0, "valid": True, "date": "2026-10-18", "git_commit": "c0ffee",
-        "code_trees": {"query": "q1", "ingestion": "i1"}, "model_id": "claude-haiku-4-5-20251001",
+        "kind": "part-b", "run": n, "label": "whole-articles", "threshold": -1.0, "valid": True,
+        "date": "2026-10-18", "git_commit": "c0ffee",
+        "code_trees": {"query": "q1", "ingestion": "i1", "evals/*.py": "e1"}, "model_id": "claude-haiku-4-5-20251001",
         "temperature": 0, "system_prompt_sha256": "p" * 64, "ticket_file_sha256": SHA, "kb_version": "v1",
         "model_calls": 5, "tokens": {"input": 1000 * n, "output": 100 * n, "calls_without_usage": 0},
         "malformed_outputs": n - 1, "cost_usd": 0.0,
@@ -149,7 +150,13 @@ def test_usage_totals(tickets):
     [
         (lambda runs: runs[2].update(run=2), "runs 1, 2 and 3 once each"),
         (lambda runs: runs[1].update(model_id="other"), "model_id"),
-        (lambda runs: runs[1].update(code_trees={"query": "q2", "ingestion": "i1"}), "code_trees"),
+        (lambda runs: runs[1].update(code_trees={"query": "q2", "ingestion": "i1", "evals/*.py": "e1"}), "code_trees"),
+        (lambda runs: runs[1].update(code_trees={"query": "q1", "ingestion": "i2", "evals/*.py": "e1"}), "code_trees"),
+        (lambda runs: runs[1].update(code_trees={"query": "q1", "ingestion": "i1", "evals/*.py": "e2"}), "code_trees"),
+        (lambda runs: runs[2].update(label="other"), "label"),
+        # The old run 1 (made before labels and the evals code id existed).
+        (lambda runs: [runs[0].pop("label"), runs[0].update(code_trees={"query": "q0", "ingestion": "i1"})], "label"),
+        (lambda runs: [r.pop("label") for r in runs], "label"),
         (lambda runs: runs[0].update(system_prompt_sha256="x"), "system_prompt_sha256"),
         (lambda runs: runs[2].update(temperature=1), "temperature"),
         (lambda runs: [r.update(ticket_file_sha256="b" * 64) for r in runs], "different ticket file"),
@@ -192,10 +199,12 @@ def test_aggregate_command(tmp_path, tickets, capsys):
     out = tmp_path / "reports"
     argv = ["aggregate", "--runs", *paths, "--date", "2026-10-18", "--reports-dir", str(out), "--tickets", str(ticket_file)]
     assert run_eval.main(argv) == 0
-    md = (out / "2026-10-18-part-b-aggregate.md").read_text(encoding="utf-8")
+    md = (out / "2026-10-18-part-b-whole-articles-aggregate.md").read_text(encoding="utf-8")
+    assert "- Runs label: whole-articles" in md
     assert "## Worst of 3" in md and "## Unstable tickets (clarification 4)" in md
     assert "Passed in all 3 runs" in md and "## Escalate tickets to watch" in md
-    data = json.loads((out / "2026-10-18-part-b-aggregate.json").read_text(encoding="utf-8"))
+    data = json.loads((out / "2026-10-18-part-b-whole-articles-aggregate.json").read_text(encoding="utf-8"))
+    assert data["label"] == "whole-articles"
     assert [f["file"] for f in data["run_files"]] == paths
     assert run_eval.main(argv) == 1  # no silent overwrite
     assert run_eval.main(["aggregate", "--runs", paths[0], paths[0], paths[1], "--reports-dir", str(out)]) == 1
