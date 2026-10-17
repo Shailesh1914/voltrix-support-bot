@@ -1,6 +1,6 @@
 # Retrieval Contract — Voltrix VX-200 Support Bot
 
-Status: Version 1.3, approved by Shailesh on 2026-10-17
+Status: Version 1.4, approved by Shailesh on 2026-10-17
 
 ## Purpose
 This contract is the ONLY interface between the ingestion side and
@@ -37,8 +37,10 @@ open_retrieval(kb_version: str) -> Retriever
 search(query: str, k: int) -> List[Chunk]
 
 Input:
-- query: non-empty text. Used exactly as given; any normalisation
-  (e.g. fault codes) is done by the query flow BEFORE calling search.
+- query: non-empty text. Apart from the fixed query prefix (see
+  Behaviour), it is used exactly as given; any normalisation
+  (e.g. fault codes) is done by the query flow BEFORE calling
+  search. The empty-query check runs before the prefix is added.
 - k: integer from 1 to 20.
 - Empty query or k outside 1..20 -> raises an error.
 
