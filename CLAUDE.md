@@ -17,9 +17,10 @@ specs are written and approved by the human (Shailesh) before code.
 2. NEVER edit data/ or evals/support_questions.jsonl. They are frozen.
 3. Only edit the folders your session owns (see specs/04-session-plan.md).
    If the task needs changes elsewhere, STOP and ask.
-4. The query side uses ingestion ONLY through open_retrieval(),
-   search() and kb_info(). Never read index, metadata or manifest
-   files from query code.
+4. The query side uses ingestion ONLY through open_retrieval() and
+   the Retriever methods search(), kb_info() and article_chunks()
+   (specs/03-retrieval-contract.md). Never read index, metadata or
+   manifest files from query code.
 5. ESCALATION_THRESHOLD lives only in spec 02 and one config setting.
    Never choose or change its value yourself.
 6. Never put secrets (AWS keys etc.) in code or commit them. Use .env.

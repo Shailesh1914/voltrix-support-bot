@@ -3,6 +3,7 @@
     retriever = open_retrieval("v1")
     retriever.search("drive trips on start", k=5) -> list[Chunk]
     retriever.kb_info() -> KBInfo
+    retriever.article_chunks("KB-007") -> list[Chunk]
 
 open_retrieval() runs every startup check before returning; any
 failure raises RetrievalError. This module is the only code that reads
@@ -103,6 +104,32 @@ class Retriever:
             kb_version=self._kb_version,
             articles=sorted(titles.items()),
         )
+
+    def article_chunks(self, article_id: str) -> list[Chunk]:
+        """Every chunk of one article in chunk order c1, c2, ... (spec 03 v1.5).
+
+        The chunks are read, not ranked, so similarity_score is 0.0.
+        An unknown article_id raises ValueError.
+        """
+        if not isinstance(article_id, str):
+            raise ValueError(f"article_id must be text, got {article_id!r}")
+        records = [r for r in self._records if r["article_id"] == article_id]
+        if not records:
+            raise ValueError(f"unknown article_id {article_id!r} in kb_version {self._kb_version!r}")
+        # Metadata is sorted by chunk_id as text ("#c10" before "#c2"),
+        # so sort by the chunk number itself.
+        records.sort(key=lambda r: int(r["chunk_id"].rsplit("#c", 1)[1]))
+        return [
+            Chunk(
+                chunk_id=r["chunk_id"],
+                article_id=r["article_id"],
+                title=r["title"],
+                text=r["text"],
+                kb_version=self._kb_version,
+                similarity_score=0.0,
+            )
+            for r in records
+        ]
 
 
 # --- Startup checks ---------------------------------------------------------
