@@ -31,3 +31,8 @@
 - Step 9 note: the anthropic SDK 1.x sends temperature via
   extra_body. Haiku 5.5 rejects any non-default temperature, so a
   Haiku 5.5 comparison needs a spec decision on temperature first.
+- Step 11 note: running all test folders together can fail at
+  import (several conftest.py files; plain pytest cannot find the
+  ingestion package). CI must use a command or pytest config that
+  runs every folder reliably, e.g. python -m pytest per folder.
+  Ingestion suite takes ~4.5 min.

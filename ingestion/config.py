@@ -1,4 +1,5 @@
-"""Fixed ingestion settings from specs/01-ingestion-spec.md.
+"""Fixed ingestion settings from specs/01-ingestion-spec.md, plus the
+query prefix from specs/03-retrieval-contract.md.
 
 These are spec values, not tuning knobs. Changing any of them needs a
 spec change first.
@@ -25,6 +26,10 @@ EXCLUDED_FILENAMES = frozenset({"README.md"})
 # Embedding model, pinned to an exact Hugging Face commit (spec 01).
 MODEL_NAME = "BAAI/bge-small-en-v1.5"
 MODEL_REVISION = "5c38ec7c405ec4b44b94cc5a9bb96e735b38267a"
+
+# BGE retrieval prefix that search() puts in front of every query
+# (spec 03 v1.3, Step 9 experiment E1). Chunks are embedded without it.
+QUERY_PREFIX = "Represent this sentence for searching relevant passages: "
 
 # Token limits, counted with the model's own tokenizer.
 MODEL_TOKEN_LIMIT = 512

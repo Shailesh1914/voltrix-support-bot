@@ -59,6 +59,12 @@ Reasons:
 - Threshold uses the top score of the final merged list. Re-run
   Part A on the real implementation and confirm 45/48 before the
   sweep.
+- No startup check for the query prefix (manifest has no field for
+  it). Covered by the "chunks embedded without prefix" test.
+  Consider a manifest field with the next re-index (e.g. kb_v3).
+- Session E's E1 experiment adds the prefix itself; after search()
+  adds it, Session E must stop doing so (handle at the Part A
+  re-run). The original no-prefix baseline report stays committed.
 
 ## Still missed after E1+E2+E3
 - T-039 (safety: STOP is not isolation), T-101 (reverse rotation),

@@ -1,11 +1,13 @@
-"""Stage d: retrieval contract (specs/03-retrieval-contract.md v1.1).
+"""Stage d: retrieval contract (specs/03-retrieval-contract.md v1.4).
 
 Contract tests 1-12 are marked with their number. Indexes are built
 from the real kb_v1 and kb_v2 into a temporary folder; tamper tests
-work on copies.
+work on copies. The query prefix tests take the expected prefix from
+the spec 03 text, never from QUERY_PREFIX.
 """
 
 import json
+import re
 import shutil
 import subprocess
 import sys
@@ -17,6 +19,9 @@ from conftest import REPO_ROOT, DATA_DIR, article_text
 from ingestion import Chunk, KBInfo, RetrievalError, open_retrieval
 from ingestion.build import build_index
 from ingestion.config import MANIFEST_FILE, METADATA_FILE, MODEL_NAME, VECTORS_FILE
+from ingestion.index_files import sha256_file
+
+SPEC_03 = REPO_ROOT / "specs" / "03-retrieval-contract.md"
 
 QUERIES = [
     "drive trips with overcurrent when accelerating",
@@ -68,6 +73,14 @@ def as_tuples(results):
         (c.chunk_id, c.article_id, c.title, c.text, c.kb_version, c.similarity_score)
         for c in results
     ]
+
+
+def spec_query_prefix() -> str:
+    """The quoted BGE prefix in spec 03, exactly as written."""
+    text = SPEC_03.read_text(encoding="utf-8")
+    found = re.findall(r'BGE retrieval prefix\s+"([^"\n]*)"', text)
+    assert len(found) == 1, f"spec 03 must quote the BGE prefix once, found {found}"
+    return found[0]
 
 
 def metadata_records(root, version):
@@ -153,14 +166,16 @@ def test_contract_4_scores_are_capped(index_copy, monkeypatch):
 
 
 def test_contract_4_scores_are_cosine_similarity(retriever, embedding_model, index_root):
+    # Cosine similarity with the PREFIXED query (spec 03 v1.3).
     from ingestion.embedding import embed
 
     vectors = np.load(index_root / "v1" / VECTORS_FILE)
     ids = [r["chunk_id"] for r in metadata_records(index_root, "v1")]
-    query_vector = embed(embedding_model, [QUERIES[0]])[0]
+    prefixed, bare = embed(embedding_model, [spec_query_prefix() + QUERIES[0], QUERIES[0]])
     for chunk in retriever.search(QUERIES[0], 5):
-        expected = float(vectors[ids.index(chunk.chunk_id)] @ query_vector)
-        assert chunk.similarity_score == pytest.approx(expected, abs=1e-5)
+        row = vectors[ids.index(chunk.chunk_id)]
+        assert chunk.similarity_score == pytest.approx(float(row @ prefixed), abs=1e-5)
+        assert abs(chunk.similarity_score - float(row @ bare)) > 1e-4
 
 
 def test_contract_5_same_query_same_results_within_run(retriever):
@@ -222,10 +237,77 @@ def test_contract_7_invalid_input_raises(retriever, query, k):
 
 
 def test_query_used_exactly_as_given(retriever):
-    # No normalisation in search: different spellings, different vectors.
+    # No normalisation in search, only the fixed prefix: different
+    # spellings, different vectors.
     a = retriever.search("E1 fault", 1)[0].similarity_score
     b = retriever.search("E-01 fault", 1)[0].similarity_score
     assert a != b
+
+
+# --- Query prefix (spec 03 v1.3-v1.4) ------------------------------------------
+
+
+def test_query_prefix_constant_equals_spec_text():
+    from ingestion.config import QUERY_PREFIX
+
+    assert QUERY_PREFIX == spec_query_prefix()
+
+
+@pytest.mark.parametrize("query", QUERIES)
+def test_query_is_embedded_once_with_spec_prefix(retriever, monkeypatch, query):
+    from ingestion import retrieval
+
+    calls = []
+    real_embed = retrieval.embed
+
+    def spy(model, texts):
+        calls.append(list(texts))
+        return real_embed(model, texts)
+
+    monkeypatch.setattr(retrieval, "embed", spy)
+    retriever.search(query, 5)
+    assert calls == [[spec_query_prefix() + query]]
+
+
+def test_chunks_are_embedded_without_prefix(index_root, embedding_model):
+    from ingestion.embedding import embed
+
+    texts = [r["text"] for r in metadata_records(index_root, "v1")]
+    stored = np.load(index_root / "v1" / VECTORS_FILE)
+    bare = embed(embedding_model, texts)
+    prefixed = embed(embedding_model, [spec_query_prefix() + t for t in texts])
+    np.testing.assert_allclose(stored, bare, atol=1e-5)
+    assert np.all(np.abs(stored - prefixed).max(axis=1) > 1e-3)
+
+
+def test_build_does_not_depend_on_query_prefix(tmp_path, monkeypatch, embedding_model, token_counter):
+    # Same index bytes whatever the prefix is, so the index never needs
+    # rebuilding for a prefix change. Patch every ingestion module's copy.
+    import sys as _sys
+
+    kb_folder = DATA_DIR / "kb_v1"
+    names = (VECTORS_FILE, METADATA_FILE, MANIFEST_FILE)
+    normal = build_index(kb_folder, tmp_path / "a", model=embedding_model, counter=token_counter)
+    patched_modules = [
+        m for name, m in list(_sys.modules.items())
+        if name.startswith("ingestion") and hasattr(m, "QUERY_PREFIX")
+    ]
+    assert patched_modules
+    for module in patched_modules:
+        monkeypatch.setattr(module, "QUERY_PREFIX", "something completely different: ")
+    patched = build_index(kb_folder, tmp_path / "b", model=embedding_model, counter=token_counter)
+    assert {n: sha256_file(normal / n) for n in names} == {
+        n: sha256_file(patched / n) for n in names
+    }
+
+
+def test_empty_query_checked_before_prefix(retriever, monkeypatch):
+    from ingestion import retrieval
+
+    monkeypatch.setattr(retrieval, "embed", lambda *a: pytest.fail("embed called"))
+    for query in ("", "   \n\t"):
+        with pytest.raises(ValueError, match="non-empty"):
+            retriever.search(query, 5)
 
 
 # --- kb_info -----------------------------------------------------------------

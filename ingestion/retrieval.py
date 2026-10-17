@@ -22,6 +22,7 @@ from ingestion.config import (
     METADATA_FILE,
     MODEL_NAME,
     MODEL_REVISION,
+    QUERY_PREFIX,
     VECTORS_FILE,
 )
 from ingestion.embedding import embed, load_model
@@ -69,13 +70,17 @@ class Retriever:
         self._model = model
 
     def search(self, query: str, k: int) -> list[Chunk]:
-        """Top k chunks by cosine similarity; ties by chunk_id."""
+        """Top k chunks by cosine similarity; ties by chunk_id.
+
+        The query is checked first, then embedded with QUERY_PREFIX in
+        front (spec 03 v1.4). Otherwise it is used exactly as given.
+        """
         if not isinstance(query, str) or not query.strip():
             raise ValueError("query must be non-empty text")
         if isinstance(k, bool) or not isinstance(k, int) or not MIN_K <= k <= MAX_K:
             raise ValueError(f"k must be an integer from {MIN_K} to {MAX_K}, got {k!r}")
 
-        query_vector = embed(self._model, [query])[0].astype(np.float64)
+        query_vector = embed(self._model, [QUERY_PREFIX + query])[0].astype(np.float64)
         scores = np.clip(self._vectors @ query_vector, -1.0, 1.0)
         # Rows are in chunk_id order, so a stable sort on descending
         # score orders equal scores by chunk_id.
