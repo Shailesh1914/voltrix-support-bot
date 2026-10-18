@@ -1,6 +1,6 @@
 # CI Spec — Voltrix VX-200 Support Bot
 
-Status: Version 1.0, approved by Shailesh on 2026-10-18
+Status: Version 1.1, approved by Shailesh on 2026-10-18
 
 ## Goal (Section 2.3)
 Structural tests run on every push. The evaluation gate runs on pull
@@ -22,8 +22,10 @@ requests to main. Nothing reaches main unless both pass.
 
 ## Workflow 2: evaluation gate
 - Runs on pull requests to main ONLY when the pull request changes
-  query/, ingestion/, data/, evals/, specs/02-query-escalation-spec.md
-  or requirements.txt. Can also be started manually.
+  query/, ingestion/, data/, evals/,
+  specs/02-query-escalation-spec.md, requirements.txt, or the CI
+  files that run the gate (.github/workflows/evaluation-gate.yml,
+  .github/actions/, .github/scripts/). Can also be started manually.
 - One full-flow run of all tickets with the real model at the
   threshold in query/config.py.
 - Passes only if, on the full ticket set, AC1 >= 85% and

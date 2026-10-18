@@ -1,0 +1,54 @@
+# Workflow 1 (spec 06): structural tests on every push and every pull request.
+# No test may call the model: no API key is available to this workflow.
+name: Structural tests
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+# A newer run on the same branch cancels the older one. The event name is in
+# the group so a push run and a pull request run never cancel each other.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  structural-tests:
+    name: structural-tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Check out
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: Set up Python, model and indexes
+        id: setup
+        uses: ./.github/actions/setup-bot
+        with:
+          kb-folders: data/kb_v1 data/kb_v2
+
+      # Each folder runs separately (spec 06). Every folder still runs when an
+      # earlier one fails, so one run shows all failures. A skipped test fails
+      # the step (check_no_skips.py).
+      - name: Tests - ingestion
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        run: |
+          python -m pytest tests/structural/ingestion -rs --junitxml="$RUNNER_TEMP/junit-ingestion.xml"
+          python .github/scripts/check_no_skips.py "$RUNNER_TEMP/junit-ingestion.xml"
+
+      - name: Tests - query
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        run: |
+          python -m pytest tests/structural/query -rs --junitxml="$RUNNER_TEMP/junit-query.xml"
+          python .github/scripts/check_no_skips.py "$RUNNER_TEMP/junit-query.xml"
+
+      - name: Tests - evals
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        run: |
+          python -m pytest tests/structural/evals -rs --junitxml="$RUNNER_TEMP/junit-evals.xml"
+          python .github/scripts/check_no_skips.py "$RUNNER_TEMP/junit-evals.xml"

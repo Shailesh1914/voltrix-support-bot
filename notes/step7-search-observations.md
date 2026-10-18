@@ -45,3 +45,5 @@
   everything. CI must run ALL test folders on every change.
 - Step 11 note (2nd case): the T-039 label edit broke an evals
   ticket test; unnoticed until Session E ran the full suite.
+- Next iteration: pin GitHub Actions to commit SHAs instead of
+  version tags (supply-chain security).

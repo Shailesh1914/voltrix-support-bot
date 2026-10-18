@@ -1,0 +1,107 @@
+# Workflow 2 (spec 06): the evaluation gate, on pull requests to main and on
+# manual start.
+#
+# There is deliberately NO paths filter on the trigger. A workflow skipped by a
+# paths filter reports nothing, and a required check would then wait forever.
+# Instead the job always runs. Its first step decides whether the gate is
+# needed, and if not, the job ends green with "gate not needed".
+name: Evaluation gate
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  evaluation-gate:
+    name: evaluation-gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      # Depth 2: on a pull request the checkout is GitHub's merge commit, and
+      # its first parent is main. Their difference is what the PR changes.
+      - name: Check out
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 2
+          persist-credentials: false
+
+      - name: Decide whether the gate is needed
+        id: decide
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            echo "Started manually: the gate runs."
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            git diff --name-only HEAD^1 HEAD | bash .github/scripts/gate_needed.sh >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Gate not needed
+        if: steps.decide.outputs.run != 'true'
+        run: |
+          echo "This pull request changes none of: query/, ingestion/, data/, evals/,"
+          echo "specs/02-query-escalation-spec.md, requirements.txt,"
+          echo ".github/workflows/evaluation-gate.yml, .github/actions/, .github/scripts/."
+          echo "Gate not needed."
+          echo "Evaluation gate: **not needed** (no gate paths changed)." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Set up Python, model and kb_v1 index
+        if: steps.decide.outputs.run == 'true'
+        uses: ./.github/actions/setup-bot
+        with:
+          kb-folders: data/kb_v1
+
+      # The bot also refuses these itself (query/anthropic_api.py). This
+      # step prints variable names only, never values.
+      - name: Check that no ANTHROPIC_* variable is set
+        if: steps.decide.outputs.run == 'true'
+        run: |
+          found=$(env | cut -d= -f1 | grep '^ANTHROPIC_' || true)
+          if [ -n "$found" ]; then
+            echo "::error::These variables must not be set: $(echo "$found" | tr '\n' ' ')"
+            exit 1
+          fi
+
+      # The secret goes to this step only. GitHub masks it in logs, and the gate
+      # never prints it. Any non-zero exit code fails the job (exit 5 = dry run,
+      # never a pass).
+      - name: Run the evaluation gate (paid)
+        id: gate
+        if: steps.decide.outputs.run == 'true'
+        env:
+          VOLTRIX_ANTHROPIC_API_KEY: ${{ secrets.VOLTRIX_ANTHROPIC_API_KEY }}
+          OUT_DIR: ${{ runner.temp }}/gate-report
+        run: |
+          set +e
+          python -m evals.run_eval gate --out-dir "$OUT_DIR" --confirm
+          code=$?
+          set -e
+          case $code in
+            0) meaning="PASSED: AC1 and AC2 meet their targets on the full set" ;;
+            3) meaning="FAILED: AC1 and/or AC2 below target" ;;
+            4) meaning="service_error: model API failure (not a quality result); re-run" ;;
+            5) meaning="dry run: the gate was NOT evaluated" ;;
+            1) meaning="error: see the log (index, threshold, output folder, key, invalid run)" ;;
+            2) meaning="wrong command-line arguments" ;;
+            *) meaning="unexpected exit code" ;;
+          esac
+          echo "Evaluation gate: exit $code, $meaning" >> "$GITHUB_STEP_SUMMARY"
+          exit $code
+
+      - name: Upload the gate report
+        if: ${{ always() && steps.decide.outputs.run == 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: evaluation-gate-report
+          path: ${{ runner.temp }}/gate-report/
+          if-no-files-found: warn
+          retention-days: 90

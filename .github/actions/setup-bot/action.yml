@@ -1,0 +1,47 @@
+name: Set up the support bot
+description: >
+  Python 3.14, the pinned requirements (CPU-only torch), the pinned
+  embedding model from the Hugging Face cache, and the requested
+  knowledge base indexes (spec 06).
+
+inputs:
+  kb-folders:
+    description: Space-separated knowledge base folders to index, e.g. "data/kb_v1 data/kb_v2"
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Python 3.14
+      uses: actions/setup-python@v6
+      with:
+        python-version: "3.14"
+        cache: pip
+        cache-dependency-path: requirements.txt
+
+    - name: Install requirements
+      shell: bash
+      run: python -m pip install -r requirements.txt
+
+    # The cache key follows the model pinned in ingestion/config.py, so a
+    # new revision can never reuse an old cached model.
+    - name: Read the pinned embedding model
+      id: model
+      shell: bash
+      run: python .github/scripts/model_pin.py >> "$GITHUB_OUTPUT"
+
+    - name: Cache the embedding model
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/huggingface/hub
+        key: hf-${{ steps.model.outputs.slug }}-${{ steps.model.outputs.revision }}
+
+    - name: Build the indexes
+      shell: bash
+      env:
+        KB_FOLDERS: ${{ inputs.kb-folders }}
+      run: |
+        for folder in $KB_FOLDERS; do
+          echo "Building the index for $folder"
+          python -m ingestion.build "$folder"
+        done
