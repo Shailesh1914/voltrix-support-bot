@@ -50,14 +50,20 @@ def load_part_b(path: Path | str) -> dict:
 
 
 def check_runs(runs: list[dict], tickets: list[Ticket], ticket_file_sha256: str) -> None:
+    check_runs_belong_together(runs, tickets)
+    if runs[0]["ticket_file_sha256"] != ticket_file_sha256:
+        raise EvalError("the runs were made on a different ticket file")
+
+
+def check_runs_belong_together(runs: list[dict], tickets: list[Ticket]) -> None:
+    """Every check_runs rule except the ticket file SHA. Used alone only by the
+    rescoring (spec 05 v1.8), which checks the ticket files itself."""
     if sorted(r["run"] for r in runs) != list(RUN_NUMBERS):
         raise EvalError(f"the aggregate needs runs 1, 2 and 3 once each, got {sorted(r['run'] for r in runs)}")
     for name in MUST_MATCH:
         values = [json.dumps(r.get(name), sort_keys=True) for r in runs]
         if len(set(values)) != 1 or runs[0].get(name) is None:
             raise EvalError(f"the runs differ in {name} (or it is missing); they are not comparable")
-    if runs[0]["ticket_file_sha256"] != ticket_file_sha256:
-        raise EvalError("the runs were made on a different ticket file")
     expected = sorted(t.ticket_id for t in tickets)
     for r in runs:
         if sorted(row["ticket_id"] for row in r["tickets"]) != expected:
@@ -95,6 +101,13 @@ def ticket_view(row: dict) -> dict:
 
 def aggregate(tickets: list[Ticket], runs: list[dict], ticket_file_sha256: str) -> dict:
     check_runs(runs, tickets, ticket_file_sha256)
+    return score_runs(tickets, runs)
+
+
+def score_runs(tickets: list[Ticket], runs: list[dict]) -> dict:
+    """The aggregate of runs that check_runs accepted, scored with `tickets`.
+    The rescoring calls it twice: original labels, then revised labels."""
+    check_runs_belong_together(runs, tickets)
     runs = sorted(runs, key=lambda r: r["run"])
     rows = [{row["ticket_id"]: row for row in r["tickets"]} for r in runs]
     outcomes = [{tid: outcome_from_record(row) for tid, row in by_id.items()} for by_id in rows]

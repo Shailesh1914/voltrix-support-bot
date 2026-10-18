@@ -7,6 +7,7 @@
     python -m evals.run_eval sweep --runs RUN1.json RUN2.json RUN3.json
     python -m evals.run_eval confirm --runs RUN1.json RUN2.json RUN3.json            (free dry run)
     python -m evals.run_eval confirm --runs RUN1.json RUN2.json RUN3.json --confirm  (PAID: Shailesh only)
+    python -m evals.run_eval rescore --runs RUN1.json RUN2.json RUN3.json
 
 Only `part-b --confirm` and `confirm --confirm` call the model; everything
 else is free. `confirm` (spec 05, Part C) runs the real flow at the bot's
@@ -25,6 +26,7 @@ from pathlib import Path
 
 from evals import eval_confirm as ec
 from evals import eval_part_b as pb
+from evals import eval_rescore as er
 from evals.eval_aggregate import aggregate, check_runs, load_part_b
 from evals.eval_compare import PART_A2_REPORT, compare_with_part_a2
 from evals.eval_experiments import BGE_QUERY_PREFIX
@@ -37,6 +39,7 @@ from evals.eval_report import (
     fmt_rate,
     part_a_markdown,
     part_b_markdown,
+    rescore_markdown,
     sweep_markdown,
     write_report,
 )
@@ -73,6 +76,10 @@ def aggregate_name(label: str) -> str:
 
 def sweep_name(label: str) -> str:
     return f"part-c-{pb.check_label(label)}-sweep"
+
+
+def rescore_name(label: str) -> str:
+    return f"part-b-{pb.check_label(label)}-rescore"
 
 # Handoffs of evaluation runs never go here (spec 05, Part B).
 HANDOFFS_DIR = REPO_ROOT / "handoffs"
@@ -352,6 +359,41 @@ def run_aggregate(args) -> int:
     return 0
 
 
+def run_rescore(args) -> int:
+    """Spec 05 v1.8: the 3 runs, BEFORE (their own ticket file, from git) and
+    AFTER (the current ticket file). Free; never touches the run files."""
+    if len(args.runs) != RUNS_REQUIRED or len({Path(p).resolve() for p in args.runs}) != RUNS_REQUIRED:
+        raise EvalError(f"the rescoring needs {RUNS_REQUIRED} different Part B run files (spec 05)")
+    runs = [load_part_b(p) for p in args.runs]
+    run_shas = {r.get("ticket_file_sha256") for r in runs}
+    if len(run_shas) != 1 or None in run_shas:
+        raise EvalError("the runs differ in ticket_file_sha256 (or it is missing); they are not comparable")
+    old_commit, old_text = er.ticket_file_from_git(run_shas.pop())
+    # Bytes, not read_text(): newline translation would change the SHA.
+    new_text = Path(args.tickets).read_bytes().decode("utf-8")
+    commit, dirty = git_state()
+    data = {
+        "date": args.date,
+        "git_commit": commit,
+        "git_dirty": dirty,
+        **er.rescore(runs, old_text, new_text),
+        "ticket_file_commit_before": old_commit,
+        "run_files": [{"file": str(p), "sha256": file_sha256(p)} for p in args.runs],
+    }
+    paths = write_report(
+        args.reports_dir, args.date, rescore_name(data["label"]), data, rescore_markdown(data), args.overwrite
+    )
+    print("Part B rescoring written (no model calls):")
+    for p in paths:
+        print(f"  {p}")
+    for name in SETS:
+        b, a = data["sets"][name]["before"]["worst"], data["sets"][name]["after"]["worst"]
+        print(f"  {name}: AC1 {fmt_rate(b['ac1'])} -> {fmt_rate(a['ac1'])}, AC2 {fmt_rate(b['ac2'])} -> {fmt_rate(a['ac2'])}")
+    print(f"  labels changed: {', '.join(c['ticket_id'] for c in data['label_changes']) or 'none'}; "
+          f"pass/fail changed: {', '.join(data['pass_changed']) or 'none'}")
+    return 0
+
+
 # --- Part A2 (completed) ---------------------------------------------------------------
 
 
@@ -581,6 +623,11 @@ def parser() -> argparse.ArgumentParser:
     sweep_parser = sub.add_parser("sweep", help="threshold sweep from 3 Part B runs (free)")
     sweep_parser.add_argument("--runs", nargs="+", type=Path, required=True, help="the 3 Part B run .json files")
     common(sweep_parser)
+    rescore_parser = sub.add_parser(
+        "rescore", help="rescore 3 Part B runs after a label review, BEFORE and AFTER (free, spec 05 v1.8)"
+    )
+    rescore_parser.add_argument("--runs", nargs="+", type=Path, required=True, help="the 3 Part B run .json files")
+    common(rescore_parser)
     # No --threshold and no --overwrite: the threshold is the bot's own
     # (query/config.py), and a valid confirmation is never replaced.
     confirm_parser = sub.add_parser(
@@ -604,6 +651,7 @@ def main(argv: list[str] | None = None) -> int:
             "aggregate": run_aggregate,
             "sweep": run_sweep,
             "confirm": run_confirm,
+            "rescore": run_rescore,
         }
         return commands[args.command](args)
     except (EvalError, ReportExists, TicketError) as e:

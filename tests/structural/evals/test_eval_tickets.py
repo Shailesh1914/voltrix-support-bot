@@ -72,10 +72,13 @@ def test_real_ticket_file_split():
 
 
 def test_real_ticket_file_any_match_ticket():
-    t101 = {t.ticket_id: t for t in load_tickets()}["T-101"]
-    assert t101.article_match == "any"
-    assert t101.split == CALIBRATION
-    assert all(t.article_match == "all" for t in load_tickets() if t.ticket_id != "T-101")
+    # T-039 since the Step 10 label review (notes/step10-review.md).
+    by_id = {t.ticket_id: t for t in load_tickets()}
+    assert by_id["T-101"].article_match == "any"
+    assert by_id["T-101"].split == CALIBRATION
+    assert by_id["T-039"].article_match == "any"
+    assert by_id["T-039"].expected_article_ids == ("KB-034", "KB-036")
+    assert [t.ticket_id for t in load_tickets() if t.article_match == "any"] == ["T-039", "T-101"]
 
 
 def test_loading_never_changes_the_ticket_file():

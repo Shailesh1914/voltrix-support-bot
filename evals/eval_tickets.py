@@ -83,26 +83,31 @@ def parse_ticket(raw: dict, line_no: int) -> Ticket:
     )
 
 
+def read_records(text: str, source: str = "ticket file") -> list[tuple[dict, Ticket]]:
+    """(raw JSON record, Ticket) per line, in file order. Fails loudly on bad
+    lines or duplicate IDs. The raw record keeps fields Ticket ignores (notes)."""
+    records: list[tuple[dict, Ticket]] = []
+    seen: set[str] = set()
+    for line_no, line in enumerate(text.splitlines(), start=1):
+        if not line.strip():
+            continue
+        try:
+            raw = json.loads(line)
+        except json.JSONDecodeError as e:
+            raise TicketError(f"ticket file line {line_no}: not valid JSON ({e.msg})") from None
+        ticket = parse_ticket(raw, line_no)
+        if ticket.ticket_id in seen:
+            raise TicketError(f"duplicate ticket_id {ticket.ticket_id}")
+        seen.add(ticket.ticket_id)
+        records.append((raw, ticket))
+    if not records:
+        raise TicketError(f"no tickets in {source}")
+    return records
+
+
 def load_tickets(path: Path | str = TICKETS_PATH) -> list[Ticket]:
     """All tickets in file order. Fails loudly on bad lines or duplicate IDs."""
-    tickets: list[Ticket] = []
-    seen: set[str] = set()
-    with open(path, encoding="utf-8") as f:
-        for line_no, line in enumerate(f, start=1):
-            if not line.strip():
-                continue
-            try:
-                raw = json.loads(line)
-            except json.JSONDecodeError as e:
-                raise TicketError(f"ticket file line {line_no}: not valid JSON ({e.msg})") from None
-            ticket = parse_ticket(raw, line_no)
-            if ticket.ticket_id in seen:
-                raise TicketError(f"duplicate ticket_id {ticket.ticket_id}")
-            seen.add(ticket.ticket_id)
-            tickets.append(ticket)
-    if not tickets:
-        raise TicketError(f"no tickets in {path}")
-    return tickets
+    return [t for _, t in read_records(Path(path).read_text(encoding="utf-8"), str(path))]
 
 
 def select(tickets: list[Ticket], set_name: str) -> list[Ticket]:

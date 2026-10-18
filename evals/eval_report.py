@@ -746,3 +746,85 @@ def confirm_markdown(data: dict) -> str:
                 f"{fmt_flag(r['ac_pass'])} | {'yes' if t['match'] else '**no**'} |"
             )
     return "\n".join(out) + "\n"
+
+
+# --- Rescoring after a label review (spec 05 v1.8) ---------------------------------
+
+
+def fmt_label(label: dict) -> str:
+    ids = ", ".join(label["expected_article_ids"]) or "–"
+    match = f" ({label['article_match']})" if len(label["expected_article_ids"]) > 1 else ""
+    return f"{label['expected']}: {ids}{match}"
+
+
+def fmt_delta(before: dict, after: dict) -> str:
+    if before["total"] != after["total"]:
+        return "total changed"
+    diff = after["passed"] - before["passed"]
+    return "–" if diff == 0 else f"{diff:+d}"
+
+
+def rescore_markdown(data: dict) -> str:
+    out = [
+        "# Part B: rescoring after a label review",
+        "",
+        "Spec 05 v1.8. The same 3 Part B runs (no model calls), scored BEFORE with",
+        "the ticket file they were made on and AFTER with the revised ticket file.",
+        "Only expected, expected_article_ids and article_match differ between the",
+        "two files (checked). Worst of 3 as in Part B (clarification 1), at",
+        "threshold -1.0. The original run files and reports are unchanged.",
+        "",
+        f"- Runs label: {data['label']}",
+        f"- Model: {data['model_id']}, temperature {data['temperature']}",
+        f"- Ticket file BEFORE: `{data['ticket_file_sha256_before']}` (git {(data.get('ticket_file_commit_before') or 'unknown')[:12]})",
+        f"- Ticket file AFTER: `{data['ticket_file_sha256_after']}`",
+        "- Runs: " + "; ".join(f"run {r['run']} ({r['date']}, {(r['git_commit'] or 'unknown')[:12]})" for r in data["runs"]),
+        "",
+        "## Changed labels",
+        "",
+    ]
+    if data["label_changes"]:
+        out += ["| Ticket | Set | BEFORE label | AFTER label | Run 1 | Run 2 | Run 3 | Pass/fail changed |",
+                "|---|---|---|---|---|---|---|---|"]
+        for c in data["label_changes"]:
+            cells = []
+            for v in c["runs"]:
+                text = v["status"] + (f" ({v['escalation_reason']})" if v["escalation_reason"] else "")
+                if v["cited"]:
+                    text += f" cites {', '.join(v['cited'])}"
+                mark = lambda p: "✓" if p else "✗"  # noqa: E731
+                cells.append(f"{text}: {mark(v['pass_before'])} → {mark(v['pass_after'])}")
+            out.append(
+                f"| {c['ticket_id']} | {c['split']} | {fmt_label(c['before'])} | {fmt_label(c['after'])} | "
+                + " | ".join(cells) + f" | {'**yes**' if c['pass_changed'] else 'no'} |"
+            )
+    else:
+        out.append("None (the files differ only in formatting).")
+    out += ["", "Tickets whose pass/fail changed: " + (", ".join(data["pass_changed"]) or "none") + "."]
+
+    out += ["", "## BEFORE and AFTER per set (worst of 3)", ""]
+    for name in SETS:
+        b, a = data["sets"][name]["before"], data["sets"][name]["after"]
+        out += [f"### {name} set ({b['n_tickets']} tickets)", "",
+                "| Metric | BEFORE | AFTER | Change |", "|---|---|---|---|"]
+        rows = (
+            (f"AC1 (target {AC1_TARGET_PCT}%)", "ac1"),
+            (f"AC2 (target {AC2_TARGET_PCT}%)", "ac2"),
+            ("Wrong escalation", "wrong_escalation"),
+            ("Both articles cited", "both_cited"),
+        )
+        for title, key in rows:
+            out.append(f"| {title} | {fmt_rate(b['worst'][key])} | {fmt_rate(a['worst'][key])} | "
+                       f"{fmt_delta(b['worst'][key], a['worst'][key])} |")
+        out += [
+            f"| AC1 meets target | {fmt_flag(b['worst']['ac1_meets_target'])} | {fmt_flag(a['worst']['ac1_meets_target'])} | |",
+            f"| AC2 meets target | {fmt_flag(b['worst']['ac2_meets_target'])} | {fmt_flag(a['worst']['ac2_meets_target'])} | |",
+            f"| Passed in all 3 runs (not a gate) | {b['tickets_passed_in_all_runs']}/{b['n_tickets']} | "
+            f"{a['tickets_passed_in_all_runs']}/{a['n_tickets']} | "
+            f"{a['tickets_passed_in_all_runs'] - b['tickets_passed_in_all_runs']:+d} |",
+            "",
+            "Unstable BEFORE: " + (", ".join(b["unstable"]) or "none")
+            + "; AFTER: " + (", ".join(a["unstable"]) or "none") + ".",
+            "",
+        ]
+    return "\n".join(out).rstrip() + "\n"

@@ -11,6 +11,7 @@ Run from the repository root with the project virtual environment:
     .venv/bin/python -m evals.run_eval sweep --runs RUN1.json RUN2.json RUN3.json
     .venv/bin/python -m evals.run_eval confirm --runs RUN1.json RUN2.json RUN3.json            # free dry run
     .venv/bin/python -m evals.run_eval confirm --runs RUN1.json RUN2.json RUN3.json --confirm  # PAID, Shailesh only
+    .venv/bin/python -m evals.run_eval rescore --runs RUN1.json RUN2.json RUN3.json
 
 Only `part-b --confirm` and `confirm --confirm` call the model. Reports go to
 `evals/reports/<date>-<name>.json` and `.md`; an existing report is never
@@ -106,6 +107,30 @@ pass/fail differs; clarification 4), tickets that passed in all 3 runs,
 failed_check counts, tokens and cost. Output: `<date>-part-b-<label>-aggregate`.
 `sweep` applies the same check to its 3 runs; output: `<date>-part-c-<label>-sweep`.
 
+## Part B rescoring after a label review (spec 05 v1.8)
+
+`rescore` takes the same 3 Part B run files as `aggregate` and scores them
+twice, without model calls: BEFORE with the ticket file the runs were made
+on, AFTER with the current `support_questions.jsonl`. The runs record only
+their ticket file's SHA-256, so the original file is taken from git history
+(the committed version with exactly that SHA); none found = refused.
+
+- Refuses unless both files hold the same ticket ids and every field other
+  than `expected`, `expected_article_ids` and `article_match` is identical
+  (question, category, notes, any other field). An absent `article_match`
+  equals `"all"`.
+- Also refuses: the runs do not belong together (same rule as `aggregate`),
+  the labels stored in the run rows differ from the original file, or the
+  ticket file is unchanged (use `aggregate`).
+- Reports per set (calibration, holdout, full) AC1, AC2, wrong escalation,
+  both-articles-cited and tickets passed in all 3 runs, BEFORE and AFTER,
+  worst of 3; every ticket whose label changed, with pass/fail per run
+  before and after; and the tickets whose pass/fail changed. A pass/fail
+  change on a ticket whose label did not change stops it as an internal error.
+- BEFORE equals the original aggregate. The run files and their reports are
+  never touched. Output: `<date>-part-b-<label>-rescore`, kind
+  `part-b-rescore` (never readable as a Part B run).
+
 ## Part C: confirmation run (real model)
 
 Spec 05, Part C: "After the threshold is chosen, one confirmation run of the
@@ -150,6 +175,7 @@ from the simulation; 4 = service_error, invalid run written, re-run it;
 - `eval_recorders.py`: wrappers passed into `QueryFlow`
 - `eval_part_b.py`: Part B plan, call limit, usage recording, run files
 - `eval_aggregate.py`: worst of the 3 Part B runs, unstable tickets
+- `eval_rescore.py`: rescoring the 3 runs after a label review (BEFORE and AFTER)
 - `eval_scoring.py`: AC1, AC2, metrics, retrieval recall
 - `eval_compare.py`: Part A against the Part A2 simulation
 - `eval_experiments.py`: Part A2 experiments (history)
