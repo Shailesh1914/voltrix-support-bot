@@ -101,3 +101,11 @@ Report: evals/reports/2026-10-17-part-a-retrieval.md (clean commit).
 - Step 10 idea: add a few "statement without a question" tickets,
   and decide whether the bot should answer them (e.g. explain the
   fault) or escalate.
+
+## Step 9 complete (2026-10-18)
+- ESCALATION_THRESHOLD = 0.60 confirmed: real run at 0.60 MATCHES the
+  sweep's simulation on 70/70 tickets, all 3 runs (exit code 0).
+- Final results (worst of 3): AC1 40/48 (83%; calibration 79%,
+  holdout 88%), AC2 22/22 (100%), wrong escalation 15%.
+- AC1 target (85%) not yet met; 8 known failures go to Step 10.
+- Step 9 model cost: about $2.10 in total.
