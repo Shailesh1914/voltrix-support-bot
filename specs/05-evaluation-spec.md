@@ -1,6 +1,6 @@
 # Evaluation Spec — Voltrix VX-200 Support Bot
 
-Status: Version 1.7, approved by Shailesh on 2026-10-18
+Status: Version 1.8, approved by Shailesh on 2026-10-18
 
 ## Purpose
 Measure spec 02 acceptance criteria 1-2 and metrics, and produce
@@ -115,6 +115,18 @@ Adopting an experiment is a spec 02 change, approved by Shailesh.
 6. On the calibration set, AC2 effectively requires 11/11. A failing
    escalate ticket is investigated, not explained away by lowering
    the target.
+
+## Rescoring after a label review (Version 1.8)
+- Existing valid Part B runs may be rescored against a revised
+  ticket file without any model calls.
+- Allowed only if the ticket ids and question texts are identical;
+  only "expected", "expected_article_ids" and "article_match" may
+  differ. Otherwise the rescoring refuses.
+- The report shows, per set, the results BEFORE (original labels)
+  and AFTER (revised labels), and lists every ticket whose label
+  changed and whether its pass/fail changed.
+- Worst-of-3 applies as in Part B. Rescoring never replaces the
+  original run files or reports.
 
 ## Cost control
 - The runner shows the number of planned model calls and the
