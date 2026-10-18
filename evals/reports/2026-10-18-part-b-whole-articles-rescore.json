@@ -1,0 +1,1039 @@
+{
+  "date": "2026-10-18",
+  "git_commit": "3f7870e2916417015f95f8ab80dd840c3da3d179",
+  "git_dirty": false,
+  "kind": "part-b-rescore",
+  "threshold": -1.0,
+  "label": "whole-articles",
+  "code_trees": {
+    "query": "8b48ca796e94041056f55ef3a066669171803474",
+    "ingestion": "16f1e659e66da8723025207f79a3ef472a7e7792",
+    "evals/*.py": "e9ed6b85bf524eb9728c680fc98e40c5d0b7998df81bc5e31c91da9b29d415c0"
+  },
+  "model_id": "claude-haiku-4-5-20251001",
+  "temperature": 0,
+  "system_prompt_sha256": "57a9ae57e9648952a933b60d9785122fb3e5d356b2445ce97bca4da1b09f2ac8",
+  "kb_version": "v1",
+  "ticket_file_sha256_before": "c07524bc9a4f251340ed5ee4f9730c3f57307d978df875d389a43d1022fdb80a",
+  "ticket_file_sha256_after": "6ae85bcf8b118ae17d88952ca5474887d7c066f492428278de2844a618fda782",
+  "runs": [
+    {
+      "run": 1,
+      "date": "2026-10-17",
+      "git_commit": "f416c18e31535359df64f449aea7c0e166658d52"
+    },
+    {
+      "run": 2,
+      "date": "2026-10-17",
+      "git_commit": "211c5aef7d8ee931caaff1773a5486337fe1439c"
+    },
+    {
+      "run": 3,
+      "date": "2026-10-17",
+      "git_commit": "211c5aef7d8ee931caaff1773a5486337fe1439c"
+    }
+  ],
+  "label_changes": [
+    {
+      "ticket_id": "T-039",
+      "before": {
+        "expected": "answer",
+        "expected_article_ids": [
+          "KB-034"
+        ],
+        "article_match": "all"
+      },
+      "after": {
+        "expected": "answer",
+        "expected_article_ids": [
+          "KB-034",
+          "KB-036"
+        ],
+        "article_match": "any"
+      },
+      "split": "calibration",
+      "runs": [
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-036",
+            "KB-032"
+          ],
+          "pass_before": false,
+          "pass_after": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-036",
+            "KB-032"
+          ],
+          "pass_before": false,
+          "pass_after": true
+        },
+        {
+          "status": "answered",
+          "escalation_reason": "",
+          "failed_check": "",
+          "cited": [
+            "KB-036",
+            "KB-032"
+          ],
+          "pass_before": false,
+          "pass_after": true
+        }
+      ],
+      "passed_all_runs_before": false,
+      "passed_all_runs_after": true,
+      "pass_changed": true
+    }
+  ],
+  "pass_changed": [
+    "T-039"
+  ],
+  "sets": {
+    "calibration": {
+      "before": {
+        "n_tickets": 35,
+        "worst": {
+          "ac1": {
+            "passed": 19,
+            "total": 24,
+            "rate": 0.7916666666666666
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "both_cited": {
+            "passed": 2,
+            "total": 3,
+            "rate": 0.6666666666666666
+          },
+          "wrong_escalation": {
+            "passed": 4,
+            "total": 24,
+            "rate": 0.16666666666666666
+          },
+          "per_category": {
+            "fault": {
+              "passed": 10,
+              "total": 12,
+              "rate": 0.8333333333333334
+            },
+            "installation": {
+              "passed": 3,
+              "total": 5,
+              "rate": 0.6
+            },
+            "maintenance": {
+              "passed": 3,
+              "total": 3,
+              "rate": 1.0
+            },
+            "out_of_scope": {
+              "passed": 8,
+              "total": 8,
+              "rate": 1.0
+            },
+            "parameters": {
+              "passed": 4,
+              "total": 4,
+              "rate": 1.0
+            },
+            "safety": {
+              "passed": 2,
+              "total": 3,
+              "rate": 0.6666666666666666
+            }
+          },
+          "ac1_meets_target": false,
+          "ac2_meets_target": true
+        },
+        "per_run": [
+          {
+            "ac1": {
+              "passed": 19,
+              "total": 24,
+              "rate": 0.7916666666666666
+            },
+            "ac2": {
+              "passed": 11,
+              "total": 11,
+              "rate": 1.0
+            },
+            "wrong_escalation": {
+              "passed": 4,
+              "total": 24,
+              "rate": 0.16666666666666666
+            },
+            "both_cited": {
+              "passed": 2,
+              "total": 3,
+              "rate": 0.6666666666666666
+            },
+            "any_match_tickets": [
+              {
+                "ticket_id": "T-101",
+                "ac1_pass": false
+              }
+            ]
+          },
+          {
+            "ac1": {
+              "passed": 19,
+              "total": 24,
+              "rate": 0.7916666666666666
+            },
+            "ac2": {
+              "passed": 11,
+              "total": 11,
+              "rate": 1.0
+            },
+            "wrong_escalation": {
+              "passed": 4,
+              "total": 24,
+              "rate": 0.16666666666666666
+            },
+            "both_cited": {
+              "passed": 2,
+              "total": 3,
+              "rate": 0.6666666666666666
+            },
+            "any_match_tickets": [
+              {
+                "ticket_id": "T-101",
+                "ac1_pass": false
+              }
+            ]
+          },
+          {
+            "ac1": {
+              "passed": 19,
+              "total": 24,
+              "rate": 0.7916666666666666
+            },
+            "ac2": {
+              "passed": 11,
+              "total": 11,
+              "rate": 1.0
+            },
+            "wrong_escalation": {
+              "passed": 4,
+              "total": 24,
+              "rate": 0.16666666666666666
+            },
+            "both_cited": {
+              "passed": 2,
+              "total": 3,
+              "rate": 0.6666666666666666
+            },
+            "any_match_tickets": [
+              {
+                "ticket_id": "T-101",
+                "ac1_pass": false
+              }
+            ]
+          }
+        ],
+        "tickets_passed_in_all_runs": 30,
+        "failed_in_some_run": [
+          "T-005",
+          "T-009",
+          "T-021",
+          "T-039",
+          "T-101"
+        ],
+        "unstable": []
+      },
+      "after": {
+        "n_tickets": 35,
+        "worst": {
+          "ac1": {
+            "passed": 20,
+            "total": 24,
+            "rate": 0.8333333333333334
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "both_cited": {
+            "passed": 2,
+            "total": 3,
+            "rate": 0.6666666666666666
+          },
+          "wrong_escalation": {
+            "passed": 4,
+            "total": 24,
+            "rate": 0.16666666666666666
+          },
+          "per_category": {
+            "fault": {
+              "passed": 10,
+              "total": 12,
+              "rate": 0.8333333333333334
+            },
+            "installation": {
+              "passed": 3,
+              "total": 5,
+              "rate": 0.6
+            },
+            "maintenance": {
+              "passed": 3,
+              "total": 3,
+              "rate": 1.0
+            },
+            "out_of_scope": {
+              "passed": 8,
+              "total": 8,
+              "rate": 1.0
+            },
+            "parameters": {
+              "passed": 4,
+              "total": 4,
+              "rate": 1.0
+            },
+            "safety": {
+              "passed": 3,
+              "total": 3,
+              "rate": 1.0
+            }
+          },
+          "ac1_meets_target": false,
+          "ac2_meets_target": true
+        },
+        "per_run": [
+          {
+            "ac1": {
+              "passed": 20,
+              "total": 24,
+              "rate": 0.8333333333333334
+            },
+            "ac2": {
+              "passed": 11,
+              "total": 11,
+              "rate": 1.0
+            },
+            "wrong_escalation": {
+              "passed": 4,
+              "total": 24,
+              "rate": 0.16666666666666666
+            },
+            "both_cited": {
+              "passed": 2,
+              "total": 3,
+              "rate": 0.6666666666666666
+            },
+            "any_match_tickets": [
+              {
+                "ticket_id": "T-039",
+                "ac1_pass": true
+              },
+              {
+                "ticket_id": "T-101",
+                "ac1_pass": false
+              }
+            ]
+          },
+          {
+            "ac1": {
+              "passed": 20,
+              "total": 24,
+              "rate": 0.8333333333333334
+            },
+            "ac2": {
+              "passed": 11,
+              "total": 11,
+              "rate": 1.0
+            },
+            "wrong_escalation": {
+              "passed": 4,
+              "total": 24,
+              "rate": 0.16666666666666666
+            },
+            "both_cited": {
+              "passed": 2,
+              "total": 3,
+              "rate": 0.6666666666666666
+            },
+            "any_match_tickets": [
+              {
+                "ticket_id": "T-039",
+                "ac1_pass": true
+              },
+              {
+                "ticket_id": "T-101",
+                "ac1_pass": false
+              }
+            ]
+          },
+          {
+            "ac1": {
+              "passed": 20,
+              "total": 24,
+              "rate": 0.8333333333333334
+            },
+            "ac2": {
+              "passed": 11,
+              "total": 11,
+              "rate": 1.0
+            },
+            "wrong_escalation": {
+              "passed": 4,
+              "total": 24,
+              "rate": 0.16666666666666666
+            },
+            "both_cited": {
+              "passed": 2,
+              "total": 3,
+              "rate": 0.6666666666666666
+            },
+            "any_match_tickets": [
+              {
+                "ticket_id": "T-039",
+                "ac1_pass": true
+              },
+              {
+                "ticket_id": "T-101",
+                "ac1_pass": false
+              }
+            ]
+          }
+        ],
+        "tickets_passed_in_all_runs": 31,
+        "failed_in_some_run": [
+          "T-005",
+          "T-009",
+          "T-021",
+          "T-101"
+        ],
+        "unstable": []
+      }
+    },
+    "holdout": {
+      "before": {
+        "n_tickets": 35,
+        "worst": {
+          "ac1": {
+            "passed": 21,
+            "total": 24,
+            "rate": 0.875
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "both_cited": {
+            "passed": 3,
+            "total": 6,
+            "rate": 0.5
+          },
+          "wrong_escalation": {
+            "passed": 3,
+            "total": 24,
+            "rate": 0.125
+          },
+          "per_category": {
+            "fault": {
+              "passed": 9,
+              "total": 11,
+              "rate": 0.8181818181818182
+            },
+            "installation": {
+              "passed": 4,
+              "total": 4,
+              "rate": 1.0
+            },
+            "maintenance": {
+              "passed": 2,
+              "total": 2,
+              "rate": 1.0
+            },
+            "out_of_scope": {
+              "passed": 10,
+              "total": 10,
+              "rate": 1.0
+            },
+            "parameters": {
+              "passed": 4,
+              "total": 5,
+              "rate": 0.8
+            },
+            "safety": {
+              "passed": 3,
+              "total": 3,
+              "rate": 1.0
+            }
+          },
+          "ac1_meets_target": true,
+          "ac2_meets_target": true
+        },
+        "per_run": [
+          {
+            "ac1": {
+              "passed": 21,
+              "total": 24,
+              "rate": 0.875
+            },
+            "ac2": {
+              "passed": 11,
+              "total": 11,
+              "rate": 1.0
+            },
+            "wrong_escalation": {
+              "passed": 3,
+              "total": 24,
+              "rate": 0.125
+            },
+            "both_cited": {
+              "passed": 3,
+              "total": 6,
+              "rate": 0.5
+            },
+            "any_match_tickets": []
+          },
+          {
+            "ac1": {
+              "passed": 21,
+              "total": 24,
+              "rate": 0.875
+            },
+            "ac2": {
+              "passed": 11,
+              "total": 11,
+              "rate": 1.0
+            },
+            "wrong_escalation": {
+              "passed": 3,
+              "total": 24,
+              "rate": 0.125
+            },
+            "both_cited": {
+              "passed": 3,
+              "total": 6,
+              "rate": 0.5
+            },
+            "any_match_tickets": []
+          },
+          {
+            "ac1": {
+              "passed": 21,
+              "total": 24,
+              "rate": 0.875
+            },
+            "ac2": {
+              "passed": 11,
+              "total": 11,
+              "rate": 1.0
+            },
+            "wrong_escalation": {
+              "passed": 3,
+              "total": 24,
+              "rate": 0.125
+            },
+            "both_cited": {
+              "passed": 3,
+              "total": 6,
+              "rate": 0.5
+            },
+            "any_match_tickets": []
+          }
+        ],
+        "tickets_passed_in_all_runs": 32,
+        "failed_in_some_run": [
+          "T-016",
+          "T-030",
+          "T-102"
+        ],
+        "unstable": []
+      },
+      "after": {
+        "n_tickets": 35,
+        "worst": {
+          "ac1": {
+            "passed": 21,
+            "total": 24,
+            "rate": 0.875
+          },
+          "ac2": {
+            "passed": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "both_cited": {
+            "passed": 3,
+            "total": 6,
+            "rate": 0.5
+          },
+          "wrong_escalation": {
+            "passed": 3,
+            "total": 24,
+            "rate": 0.125
+          },
+          "per_category": {
+            "fault": {
+              "passed": 9,
+              "total": 11,
+              "rate": 0.8181818181818182
+            },
+            "installation": {
+              "passed": 4,
+              "total": 4,
+              "rate": 1.0
+            },
+            "maintenance": {
+              "passed": 2,
+              "total": 2,
+              "rate": 1.0
+            },
+            "out_of_scope": {
+              "passed": 10,
+              "total": 10,
+              "rate": 1.0
+            },
+            "parameters": {
+              "passed": 4,
+              "total": 5,
+              "rate": 0.8
+            },
+            "safety": {
+              "passed": 3,
+              "total": 3,
+              "rate": 1.0
+            }
+          },
+          "ac1_meets_target": true,
+          "ac2_meets_target": true
+        },
+        "per_run": [
+          {
+            "ac1": {
+              "passed": 21,
+              "total": 24,
+              "rate": 0.875
+            },
+            "ac2": {
+              "passed": 11,
+              "total": 11,
+              "rate": 1.0
+            },
+            "wrong_escalation": {
+              "passed": 3,
+              "total": 24,
+              "rate": 0.125
+            },
+            "both_cited": {
+              "passed": 3,
+              "total": 6,
+              "rate": 0.5
+            },
+            "any_match_tickets": []
+          },
+          {
+            "ac1": {
+              "passed": 21,
+              "total": 24,
+              "rate": 0.875
+            },
+            "ac2": {
+              "passed": 11,
+              "total": 11,
+              "rate": 1.0
+            },
+            "wrong_escalation": {
+              "passed": 3,
+              "total": 24,
+              "rate": 0.125
+            },
+            "both_cited": {
+              "passed": 3,
+              "total": 6,
+              "rate": 0.5
+            },
+            "any_match_tickets": []
+          },
+          {
+            "ac1": {
+              "passed": 21,
+              "total": 24,
+              "rate": 0.875
+            },
+            "ac2": {
+              "passed": 11,
+              "total": 11,
+              "rate": 1.0
+            },
+            "wrong_escalation": {
+              "passed": 3,
+              "total": 24,
+              "rate": 0.125
+            },
+            "both_cited": {
+              "passed": 3,
+              "total": 6,
+              "rate": 0.5
+            },
+            "any_match_tickets": []
+          }
+        ],
+        "tickets_passed_in_all_runs": 32,
+        "failed_in_some_run": [
+          "T-016",
+          "T-030",
+          "T-102"
+        ],
+        "unstable": []
+      }
+    },
+    "full": {
+      "before": {
+        "n_tickets": 70,
+        "worst": {
+          "ac1": {
+            "passed": 40,
+            "total": 48,
+            "rate": 0.8333333333333334
+          },
+          "ac2": {
+            "passed": 22,
+            "total": 22,
+            "rate": 1.0
+          },
+          "both_cited": {
+            "passed": 5,
+            "total": 9,
+            "rate": 0.5555555555555556
+          },
+          "wrong_escalation": {
+            "passed": 7,
+            "total": 48,
+            "rate": 0.14583333333333334
+          },
+          "per_category": {
+            "fault": {
+              "passed": 19,
+              "total": 23,
+              "rate": 0.8260869565217391
+            },
+            "installation": {
+              "passed": 7,
+              "total": 9,
+              "rate": 0.7777777777777778
+            },
+            "maintenance": {
+              "passed": 5,
+              "total": 5,
+              "rate": 1.0
+            },
+            "out_of_scope": {
+              "passed": 18,
+              "total": 18,
+              "rate": 1.0
+            },
+            "parameters": {
+              "passed": 8,
+              "total": 9,
+              "rate": 0.8888888888888888
+            },
+            "safety": {
+              "passed": 5,
+              "total": 6,
+              "rate": 0.8333333333333334
+            }
+          },
+          "ac1_meets_target": false,
+          "ac2_meets_target": true
+        },
+        "per_run": [
+          {
+            "ac1": {
+              "passed": 40,
+              "total": 48,
+              "rate": 0.8333333333333334
+            },
+            "ac2": {
+              "passed": 22,
+              "total": 22,
+              "rate": 1.0
+            },
+            "wrong_escalation": {
+              "passed": 7,
+              "total": 48,
+              "rate": 0.14583333333333334
+            },
+            "both_cited": {
+              "passed": 5,
+              "total": 9,
+              "rate": 0.5555555555555556
+            },
+            "any_match_tickets": [
+              {
+                "ticket_id": "T-101",
+                "ac1_pass": false
+              }
+            ]
+          },
+          {
+            "ac1": {
+              "passed": 40,
+              "total": 48,
+              "rate": 0.8333333333333334
+            },
+            "ac2": {
+              "passed": 22,
+              "total": 22,
+              "rate": 1.0
+            },
+            "wrong_escalation": {
+              "passed": 7,
+              "total": 48,
+              "rate": 0.14583333333333334
+            },
+            "both_cited": {
+              "passed": 5,
+              "total": 9,
+              "rate": 0.5555555555555556
+            },
+            "any_match_tickets": [
+              {
+                "ticket_id": "T-101",
+                "ac1_pass": false
+              }
+            ]
+          },
+          {
+            "ac1": {
+              "passed": 40,
+              "total": 48,
+              "rate": 0.8333333333333334
+            },
+            "ac2": {
+              "passed": 22,
+              "total": 22,
+              "rate": 1.0
+            },
+            "wrong_escalation": {
+              "passed": 7,
+              "total": 48,
+              "rate": 0.14583333333333334
+            },
+            "both_cited": {
+              "passed": 5,
+              "total": 9,
+              "rate": 0.5555555555555556
+            },
+            "any_match_tickets": [
+              {
+                "ticket_id": "T-101",
+                "ac1_pass": false
+              }
+            ]
+          }
+        ],
+        "tickets_passed_in_all_runs": 62,
+        "failed_in_some_run": [
+          "T-005",
+          "T-009",
+          "T-016",
+          "T-021",
+          "T-030",
+          "T-039",
+          "T-101",
+          "T-102"
+        ],
+        "unstable": []
+      },
+      "after": {
+        "n_tickets": 70,
+        "worst": {
+          "ac1": {
+            "passed": 41,
+            "total": 48,
+            "rate": 0.8541666666666666
+          },
+          "ac2": {
+            "passed": 22,
+            "total": 22,
+            "rate": 1.0
+          },
+          "both_cited": {
+            "passed": 5,
+            "total": 9,
+            "rate": 0.5555555555555556
+          },
+          "wrong_escalation": {
+            "passed": 7,
+            "total": 48,
+            "rate": 0.14583333333333334
+          },
+          "per_category": {
+            "fault": {
+              "passed": 19,
+              "total": 23,
+              "rate": 0.8260869565217391
+            },
+            "installation": {
+              "passed": 7,
+              "total": 9,
+              "rate": 0.7777777777777778
+            },
+            "maintenance": {
+              "passed": 5,
+              "total": 5,
+              "rate": 1.0
+            },
+            "out_of_scope": {
+              "passed": 18,
+              "total": 18,
+              "rate": 1.0
+            },
+            "parameters": {
+              "passed": 8,
+              "total": 9,
+              "rate": 0.8888888888888888
+            },
+            "safety": {
+              "passed": 6,
+              "total": 6,
+              "rate": 1.0
+            }
+          },
+          "ac1_meets_target": true,
+          "ac2_meets_target": true
+        },
+        "per_run": [
+          {
+            "ac1": {
+              "passed": 41,
+              "total": 48,
+              "rate": 0.8541666666666666
+            },
+            "ac2": {
+              "passed": 22,
+              "total": 22,
+              "rate": 1.0
+            },
+            "wrong_escalation": {
+              "passed": 7,
+              "total": 48,
+              "rate": 0.14583333333333334
+            },
+            "both_cited": {
+              "passed": 5,
+              "total": 9,
+              "rate": 0.5555555555555556
+            },
+            "any_match_tickets": [
+              {
+                "ticket_id": "T-039",
+                "ac1_pass": true
+              },
+              {
+                "ticket_id": "T-101",
+                "ac1_pass": false
+              }
+            ]
+          },
+          {
+            "ac1": {
+              "passed": 41,
+              "total": 48,
+              "rate": 0.8541666666666666
+            },
+            "ac2": {
+              "passed": 22,
+              "total": 22,
+              "rate": 1.0
+            },
+            "wrong_escalation": {
+              "passed": 7,
+              "total": 48,
+              "rate": 0.14583333333333334
+            },
+            "both_cited": {
+              "passed": 5,
+              "total": 9,
+              "rate": 0.5555555555555556
+            },
+            "any_match_tickets": [
+              {
+                "ticket_id": "T-039",
+                "ac1_pass": true
+              },
+              {
+                "ticket_id": "T-101",
+                "ac1_pass": false
+              }
+            ]
+          },
+          {
+            "ac1": {
+              "passed": 41,
+              "total": 48,
+              "rate": 0.8541666666666666
+            },
+            "ac2": {
+              "passed": 22,
+              "total": 22,
+              "rate": 1.0
+            },
+            "wrong_escalation": {
+              "passed": 7,
+              "total": 48,
+              "rate": 0.14583333333333334
+            },
+            "both_cited": {
+              "passed": 5,
+              "total": 9,
+              "rate": 0.5555555555555556
+            },
+            "any_match_tickets": [
+              {
+                "ticket_id": "T-039",
+                "ac1_pass": true
+              },
+              {
+                "ticket_id": "T-101",
+                "ac1_pass": false
+              }
+            ]
+          }
+        ],
+        "tickets_passed_in_all_runs": 63,
+        "failed_in_some_run": [
+          "T-005",
+          "T-009",
+          "T-016",
+          "T-021",
+          "T-030",
+          "T-101",
+          "T-102"
+        ],
+        "unstable": []
+      }
+    }
+  },
+  "ticket_file_commit_before": "dfdee7bfd7187cafecc63e269a3712689d55299a",
+  "run_files": [
+    {
+      "file": "evals/reports/2026-10-17-part-b-whole-articles-run1.json",
+      "sha256": "5110fdf73c42618f8eae18f538b79c860d8481637ac0b9880155bde23fff80b1"
+    },
+    {
+      "file": "evals/reports/2026-10-17-part-b-whole-articles-run2.json",
+      "sha256": "f86750d5ac9b66d66dc6b75710b9fad7c5514917e82081f00bc3dc8314f45745"
+    },
+    {
+      "file": "evals/reports/2026-10-17-part-b-whole-articles-run3.json",
+      "sha256": "e05759fa4fea73c428f83defeb96c6501912c4b193179884e7f11d51bc5f5d8e"
+    }
+  ]
+}

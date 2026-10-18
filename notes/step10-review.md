@@ -63,4 +63,34 @@ and new runs required):
 4. Do not refer to "the documents" in answers. (T-042)
 
 ## Rescoring (10.4)
-<to be filled>
+Free rescoring of the 3 whole-articles runs against the reviewed
+labels (spec 05 v1.8). Old labels taken from git history by SHA.
+BEFORE matches the committed aggregate exactly.
+
+| Set | AC1 before | AC1 after | AC2 |
+|---|---|---|---|
+| Calibration | 19/24 (79.2%) | 20/24 (83.3%) | 11/11 |
+| Holdout | 21/24 (87.5%) | 21/24 (87.5%) | 11/11 |
+| Full | 40/48 (83.3%) | 41/48 (85.4%) | 22/22 |
+
+Only T-039 changed (fail -> pass in all 3 runs).
+
+## Step 10 outcome (honest status)
+- AC2 (95%): met, 22/22 (100%), on every set.
+- AC1 (85%): met on the FULL set (41/48, 85.4%), the gate in
+  spec 02. Fragile: one ticket decides it. The calibration set alone
+  is still below target (83.3%).
+- One label changed after review, with a written reason; decisions
+  based on the KB text.
+- Answer review: 7 good, 3 partly, 1 safety concern (T-027).
+
+## Next iteration
+1. Prompt: never conclude a safety measure can be skipped (T-027,
+   top priority); actions only when their condition matches (T-006);
+   isolation before wiring (T-022); no "the documents" (T-042).
+2. Grounding false rejections: T-009 ("6.0" vs "6.0 A"), T-021
+   ("10 kΩ").
+3. Over-cautious escalations with the answer present: T-016, T-021,
+   T-030.
+4. kb_v3: symptoms (T-102), wording (T-101), WARNING lines.
+5. New "statement without a question" tickets.
