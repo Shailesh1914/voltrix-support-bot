@@ -1,6 +1,7 @@
 """Stage e: python -m query.ask (spec 02 "Output"; fails loudly while
 ESCALATION_THRESHOLD is unset). No model calls: the real command is run
-only while the threshold is unset, when it stops before loading anything.
+with the threshold unset in the child process only, and everything after
+the threshold check is blocked there.
 """
 
 import json
@@ -42,17 +43,42 @@ def fake_build(fake_retriever, make_chunk, tmp_path):
 
 # --- The real command, threshold unset --------------------------------------------------
 
+# Runs `python -m query.ask` in a child process whose threshold is None.
+# query/config.py is not touched: the threshold is unset in the child's
+# memory only. Everything the command must not reach while the threshold
+# is unset (settings, API key, index, network) fails there, so the real
+# model can never be called, even if the threshold check is broken.
+UNSET_THRESHOLD_LAUNCHER = """
+import runpy, socket, sys
 
-@pytest.mark.skipif(config.ESCALATION_THRESHOLD is not None, reason="would run the real bot")
+import ingestion
+from query import anthropic_api, config
+
+def must_not_run(*args, **kwargs):
+    raise AssertionError("loaded before the threshold check")
+
+config.ESCALATION_THRESHOLD = None
+config.load_settings = must_not_run
+ingestion.open_retrieval = must_not_run
+anthropic_api.AnthropicGenerator.from_environment = must_not_run
+socket.socket.connect = must_not_run
+socket.create_connection = must_not_run
+
+sys.argv = ["python -m query.ask", *sys.argv[1:]]
+runpy.run_module("query.ask", run_name="__main__", alter_sys=True)
+"""
+
+
 def test_real_command_fails_loudly_while_threshold_unset(tmp_path):
     handoffs = tmp_path / "handoffs.jsonl"
     result = subprocess.run(
-        [sys.executable, "-m", "query.ask", "E1 when the motor ramps up"],
+        [sys.executable, "-c", UNSET_THRESHOLD_LAUNCHER, "E1 when the motor ramps up"],
         cwd=config.REPO_ROOT,
-        # The shell's Anthropic variables are left out: the result must not
-        # depend on them.
+        # The shell's Anthropic variables are left out and HOME points at an
+        # empty folder (no secrets file): the result must not depend on them.
         env={
             **{k: v for k, v in os.environ.items() if not k.startswith(("ANTHROPIC_", "VOLTRIX_"))},
+            "HOME": str(tmp_path),
             "HANDOFF_PATH": str(handoffs),
         },
         capture_output=True,
