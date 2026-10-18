@@ -1,6 +1,6 @@
 # Evaluation Spec — Voltrix VX-200 Support Bot
 
-Status: Version 1.8, approved by Shailesh on 2026-10-18
+Status: Version 1.9, approved by Shailesh on 2026-10-18
 
 ## Purpose
 Measure spec 02 acceptance criteria 1-2 and metrics, and produce
@@ -13,10 +13,10 @@ This spec is written BEFORE any evaluation results exist.
 - Uses the bot only through its public parts: QueryFlow,
   AnthropicGenerator and open_retrieval.
 - Scoring follows this spec and spec 02, never the bot's code.
-- Exception (Version 1.7): the confirm command (Part C) reads
-  query.config.ESCALATION_THRESHOLD exactly once, so the
-  confirmation uses the same threshold as the real bot. No evals
-  file may assign or override it.
+- Exception (Version 1.9): the confirm command (Part C) and the CI
+  gate (spec 06) read query.config.ESCALATION_THRESHOLD through one
+  shared reader, so they use the same threshold as the real bot.
+  No evals file may assign or override it.
 
 ## Data split (fixed before any results)
 - Calibration set: tickets whose number is ODD (T-001, T-003, ...,
@@ -133,6 +133,8 @@ Adopting an experiment is a spec 02 change, approved by Shailesh.
   estimated cost, and runs only with an explicit --confirm flag.
 - Hard limit: 100 model calls per run.
 - Only Shailesh runs the paid parts (B and the confirmation run).
+  Exception: the CI evaluation gate runs automatically as defined
+  in spec 06, with the same 100-call limit.
 
 ## Outputs
 - evals/reports/<YYYY-MM-DD>-<name>.json and .md, committed to Git.

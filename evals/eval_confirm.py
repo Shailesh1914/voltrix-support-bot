@@ -46,13 +46,14 @@ ALLOWED_QUERY_CHANGES = ("config.py",)
 
 def bot_threshold() -> float:
     """The threshold the real bot runs at, read as query/ask.py reads it.
-    Read when called (never cached), so nothing else can stand in for it."""
+    Read when called (never cached), so nothing else can stand in for it.
+    The only threshold reader in evals/: the gate (eval_gate) uses it too."""
     from query import config
 
     try:
         return config.require_threshold(config.ESCALATION_THRESHOLD)
     except config.ConfigError as e:
-        raise EvalError(f"cannot confirm: {e}") from None
+        raise EvalError(f"the bot's threshold is not usable: {e}") from None
 
 
 def threshold_text(threshold: float) -> str:

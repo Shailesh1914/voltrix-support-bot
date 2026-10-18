@@ -349,7 +349,9 @@ def test_sweep_refuses_runs_that_do_not_belong_together(tmp_path, capsys, over, 
 # imported. The two generator exceptions are AnthropicGenerator's outputs
 # (Part B records malformed output and service errors).
 ALLOWED_IMPORTS = {
-    "ingestion": {"Chunk", "KBInfo", "open_retrieval"},
+    # RetrievalError is public (spec 03): the gate turns a missing kb_v1
+    # index into a clear error.
+    "ingestion": {"Chunk", "KBInfo", "open_retrieval", "RetrievalError"},
     "query.flow": {"QueryFlow"},
     "query.anthropic_api": {"AnthropicGenerator"},
     "query.generator": {"GeneratorOutput", "MalformedOutput", "GeneratorServiceError"},

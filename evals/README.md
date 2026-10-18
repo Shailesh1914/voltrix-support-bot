@@ -167,6 +167,42 @@ Exit codes: 0 = MATCH (or dry run done); 3 = valid run written but it differs
 from the simulation; 4 = service_error, invalid run written, re-run it;
 1 = error.
 
+## Evaluation gate for CI (spec 06, Workflow 2)
+
+    .venv/bin/python -m evals.run_eval gate --out-dir DIR            # free dry run (exit 5)
+    .venv/bin/python -m evals.run_eval gate --out-dir DIR --confirm  # PAID: what CI runs
+
+One full-flow run of every ticket with the real model, at the threshold in
+`query/config.py` (read through the same single reader as `confirm`; there is
+no option for it). It passes only if, on the FULL ticket set, AC1 >= 85% and
+AC2 >= 95% (spec 02). One run, not three (spec 06).
+
+- Needs the kb_v1 index (`python -m ingestion.build data/kb_v1`); without it
+  the gate stops before anything else with a clear error.
+- Writes `<date>-gate.json`, `.md` and `-handoffs.jsonl` to `--out-dir`
+  (created if needed), for CI to keep as an artifact. Never to `handoffs/`
+  (the run fails if `handoffs/` changes). An existing report is never replaced.
+- The output folder may be outside the repository or e.g. `evals/reports/`;
+  it may not be the repository root, `evals/` itself, or inside or around
+  `handoffs/`, `data/`, `query/`, `ingestion/` or `specs/`.
+- Same safeguards as Part B: dry run by default (no key, nothing written),
+  `--confirm` to pay, 100-call limit (planned and during the run), refuses
+  uncommitted changes in `query/`, `ingestion/`, `evals/*.py` or `specs/`.
+  Files inside its own output folder never count as such changes. The key
+  is read from `VOLTRIX_ANTHROPIC_API_KEY` (in CI: the GitHub secret) and is
+  never printed or written.
+
+Exit codes (each means one thing only):
+
+| Code | Meaning |
+|---|---|
+| 0 | PASSED: AC1 and AC2 meet their targets on the full set |
+| 3 | FAILED: a valid run, and AC1 and/or AC2 is below target (the message names which) |
+| 4 | service_error: the model API failed (an outage, never a quality result); re-run |
+| 5 | dry run: the gate was NOT evaluated (never 0, so a missing `--confirm` cannot pass) |
+| 1 | error: no index, threshold unset, refused output folder, uncommitted changes, other invalid run |
+| 2 | wrong command-line arguments (argparse) |
+
 ## Files
 
 - `support_questions.jsonl`: the labelled tickets (frozen, never edited)
@@ -181,5 +217,6 @@ from the simulation; 4 = service_error, invalid run written, re-run it;
 - `eval_experiments.py`: Part A2 experiments (history)
 - `eval_sweep.py`: Part C threshold sweep
 - `eval_confirm.py`: Part C confirmation run against the sweep's simulation
+- `eval_gate.py`: CI evaluation gate (spec 06): verdict on the full set, exit codes, output folder rules
 - `eval_report.py`: report files and Markdown
 - `uncovered-topics.md`: topics deliberately not in the knowledge base (used to write escalate tickets)

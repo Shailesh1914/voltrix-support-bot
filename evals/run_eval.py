@@ -8,8 +8,10 @@
     python -m evals.run_eval confirm --runs RUN1.json RUN2.json RUN3.json            (free dry run)
     python -m evals.run_eval confirm --runs RUN1.json RUN2.json RUN3.json --confirm  (PAID: Shailesh only)
     python -m evals.run_eval rescore --runs RUN1.json RUN2.json RUN3.json
+    python -m evals.run_eval gate --out-dir DIR            (free dry run, exit 5: not evaluated)
+    python -m evals.run_eval gate --out-dir DIR --confirm  (PAID: the CI evaluation gate, spec 06)
 
-Only `part-b --confirm` and `confirm --confirm` call the model; everything
+Only `part-b --confirm`, `confirm --confirm` and `gate --confirm` call the model; everything
 else is free. `confirm` (spec 05, Part C) runs the real flow at the bot's
 own threshold from query/config.py and compares it with the sweep's
 simulation of the same 3 runs.
@@ -25,6 +27,7 @@ from datetime import date
 from pathlib import Path
 
 from evals import eval_confirm as ec
+from evals import eval_gate as gate
 from evals import eval_part_b as pb
 from evals import eval_rescore as er
 from evals.eval_aggregate import aggregate, check_runs, load_part_b
@@ -37,16 +40,18 @@ from evals.eval_report import (
     aggregate_markdown,
     confirm_markdown,
     fmt_rate,
+    gate_markdown,
     part_a_markdown,
     part_b_markdown,
     rescore_markdown,
     sweep_markdown,
     write_report,
 )
-from evals.eval_scoring import retrieval_row, retrieval_summary
+from evals.eval_scoring import AC1_TARGET_PCT, AC2_TARGET_PCT, retrieval_row, retrieval_summary
 from evals.eval_sweep import run_from_json, sweep, thresholds_meeting_targets
 from evals.eval_tickets import (
     CALIBRATION,
+    FULL,
     REPO_ROOT,
     SETS,
     TICKETS_PATH,
@@ -589,6 +594,102 @@ def run_confirm(args) -> int:
     return EXIT_MISMATCH
 
 
+# --- Evaluation gate (spec 06, Workflow 2) ----------------------------------------------
+
+
+def open_kb_v1():
+    """kb_v1 through the retrieval contract; a missing or broken index fails
+    clearly before anything else is done."""
+    from ingestion import RetrievalError, open_retrieval
+
+    try:
+        return open_retrieval(KB_VERSION)
+    except RetrievalError as e:
+        raise EvalError(f"the gate needs the kb_{KB_VERSION} index: {e}") from None
+
+
+def run_gate(args) -> int:
+    # The real bot's threshold, from query/config.py only (no option for it).
+    threshold = gate.bot_threshold()
+    out_dir = gate.check_output_folder(args.out_dir)
+    gate.check_not_written(out_dir, args.date)
+    retriever = open_kb_v1()
+    sha_before = file_sha256(args.tickets)
+    tickets = load_tickets(args.tickets)
+
+    plan, retrieval = gate_plan(tickets, retriever, threshold)
+    print(f"Evaluation gate (spec 06) at threshold {threshold} (read from query/config.py), kb_{KB_VERSION}")
+    print(f"  passes only if, on the full set, AC1 >= {AC1_TARGET_PCT}% and AC2 >= {AC2_TARGET_PCT}%")
+    print("Plan (free: no key loaded, no model calls):")
+    for line in pb.plan_lines(plan):
+        print(f"  {line}")
+    if not plan["within_limit"]:
+        raise EvalError(f"{plan['planned_model_calls']} planned model calls exceed the limit of {pb.MAX_MODEL_CALLS}")
+    if not args.confirm:
+        print("DRY RUN: the gate was NOT evaluated; nothing was called or written.")
+        print(f"To run the PAID gate: python -m evals.run_eval gate --out-dir {args.out_dir} --confirm")
+        return gate.EXIT_DRY_RUN
+
+    changes = gate.blocking_changes(pb.uncommitted_code_changes(), out_dir)
+    if changes:
+        raise EvalError(
+            "uncommitted changes in query/, ingestion/, evals/*.py or specs/; commit first so the run maps "
+            f"to a commit: {', '.join(changes)}"
+        )
+    handoffs_before = pb.folder_snapshot(HANDOFFS_DIR)
+    try:
+        real = make_real_generator()
+    except Exception as e:  # e.g. ConfigError: missing key, refused variable
+        # Its messages name variables and files, never the key (query/anthropic_api.py).
+        raise EvalError(f"the real generator cannot start: {type(e).__name__}: {e}") from None
+    settings = pb.request_settings(real)
+    generator = pb.UsageRecordingGenerator(real)
+
+    print(f"Running {plan['planned_model_calls']} model calls ...")
+    store = MemoryHandoffStore()
+    flow = build_flow(retriever, generator, store, threshold)
+    outcome = pb.run_tickets(tickets, flow, generator, store, retrieval)
+    if outcome.stopped is None and file_sha256(args.tickets) != sha_before:
+        outcome.stopped = {"reason": "the ticket file changed during the run", "ticket_id": None}
+    if outcome.stopped is None and pb.folder_snapshot(HANDOFFS_DIR) != handoffs_before:
+        outcome.stopped = {"reason": "handoffs/ changed during the run", "ticket_id": None}
+
+    commit, dirty = git_state()
+    body = pb.run_data(tickets, outcome, None, None, kind=gate.GATE_KIND, threshold=threshold)
+    data = {
+        "date": args.date,
+        "git_commit": commit,
+        "git_dirty": dirty,
+        "code_trees": pb.code_trees(),
+        "ticket_file_sha256": sha_before,
+        "kb_version": KB_VERSION,
+        **settings,
+        "threshold_source": "query/config.py",
+        "plan": plan,
+        **body,
+    }
+    code, message = gate.decide(data)
+    data["gate"] = gate.verdict(data["summary"][FULL]) if code in (gate.EXIT_PASS, gate.EXIT_QUALITY_FAILED) else None
+    data["exit_code"] = code
+    data["result"] = message
+    *_, handoffs = gate.report_files(out_dir, args.date)
+    data["handoffs_file"] = handoffs.name
+    paths = [pb.write_handoffs(handoffs, outcome.handoffs)]
+    paths += write_report(out_dir, args.date, gate.GATE_NAME, data, gate_markdown(data))
+    print(f"Gate report written ({data['model_calls']} model calls, ${data['cost_usd']:.4f}):")
+    for p in paths:
+        print(f"  {p}")
+    print(message, file=sys.stdout if code == gate.EXIT_PASS else sys.stderr)
+    return code
+
+
+def gate_plan(tickets: list[Ticket], retriever, threshold: float) -> tuple[dict, dict]:
+    """Free: the flow at the bot's threshold with the planning generator."""
+    planner = pb.PlanningGenerator()
+    store = MemoryHandoffStore()
+    return pb.plan(tickets, build_flow(retriever, planner, store, threshold), planner, store)
+
+
 # --- Command line ------------------------------------------------------------------------
 
 
@@ -638,6 +739,17 @@ def parser() -> argparse.ArgumentParser:
     confirm_parser.add_argument("--date", default=date.today().isoformat(), help="report date (default: today)")
     confirm_parser.add_argument("--reports-dir", type=Path, default=REPORTS_DIR, help=argparse.SUPPRESS)
     confirm_parser.add_argument("--tickets", type=Path, default=TICKETS_PATH, help=argparse.SUPPRESS)
+    # No --threshold and no --overwrite: the threshold is the bot's own
+    # (query/config.py), and a report is never replaced.
+    gate_parser = sub.add_parser(
+        "gate",
+        help="CI evaluation gate (spec 06): full set, AC1 >= 85%% and AC2 >= 95%% (dry run unless --confirm)",
+    )
+    gate_parser.add_argument("--out-dir", type=Path, required=True,
+                             help="folder for the report (.json, .md, -handoffs.jsonl), e.g. for a CI artifact")
+    gate_parser.add_argument("--confirm", action="store_true", help="make the PAID run")
+    gate_parser.add_argument("--date", default=date.today().isoformat(), help="report date (default: today)")
+    gate_parser.add_argument("--tickets", type=Path, default=TICKETS_PATH, help=argparse.SUPPRESS)
     return p
 
 
@@ -652,6 +764,7 @@ def main(argv: list[str] | None = None) -> int:
             "sweep": run_sweep,
             "confirm": run_confirm,
             "rescore": run_rescore,
+            "gate": run_gate,
         }
         return commands[args.command](args)
     except (EvalError, ReportExists, TicketError) as e:

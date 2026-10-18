@@ -828,3 +828,66 @@ def rescore_markdown(data: dict) -> str:
             "",
         ]
     return "\n".join(out).rstrip() + "\n"
+
+
+# --- Evaluation gate (spec 06, Workflow 2) ------------------------------------------
+
+
+def gate_markdown(data: dict) -> str:
+    g = data.get("gate")
+    if g is None:
+        verdict = f"**NO RESULT**: {data['result']}"
+    elif g["passed"]:
+        verdict = "**PASSED**"
+    else:
+        verdict = f"**FAILED**: {' and '.join(g['failed_criteria'])} below target"
+    out = [
+        "# Evaluation gate (spec 06, Workflow 2)",
+        "",
+        "One full-flow run of every ticket with the real model, at the threshold in",
+        "query/config.py (read as the real bot reads it; no other source). The gate",
+        f"passes only if, on the FULL ticket set, AC1 >= {AC1_TARGET_PCT}% and AC2 >= {AC2_TARGET_PCT}%",
+        "(spec 02). A service_error makes the run invalid: it is an outage, never a",
+        "quality result. Handoffs went to the file below, never to handoffs/.",
+        "",
+        f"- Result: {verdict}",
+        f"- Message: {data['result']}",
+        f"- Exit code: {data['exit_code']}",
+        f"- Tickets run: {data['tickets_run']}/{data['tickets_total']}",
+    ]
+    if data["stopped"]:
+        out.append(f"- Stopped at {data['stopped']['ticket_id']}: {data['stopped']['reason']}")
+    if data["incomplete_handoff_records"]:
+        out.append(f"- **Incomplete handoff records (criterion 3):** {', '.join(data['incomplete_handoff_records'])}")
+    trees = ", ".join(f"{k} `{(v or 'unknown')[:12]}`" for k, v in data["code_trees"].items())
+    out += [
+        *provenance_lines(data),
+        f"- Code trees at HEAD: {trees}",
+        f"- Model: {data['model_id']}, temperature {data['temperature']}, max output tokens {data['max_output_tokens']}",
+        f"- System prompt SHA-256: `{data['system_prompt_sha256']}`",
+        f"- KB version: {data['kb_version']}; threshold {data['threshold']} from {data['threshold_source']}",
+        f"- Handoffs: `{data['handoffs_file']}` ({data['handoff_records']} records)",
+        *usage_lines(data),
+    ]
+    if g is not None:
+        out += ["", "## Gate criteria (full set)", "", "| Criterion | Result | Target | Met |", "|---|---|---|---|"]
+        for c in g["criteria"]:
+            rate = {"passed": c["passed"], "total": c["total"],
+                    "rate": c["passed"] / c["total"] if c["total"] else None}
+            out.append(f"| {c['criterion']} | {fmt_rate(rate)} | {c['target_pct']}% | {fmt_flag(c['met'])} |")
+    if data["summary"]:
+        out += ["", "## All sets (information; only the full set gates)", "", *summary_table(data["summary"])]
+        failing = [r for r in data["tickets"] if not r["ac_pass"]]
+        out += ["", "## Tickets that did not pass", ""]
+        if not failing:
+            out.append("None.")
+        else:
+            out += ["| Ticket | Set | Expected | Top score | Status | Reason | failed_check | Cited |",
+                    "|---|---|---|---|---|---|---|---|"]
+            for r in failing:
+                out.append(
+                    f"| {r['ticket_id']} | {r['split']} | {r['expected']} | {fmt_score(r['top_score'])} | "
+                    f"{r['status']} | {r['escalation_reason'] or '–'} | {r['failed_check'] or '–'} | "
+                    f"{', '.join(c['article_id'] for c in r['citations']) or '–'} |"
+                )
+    return "\n".join(out) + "\n"
