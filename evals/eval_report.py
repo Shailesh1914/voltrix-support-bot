@@ -657,3 +657,92 @@ def ticket_runs_table(tickets: list[dict]) -> list[str]:
         out.append(f"| {t['ticket_id']} | {t['split']} | {t['expected']} | {fmt_score(t['top_score'])} | "
                    + " | ".join(cells) + " |")
     return out
+
+
+# --- Part C: confirmation run --------------------------------------------------------
+
+
+def fmt_compared(name: str, value) -> str:
+    if name == "top_score":
+        return fmt_score(value)
+    if name == "ac_pass":
+        return "pass" if value else "fail"
+    return str(value) if value else "–"
+
+
+def confirm_markdown(data: dict) -> str:
+    c = data["comparison"]
+    if not data["valid"]:
+        verdict = "**INVALID: re-run it (spec 05)**"
+    elif c["match"]:
+        verdict = f"**MATCH**: {c['tickets_matching']}/{c['tickets_compared']} tickets agree with all 3 runs"
+    else:
+        verdict = (f"**DIFFERENCES**: {len(c['tickets_differing'])} of {c['tickets_compared']} tickets differ "
+                   f"({', '.join(c['tickets_differing'])})")
+    code = data["code_since_runs"]
+    out = [
+        f"# Part C: confirmation run at threshold {data['threshold']} ({data['label']})",
+        "",
+        "Spec 05, Part C: \"After the threshold is chosen, one confirmation run of",
+        "the real flow at that threshold checks the simulation matched.\" Every",
+        "ticket went through QueryFlow with the real model at the threshold in",
+        "query/config.py (read as the real bot reads it; no other source). Each",
+        "ticket's real outcome is compared with the sweep's simulated outcome at",
+        "the same threshold, for each of the 3 Part B runs. A ticket matches only",
+        "if it agrees with all 3. Handoffs went to the evaluation-only file below,",
+        "never to handoffs/.",
+        "",
+        f"- Result: {verdict}",
+        f"- Tickets run: {data['tickets_run']}/{data['tickets_total']}",
+    ]
+    if data["stopped"]:
+        out.append(f"- Stopped at {data['stopped']['ticket_id']}: {data['stopped']['reason']}")
+    if data["incomplete_handoff_records"]:
+        out.append(f"- **Incomplete handoff records (criterion 3):** {', '.join(data['incomplete_handoff_records'])}")
+    trees = ", ".join(f"{k} `{(v or 'unknown')[:12]}`" for k, v in data["code_trees"].items())
+    out += [
+        *provenance_lines(data),
+        f"- Code trees at HEAD: {trees}",
+        "- query/ files changed since the Part B runs: "
+        + (", ".join(code["query_files_changed_since_runs"]) or "none")
+        + "; evals/*.py changed: " + ("yes (this command)" if code["evals_code_changed_since_runs"] else "no"),
+        f"- Model: {data['model_id']}, temperature {data['temperature']}, max output tokens {data['max_output_tokens']}",
+        f"- System prompt SHA-256: `{data['system_prompt_sha256']}`",
+        f"- KB version: {data['kb_version']}; threshold {data['threshold']} from {data['threshold_source']}",
+        f"- Handoffs: `{data['handoffs_file']}` ({data['handoff_records']} records)",
+        "- Part B runs simulated:",
+        *[f"  - `{r['file']}` (SHA-256 `{r['sha256'][:16]}…`)" for r in data["part_b_runs"]],
+        *usage_lines(data),
+    ]
+    if data["summary"]:
+        out += ["", "## Results at this threshold", "", "Real run:", "", *summary_table(data["summary"]), "",
+                "Simulated by the sweep (worst of the 3 runs):", "",
+                "| Set | AC1 | AC2 | Wrong escalation |", "|---|---|---|---|"]
+        for name in SETS:
+            w = data["simulated"][name]["worst"]
+            out.append(f"| {name} | {fmt_rate(w['ac1'])} | {fmt_rate(w['ac2'])} | {fmt_rate(w['wrong_escalation'])} |")
+        out += ["", "| Set | AC1 meets target | AC2 meets target (real run) |", "|---|---|---|"]
+        for name in SETS:
+            s = data["summary"][name]
+            out.append(f"| {name} | {fmt_flag(s['ac1_meets_target'])} | {fmt_flag(s['ac2_meets_target'])} |")
+    if c is not None:
+        out += ["", "## Against the simulation", "",
+                "Compared per ticket and per run: " + ", ".join(c["compared_fields"]) + ".", ""]
+        if not c["differences"]:
+            out.append("No differences.")
+        else:
+            out += ["| Ticket | Set | Expected | Run | Field | Real | Simulated |", "|---|---|---|---|---|---|---|"]
+            for d in c["differences"]:
+                out.append(f"| {d['ticket_id']} | {d['split']} | {d['expected']} | {d['run']} | {d['field']} | "
+                           f"{fmt_compared(d['field'], d['real'])} | {fmt_compared(d['field'], d['simulated'])} |")
+        out += ["", "## All tickets (real run)", "",
+                "| Ticket | Set | Expected | Top score | Status | Reason | failed_check | Cited | Pass | Matches |",
+                "|---|---|---|---|---|---|---|---|---|---|"]
+        for t in c["tickets"]:
+            r = t["real"]
+            out.append(
+                f"| {t['ticket_id']} | {t['split']} | {t['expected']} | {fmt_score(r['top_score'])} | {r['status']} | "
+                f"{r['escalation_reason'] or '–'} | {r['failed_check'] or '–'} | {', '.join(r['cited']) or '–'} | "
+                f"{fmt_flag(r['ac_pass'])} | {'yes' if t['match'] else '**no**'} |"
+            )
+    return "\n".join(out) + "\n"

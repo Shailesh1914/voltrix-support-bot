@@ -83,7 +83,7 @@ EVALS_CODE = "evals/*.py"
 # something in a run file name are not allowed.
 LABEL_PATTERN = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
 LABEL_MAX_LENGTH = 40
-RESERVED_LABEL_WORD = re.compile(r"^(run\d*|invalid|handoffs|aggregate|sweep)$")
+RESERVED_LABEL_WORD = re.compile(r"^(run\d*|invalid|handoffs|aggregate|sweep|confirm)$")
 
 RUN_MALFORMED_NOTE = (
     "Malformed model outputs have no token counts (the generator raises before "
@@ -383,8 +383,11 @@ def run_tickets(tickets: list[Ticket], flow, generator: UsageRecordingGenerator,
     )
 
 
-def run_data(tickets: list[Ticket], outcome: RunOutcome, run_number: int, label: str | None = None) -> dict:
-    """The run file body (provenance is added by the runner)."""
+def run_data(tickets: list[Ticket], outcome: RunOutcome, run_number: int | None, label: str | None = None, *,
+             kind: str = PART_B_KIND, threshold: float = PART_B_THRESHOLD) -> dict:
+    """The run file body (provenance is added by the runner). kind and
+    threshold differ only for the confirmation run (eval_confirm), whose
+    file must never be read as a Part B run."""
     rows = outcome.rows
     called = [r for r in rows if r["model_called"]]
     with_usage = [r for r in called if r["input_tokens"] is not None]
@@ -393,10 +396,10 @@ def run_data(tickets: list[Ticket], outcome: RunOutcome, run_number: int, label:
     incomplete = [h["handoff_id"] for h in outcome.handoffs if handoff_missing_fields(h)]
     valid = outcome.stopped is None and len(rows) == len(tickets) and not incomplete
     data = {
-        "kind": PART_B_KIND,
+        "kind": kind,
         "run": run_number,
         "label": label,
-        "threshold": PART_B_THRESHOLD,
+        "threshold": threshold,
         "valid": valid,
         "stopped": outcome.stopped,
         "tickets_run": len(rows),

@@ -5,9 +5,13 @@
     python -m evals.run_eval part-b --label LABEL --run 1 --confirm  (PAID: Shailesh only)
     python -m evals.run_eval aggregate --runs RUN1.json RUN2.json RUN3.json
     python -m evals.run_eval sweep --runs RUN1.json RUN2.json RUN3.json
+    python -m evals.run_eval confirm --runs RUN1.json RUN2.json RUN3.json            (free dry run)
+    python -m evals.run_eval confirm --runs RUN1.json RUN2.json RUN3.json --confirm  (PAID: Shailesh only)
 
-Only `part-b --confirm` calls the model; everything else is free. The
-confirmation run (spec 05, Part C) is not implemented yet.
+Only `part-b --confirm` and `confirm --confirm` call the model; everything
+else is free. `confirm` (spec 05, Part C) runs the real flow at the bot's
+own threshold from query/config.py and compares it with the sweep's
+simulation of the same 3 runs.
 
 Part A2 is completed (spec 05 v1.5): `part-a2` only refuses and points to
 its committed report.
@@ -19,6 +23,7 @@ import sys
 from datetime import date
 from pathlib import Path
 
+from evals import eval_confirm as ec
 from evals import eval_part_b as pb
 from evals.eval_aggregate import aggregate, check_runs, load_part_b
 from evals.eval_compare import PART_A2_REPORT, compare_with_part_a2
@@ -28,6 +33,8 @@ from evals.eval_report import (
     REPORTS_DIR,
     ReportExists,
     aggregate_markdown,
+    confirm_markdown,
+    fmt_rate,
     part_a_markdown,
     part_b_markdown,
     sweep_markdown,
@@ -394,6 +401,152 @@ def run_sweep(args) -> int:
     return 0
 
 
+# --- Part C: confirmation run ---------------------------------------------------------
+
+
+def existing_valid_confirm(reports_dir: Path, name: str) -> list[Path]:
+    """Valid confirmation files of this name, any date. Invalid attempts are
+    named ...-invalid-<k> and never block a re-run."""
+    return sorted(Path(reports_dir).glob(f"*-{name}.json"))
+
+
+def confirm_invalid_name(reports_dir: Path, date: str, name: str) -> str:
+    k = 1
+    while (Path(reports_dir) / f"{date}-{name}-invalid-{k}.json").exists():
+        k += 1
+    return f"{name}-invalid-{k}"
+
+
+def confirm_plan(tickets: list[Ticket], retriever, threshold: float) -> tuple[dict, dict, dict]:
+    """Free: the flow at the bot's threshold with the planning generator.
+    Returns the plan, each ticket's step-d retrieval and the model settings."""
+    planner = pb.PlanningGenerator()
+    store = MemoryHandoffStore()
+    plan, retrieval = pb.plan(tickets, build_flow(retriever, planner, store, threshold), planner, store)
+    return plan, retrieval, planner.settings
+
+
+def simulated_lines(summary: dict) -> list[str]:
+    lines = []
+    for name in SETS:
+        w = summary[name]["worst"]
+        lines.append(
+            f"{name:<12} AC1 {fmt_rate(w['ac1'])}, AC2 {fmt_rate(w['ac2'])}, "
+            f"wrong escalation {fmt_rate(w['wrong_escalation'])}"
+        )
+    return lines
+
+
+def run_confirm(args) -> int:
+    from ingestion import open_retrieval
+
+    # The real bot's threshold, from query/config.py only (there is no
+    # option for it). The real run and the simulation both use this value.
+    threshold = ec.bot_threshold()
+    if len(args.runs) != RUNS_REQUIRED or len({Path(p).resolve() for p in args.runs}) != RUNS_REQUIRED:
+        raise EvalError(f"the confirmation needs the {RUNS_REQUIRED} different Part B run files of the sweep (spec 05)")
+    reports_dir = Path(args.reports_dir)
+    sha_before = file_sha256(args.tickets)
+    tickets = load_tickets(args.tickets)
+    run_files = [load_part_b(p) for p in args.runs]
+    part_b_runs = ec.part_b_results(run_files, tickets, sha_before)
+    label = pb.check_label(run_files[0]["label"])
+    name = ec.confirm_name(label, threshold)
+
+    # Free checks before any money: does the simulation describe today's bot?
+    code = ec.check_code(run_files[0]["code_trees"], pb.code_trees())
+    retriever = open_retrieval(KB_VERSION)
+    plan, retrieval, settings = confirm_plan(tickets, retriever, threshold)
+    ec.check_settings(settings, run_files)
+    ec.check_retrieval(retrieval, run_files)
+    simulated = ec.simulated_summary(tickets, part_b_runs, threshold)
+
+    print(f"Confirmation run ({label}) at threshold {threshold} (read from query/config.py)")
+    print("  checks: same model, prompt, tickets, KB and retrieval as the 3 Part B runs; "
+          f"query/ files changed since the runs: {', '.join(code['query_files_changed_since_runs']) or 'none'}")
+    print("Plan (free: no key loaded, no model calls):")
+    for line in pb.plan_lines(plan):
+        print(f"  {line}")
+    print("Simulated by the sweep at this threshold (worst of the 3 runs):")
+    for line in simulated_lines(simulated):
+        print(f"  {line}")
+    if not plan["within_limit"]:
+        raise EvalError(f"{plan['planned_model_calls']} planned model calls exceed the limit of {pb.MAX_MODEL_CALLS}")
+    existing = existing_valid_confirm(reports_dir, name)
+    if existing:
+        raise EvalError(
+            f"a valid confirmation run already exists ({', '.join(map(str, existing))}); it is never replaced"
+        )
+    if not args.confirm:
+        print("Dry run: nothing was called or written.")
+        print("To make the PAID run: python -m evals.run_eval confirm --runs "
+              + " ".join(str(p) for p in args.runs) + " --confirm")
+        return 0
+
+    changes = pb.uncommitted_code_changes()
+    if changes:
+        raise EvalError(
+            "uncommitted changes in query/, ingestion/, evals/*.py or specs/; commit first so the run maps "
+            f"to a commit: {', '.join(changes)}"
+        )
+    handoffs_before = pb.folder_snapshot(HANDOFFS_DIR)
+    try:
+        real = make_real_generator()
+    except Exception as e:  # e.g. ConfigError: missing key, refused variable
+        raise EvalError(f"the real generator cannot start: {type(e).__name__}: {e}") from None
+    real_settings = pb.request_settings(real)
+    ec.check_settings(real_settings, run_files)
+    generator = pb.UsageRecordingGenerator(real)
+
+    print(f"Running {plan['planned_model_calls']} model calls ...")
+    store = MemoryHandoffStore()
+    flow = build_flow(retriever, generator, store, threshold)
+    outcome = pb.run_tickets(tickets, flow, generator, store, retrieval)
+    if outcome.stopped is None and file_sha256(args.tickets) != sha_before:
+        outcome.stopped = {"reason": "the ticket file changed during the run", "ticket_id": None}
+    if outcome.stopped is None and pb.folder_snapshot(HANDOFFS_DIR) != handoffs_before:
+        outcome.stopped = {"reason": "handoffs/ changed during the run", "ticket_id": None}
+
+    commit, dirty = git_state()
+    body = pb.run_data(tickets, outcome, None, label, kind=ec.CONFIRM_KIND, threshold=threshold)
+    data = {
+        "date": args.date,
+        "git_commit": commit,
+        "git_dirty": dirty,
+        "code_trees": pb.code_trees(),
+        "code_since_runs": code,
+        "ticket_file_sha256": sha_before,
+        "kb_version": KB_VERSION,
+        **real_settings,
+        "threshold_source": "query/config.py",
+        "plan": plan,
+        "part_b_runs": [{"file": str(p), "sha256": file_sha256(p)} for p in args.runs],
+        **body,
+        "simulated": simulated,
+        "comparison": ec.compare(tickets, outcome.rows, part_b_runs, threshold) if body["valid"] else None,
+    }
+    out_name = name if data["valid"] else confirm_invalid_name(reports_dir, args.date, name)
+    handoffs = pb.handoffs_path(reports_dir, args.date, out_name)
+    data["handoffs_file"] = handoffs.name
+    paths = [pb.write_handoffs(handoffs, outcome.handoffs)]
+    paths += write_report(reports_dir, args.date, out_name, data, confirm_markdown(data))
+    print(f"Confirmation run written ({data['model_calls']} model calls, ${data['cost_usd']:.4f}):")
+    for p in paths:
+        print(f"  {p}")
+    if not data["valid"]:
+        reason = data["stopped"]["reason"] if data["stopped"] else "incomplete handoff records"
+        print(f"INVALID confirmation run ({reason}). Re-run the same command with --confirm.", file=sys.stderr)
+        return EXIT_INVALID_RUN if data["stopped"] and data["stopped"]["reason"] == "service_error" else EXIT_FAILED
+    c = data["comparison"]
+    if c["match"]:
+        print(f"MATCH with the sweep's simulation: {c['tickets_matching']}/{c['tickets_compared']} tickets, "
+              f"all {len(c['runs_compared'])} runs")
+        return 0
+    print(f"MISMATCH with the sweep's simulation: {len(c['tickets_differing'])} tickets differ "
+          f"({', '.join(c['tickets_differing'])}); see the report", file=sys.stderr)
+    return EXIT_MISMATCH
+
+
 # --- Command line ------------------------------------------------------------------------
 
 
@@ -428,6 +581,16 @@ def parser() -> argparse.ArgumentParser:
     sweep_parser = sub.add_parser("sweep", help="threshold sweep from 3 Part B runs (free)")
     sweep_parser.add_argument("--runs", nargs="+", type=Path, required=True, help="the 3 Part B run .json files")
     common(sweep_parser)
+    # No --threshold and no --overwrite: the threshold is the bot's own
+    # (query/config.py), and a valid confirmation is never replaced.
+    confirm_parser = sub.add_parser(
+        "confirm", help="real flow at the threshold in query/config.py vs the sweep (dry run unless --confirm)"
+    )
+    confirm_parser.add_argument("--runs", nargs="+", type=Path, required=True, help="the 3 Part B run .json files of the sweep")
+    confirm_parser.add_argument("--confirm", action="store_true", help="make the PAID run (Shailesh only)")
+    confirm_parser.add_argument("--date", default=date.today().isoformat(), help="report date (default: today)")
+    confirm_parser.add_argument("--reports-dir", type=Path, default=REPORTS_DIR, help=argparse.SUPPRESS)
+    confirm_parser.add_argument("--tickets", type=Path, default=TICKETS_PATH, help=argparse.SUPPRESS)
     return p
 
 
@@ -440,6 +603,7 @@ def main(argv: list[str] | None = None) -> int:
             "part-b": run_part_b,
             "aggregate": run_aggregate,
             "sweep": run_sweep,
+            "confirm": run_confirm,
         }
         return commands[args.command](args)
     except (EvalError, ReportExists, TicketError) as e:

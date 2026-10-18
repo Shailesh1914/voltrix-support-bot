@@ -9,8 +9,10 @@ Run from the repository root with the project virtual environment:
     .venv/bin/python -m evals.run_eval part-b --label LABEL --run 1 --confirm  # PAID, Shailesh only
     .venv/bin/python -m evals.run_eval aggregate --runs RUN1.json RUN2.json RUN3.json
     .venv/bin/python -m evals.run_eval sweep --runs RUN1.json RUN2.json RUN3.json
+    .venv/bin/python -m evals.run_eval confirm --runs RUN1.json RUN2.json RUN3.json            # free dry run
+    .venv/bin/python -m evals.run_eval confirm --runs RUN1.json RUN2.json RUN3.json --confirm  # PAID, Shailesh only
 
-Only `part-b --confirm` calls the model. Reports go to
+Only `part-b --confirm` and `confirm --confirm` call the model. Reports go to
 `evals/reports/<date>-<name>.json` and `.md`; an existing report is never
 replaced unless `--overwrite` is given (Part B files are never replaced).
 
@@ -104,6 +106,42 @@ pass/fail differs; clarification 4), tickets that passed in all 3 runs,
 failed_check counts, tokens and cost. Output: `<date>-part-b-<label>-aggregate`.
 `sweep` applies the same check to its 3 runs; output: `<date>-part-c-<label>-sweep`.
 
+## Part C: confirmation run (real model)
+
+Spec 05, Part C: "After the threshold is chosen, one confirmation run of the
+real flow at that threshold checks the simulation matched." `confirm` takes
+the same 3 Part B run files as the sweep.
+
+- Threshold: the bot's own, read from `query/config.py` as `query/ask.py`
+  reads it (`require_threshold(config.ESCALATION_THRESHOLD)`), when the
+  command runs. There is no option for it. The real run and the simulation
+  both use this one value. It refuses while the threshold is unset.
+- Every ticket goes through `QueryFlow` at that threshold with the real
+  `AnthropicGenerator` (unknown-fault-code and retrieval checks active).
+- For each ticket and each of the 3 runs, the real top score, status,
+  escalation_reason and AC pass/fail are compared with the sweep's simulated
+  outcome (`eval_sweep.simulate`) at the same threshold. A ticket matches only
+  if it agrees with all 3 runs. The report shows MATCH or every difference,
+  and AC1, AC2 and wrong escalation (real, and simulated worst of 3) for
+  calibration, holdout and full.
+- Free checks before any money is spent (also in the dry run): the 3 runs
+  belong together (same rule as the sweep); the model settings and system
+  prompt equal the runs'; `ingestion/` is the same tree and in `query/` only
+  `config.py` differs; every ticket retrieves exactly the runs' step-d chunks
+  and scores.
+- Same safeguards as Part B: dry run by default (no key, nothing written),
+  `--confirm` to pay, 100-call limit (planned and during the run), refuses
+  uncommitted changes, never replaces a valid result (no `--overwrite`),
+  handoffs only to `reports/`, the run fails if `handoffs/` changes, and it
+  stops at the first `service_error` (written as `...-invalid-<k>`).
+- Output: `<date>-part-c-<label>-confirm-t<threshold>.json`, `.md` and
+  `-handoffs.jsonl`. Its kind is `part-c-confirm`, so it can never be read as
+  a Part B run.
+
+Exit codes: 0 = MATCH (or dry run done); 3 = valid run written but it differs
+from the simulation; 4 = service_error, invalid run written, re-run it;
+1 = error.
+
 ## Files
 
 - `support_questions.jsonl`: the labelled tickets (frozen, never edited)
@@ -116,5 +154,6 @@ failed_check counts, tokens and cost. Output: `<date>-part-b-<label>-aggregate`.
 - `eval_compare.py`: Part A against the Part A2 simulation
 - `eval_experiments.py`: Part A2 experiments (history)
 - `eval_sweep.py`: Part C threshold sweep
+- `eval_confirm.py`: Part C confirmation run against the sweep's simulation
 - `eval_report.py`: report files and Markdown
 - `uncovered-topics.md`: topics deliberately not in the knowledge base (used to write escalate tickets)

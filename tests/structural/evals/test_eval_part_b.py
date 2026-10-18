@@ -23,7 +23,7 @@ from evals import run_eval
 from evals.eval_recorders import EvalError
 from evals.eval_sweep import load_run
 from query.anthropic_api import AnthropicGenerator
-from query.config import ConfigError, require_threshold
+from query.config import ConfigError
 from query.generator import GeneratorOutput
 from query.handoff import missing_fields
 from query.prompt import TOOL_NAME
@@ -457,23 +457,47 @@ def test_three_runs_feed_the_aggregate_and_the_sweep(command, capsys):
 
 
 def test_evaluation_never_sets_the_bots_threshold(command, repo_root):
+    """Part B runs at -1.0 passed to the flow; the bot's setting is untouched
+    (whatever value Shailesh has set in query/config.py)."""
     config_file = repo_root / "query" / "config.py"
     before = config_file.read_bytes()
+    value = query.config.ESCALATION_THRESHOLD
     assert command.run("--confirm") == 0
     assert config_file.read_bytes() == before
-    assert query.config.ESCALATION_THRESHOLD is None
-    with pytest.raises(ConfigError, match="NOT YET SET"):
-        require_threshold()
+    assert query.config.ESCALATION_THRESHOLD == value
+    data = json.loads((command.reports / "2026-10-18-part-b-whole-articles-run1.json").read_text(encoding="utf-8"))
+    assert data["threshold"] == -1.0
+
+
+# Since spec 02 v1.15 the threshold is set. Only the confirmation run
+# (eval_confirm.py, spec 05 Part C) may READ it, as config.ESCALATION_THRESHOLD
+# like query/ask.py; no evals code may assign it or import the name.
+THRESHOLD_READER = "eval_confirm.py"
 
 
 def test_evals_code_never_touches_the_threshold_setting_or_the_bots_handoff_store(repo_root):
     for path in sorted((repo_root / "evals").glob("*.py")):
         source = path.read_text(encoding="utf-8")
-        assert not re.search(r"\bESCALATION_THRESHOLD\b", source), path.name
+        if path.name != THRESHOLD_READER:
+            assert not re.search(r"\bESCALATION_THRESHOLD\b", source), path.name
         for node in ast.walk(ast.parse(source)):
             if isinstance(node, ast.ImportFrom):
                 names = {a.name for a in node.names}
-                assert not names & {"JsonlHandoffStore", "load_settings", "DEFAULT_HANDOFF_PATH"}, path.name
+                assert not names & {"JsonlHandoffStore", "load_settings", "DEFAULT_HANDOFF_PATH",
+                                    "ESCALATION_THRESHOLD"}, path.name
+            if isinstance(node, ast.Attribute) and node.attr == "ESCALATION_THRESHOLD":
+                assert isinstance(node.ctx, ast.Load), f"{path.name} assigns ESCALATION_THRESHOLD"
+            if isinstance(node, ast.Name) and node.id == "ESCALATION_THRESHOLD":
+                raise AssertionError(f"{path.name} uses ESCALATION_THRESHOLD as a bare name")
+            if isinstance(node, ast.Call) and getattr(node.func, "id", getattr(node.func, "attr", "")) == "setattr":
+                assert "ESCALATION_THRESHOLD" not in ast.unparse(node), path.name
+
+
+def test_the_threshold_reader_reads_the_config_attribute_once(repo_root):
+    source = (repo_root / "evals" / THRESHOLD_READER).read_text(encoding="utf-8")
+    reads = [n for n in ast.walk(ast.parse(source))
+             if isinstance(n, ast.Attribute) and n.attr == "ESCALATION_THRESHOLD"]
+    assert len(reads) == 1 and ast.unparse(reads[0]) == "config.ESCALATION_THRESHOLD"
 
 
 # --- uncommitted_code_changes on a real git repository --------------------------------

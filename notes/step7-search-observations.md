@@ -40,3 +40,6 @@
   the real bot") because the threshold is set. Ask Session Q to
   rewrite it so it still tests the refusal without calling the
   real model.
+- Step 11 note: setting the threshold broke an evals test, but only
+  the query suite was run, so it went unnoticed until Session E ran
+  everything. CI must run ALL test folders on every change.

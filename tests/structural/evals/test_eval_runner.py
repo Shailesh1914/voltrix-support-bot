@@ -354,6 +354,9 @@ ALLOWED_IMPORTS = {
     "query.anthropic_api": {"AnthropicGenerator"},
     "query.generator": {"GeneratorOutput", "MalformedOutput", "GeneratorServiceError"},
     "query.handoff": {"HandoffRecord"},
+    # The confirmation run reads the bot's threshold as query/ask.py does
+    # (spec 05 Part C; see test_eval_part_b for the read-only rule).
+    "query": {"config"},
 }
 
 

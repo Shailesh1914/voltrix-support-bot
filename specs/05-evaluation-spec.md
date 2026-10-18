@@ -1,6 +1,6 @@
 # Evaluation Spec — Voltrix VX-200 Support Bot
 
-Status: Version 1.6, approved by Shailesh on 2026-10-17
+Status: Version 1.7, approved by Shailesh on 2026-10-18
 
 ## Purpose
 Measure spec 02 acceptance criteria 1-2 and metrics, and produce
@@ -13,6 +13,10 @@ This spec is written BEFORE any evaluation results exist.
 - Uses the bot only through its public parts: QueryFlow,
   AnthropicGenerator and open_retrieval.
 - Scoring follows this spec and spec 02, never the bot's code.
+- Exception (Version 1.7): the confirm command (Part C) reads
+  query.config.ESCALATION_THRESHOLD exactly once, so the
+  confirmation uses the same threshold as the real bot. No evals
+  file may assign or override it.
 
 ## Data split (fixed before any results)
 - Calibration set: tickets whose number is ODD (T-001, T-003, ...,
