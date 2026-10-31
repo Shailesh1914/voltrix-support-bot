@@ -94,3 +94,5 @@ Only T-039 changed (fail -> pass in all 3 runs).
    T-030.
 4. kb_v3: symptoms (T-102), wording (T-101), WARNING lines.
 5. New "statement without a question" tickets.
+
+- CI: first structural-tests run passed on GitHub (2026-10-18).
