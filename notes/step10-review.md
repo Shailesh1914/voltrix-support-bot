@@ -96,3 +96,21 @@ Only T-039 changed (fail -> pass in all 3 runs).
 5. New "statement without a question" tickets.
 
 - CI: first structural-tests run passed on GitHub (2026-10-18).
+
+## Step 11: CI (completed 2026-10-31)
+- Structural tests and evaluation gate run on GitHub Actions (spec 06).
+- Branch protection on main: pull request required, both checks
+  required, no bypassing (enforced since the repository became public).
+- PR #1 (notes only): all checks passed, gate "not needed" (free),
+  merged through the rules.
+- Acceptance criterion 1: PR #2 with a deliberately failing test was
+  BLOCKED (structural tests failed, required). Closed, not merged:
+  https://github.com/Shailesh1914/voltrix-support-bot/pull/2
+- Acceptance criterion 5: evaluation gate run by hand on main
+  (run #3, 2026-10-31): PASSED, exit 0. AC1 41/48 (85.4%),
+  AC2 22/22 (100%).
+- Reproducibility: gate run #3 used exactly the same tokens as the
+  Part B runs of 2026-10-17 (312,746 in / 13,209 out, $0.3788),
+  on a different machine two weeks later.
+- Security check before going public: history searched for keys;
+  all matches were test fixtures. Unused AWS access key deactivated.
