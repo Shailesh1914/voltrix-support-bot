@@ -29,3 +29,16 @@ Adding KB-038 does not change v1 scores (v1 has no KB-038).
   not that new content is found. Add such tickets next iteration.
 - Also fix later: the stray line "CI: first structural-tests run
   passed" sits under "Next iteration" in step10-review.md.
+
+## Free retrieval check (spec 07 step 3), 2026-11-01
+| Set | v1 recall | v2 recall |
+|---|---|---|
+| Calibration | 23/24 | 23/24 |
+| Holdout | 23/24 | 23/24 |
+| Full | 46/48 | 46/48 |
+Both articles: 7/9 on both. No regression.
+- 46 (not 45 as in Step 9) because of the reviewed labels: T-039
+  now accepts KB-036, which retrieval already found.
+- Lowest found-answer score: v1 0.6435, v2 0.6439. The 0.60
+  threshold keeps its margin on v2; no flag needed.
+- Chunks read per full run: v1 1,547, v2 1,561 (about 1% more).
