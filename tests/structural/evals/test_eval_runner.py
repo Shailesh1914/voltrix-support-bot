@@ -26,7 +26,7 @@ def three_tickets(make_ticket):
 
 
 def test_part_a_records_the_flows_own_query(three_tickets, fake_retriever):
-    data = run_eval.part_a(three_tickets, fake_retriever())
+    data = run_eval.part_a(three_tickets, fake_retriever(), "v1")
     rows = {r["ticket_id"]: r for r in data["tickets"]}
     # Clarification 3: masked and normalised (spec 02 steps 1 and 2).
     assert "E-01" in rows["T-001"]["query_sent"]
@@ -47,7 +47,7 @@ def test_part_a_records_the_flows_own_query(three_tickets, fake_retriever):
 
 
 def test_part_a_counts_planned_model_calls(three_tickets, fake_retriever):
-    data = run_eval.part_a(three_tickets, fake_retriever())
+    data = run_eval.part_a(three_tickets, fake_retriever(), "v1")
     rows = {r["ticket_id"]: r for r in data["tickets"]}
     # E-21 is not a known fault code: the flow stops before the model.
     assert rows["T-003"]["model_called"] is False
@@ -57,7 +57,7 @@ def test_part_a_counts_planned_model_calls(three_tickets, fake_retriever):
 
 
 def test_part_a_uses_threshold_minus_one(three_tickets, fake_retriever):
-    data = run_eval.part_a(three_tickets, fake_retriever())
+    data = run_eval.part_a(three_tickets, fake_retriever(), "v1")
     assert (data["kb_version"], data["threshold"]) == ("v1", -1.0)
     assert "spec 02 step 3" in data["retrieval"]
     assert "k" not in data
@@ -75,7 +75,7 @@ def test_part_a_reports_the_final_chunks_not_a_raw_search(make_ticket, fake_retr
                 ("KB-019", 0.70), ("KB-001", 0.65)]
 
     ticket = make_ticket("T-001", ids=("KB-002", "KB-019"), question="drive trips with E2 when stopping")
-    row = run_eval.part_a([ticket], fake_retriever(scores))["tickets"][0]
+    row = run_eval.part_a([ticket], fake_retriever(scores), "v1")["tickets"][0]
     assert row["top_article_ids"] == ["KB-002", "KB-020", "KB-019", "KB-001"]
     assert [c["chunk_id"] for c in row["top_chunks"]] == ["KB-002#c1", "KB-020#c1", "KB-019#c6", "KB-001#c7"]
     assert row["top_score"] == 0.95
@@ -88,7 +88,7 @@ def test_part_a_refuses_a_prefixed_query(make_ticket, fake_retriever):
     # has it would be embedded with a double prefix.
     ticket = make_ticket("T-001", question=BGE_QUERY_PREFIX + "how do i set the ramp")
     with pytest.raises(EvalError, match="prefix"):
-        run_eval.part_a([ticket], fake_retriever())
+        run_eval.part_a([ticket], fake_retriever(), "v1")
 
 
 def test_part_a_does_not_reimplement_retrieval(repo_root):
@@ -102,13 +102,13 @@ def test_part_a_does_not_reimplement_retrieval(repo_root):
 
 def test_part_a_low_scores_never_escalate_at_minus_one(make_ticket, fake_retriever):
     # With threshold -1.0 even a very low score reaches the model.
-    data = run_eval.part_a([make_ticket("T-001")], fake_retriever(lambda q: [("KB-001", -0.5)]))
+    data = run_eval.part_a([make_ticket("T-001")], fake_retriever(lambda q: [("KB-001", -0.5)]), "v1")
     assert data["tickets"][0]["model_called"] is True
 
 
 def test_part_a_fails_loudly_without_chunks(make_ticket, fake_retriever):
     with pytest.raises(EvalError, match="no chunks"):
-        run_eval.part_a([make_ticket("T-001")], fake_retriever(lambda q: []))
+        run_eval.part_a([make_ticket("T-001")], fake_retriever(lambda q: []), "v1")
 
 
 def test_recorders(fake_retriever):
@@ -139,7 +139,7 @@ def test_recorder_passes_article_chunks_through(fake_retriever):
 
 
 def test_part_a_records_what_the_model_would_read(three_tickets, fake_retriever):
-    data = run_eval.part_a(three_tickets, fake_retriever())
+    data = run_eval.part_a(three_tickets, fake_retriever(), "v1")
     rows = {r["ticket_id"]: r for r in data["tickets"]}
     # Step 3e: whole articles, in step-d order; the top score stays step d's.
     assert rows["T-001"]["read_article_ids"] == ["KB-001", "KB-020"]
@@ -156,7 +156,7 @@ def test_part_a_refuses_when_the_flow_reads_other_articles(make_ticket, fake_ret
     # Simulate a flow that reads the selected articles in the wrong order.
     monkeypatch.setattr(query.flow, "read_articles", lambda r, chunks: real(r, list(reversed(chunks))))
     with pytest.raises(EvalError, match="step 3e"):
-        run_eval.part_a([make_ticket("T-001")], fake_retriever())
+        run_eval.part_a([make_ticket("T-001")], fake_retriever(), "v1")
 
 
 def handoffs_snapshot(repo_root):
@@ -168,7 +168,7 @@ def handoffs_snapshot(repo_root):
 
 def write_fake_part_a2(path, fake_retriever, make_part_a2, change=None):
     """A Part A2 report equal to what Part A finds with the fake retriever."""
-    data = run_eval.part_a(load_tickets(), fake_retriever())
+    data = run_eval.part_a(load_tickets(), fake_retriever(), "v1")
     a2 = make_part_a2(data, file_sha256(TICKETS_PATH))
     if change:
         change(a2)
@@ -187,16 +187,16 @@ def test_part_a_command_writes_reports_only(tmp_path, monkeypatch, fake_retrieve
     assert run_eval.main(argv) == 0
     assert "MATCH with the Part A2 E1+E2+E3 simulation: 70/70 tickets" in capsys.readouterr().out
 
-    data = json.loads((out / "2026-10-16-part-a-retrieval.json").read_text(encoding="utf-8"))
-    md = (out / "2026-10-16-part-a-retrieval.md").read_text(encoding="utf-8")
+    data = json.loads((out / "2026-10-16-part-a-retrieval-kb-v1.json").read_text(encoding="utf-8"))
+    md = (out / "2026-10-16-part-a-retrieval-kb-v1.md").read_text(encoding="utf-8")
     assert data["kind"] == "part-a" and len(data["tickets"]) == 70
     assert data["ticket_file_sha256"] == before_tickets
     assert data["against_part_a2"]["match"] is True
     assert "## Retrieval recall" in md and "## Top-score distributions" in md
     assert "## Against the Part A2 simulation (E1+E2+E3)" in md and "**MATCH**" in md
     assert sorted(p.name for p in out.iterdir()) == [
-        "2026-10-16-part-a-retrieval.json",
-        "2026-10-16-part-a-retrieval.md",
+        "2026-10-16-part-a-retrieval-kb-v1.json",
+        "2026-10-16-part-a-retrieval-kb-v1.md",
     ]
     assert file_sha256(TICKETS_PATH) == before_tickets
     assert handoffs_snapshot(repo_root) == before_handoffs
@@ -214,8 +214,8 @@ def test_part_a_command_mismatch_writes_report_then_exits_3(tmp_path, monkeypatc
 
     assert run_eval.main(argv) == run_eval.EXIT_MISMATCH == 3
     assert "MISMATCH" in capsys.readouterr().err
-    data = json.loads((out / "2026-10-16-part-a-retrieval.json").read_text(encoding="utf-8"))
-    md = (out / "2026-10-16-part-a-retrieval.md").read_text(encoding="utf-8")
+    data = json.loads((out / "2026-10-16-part-a-retrieval-kb-v1.json").read_text(encoding="utf-8"))
+    md = (out / "2026-10-16-part-a-retrieval-kb-v1.md").read_text(encoding="utf-8")
     assert data["against_part_a2"]["match"] is False
     assert [d["field"] for d in data["against_part_a2"]["differences"]] == ["top_score"]
     assert "**MISMATCH**" in md and "69/70 tickets match" in md
@@ -239,12 +239,12 @@ def test_part_a_label_names_a_separate_report(tmp_path, monkeypatch, fake_retrie
     assert run_eval.main(argv) == 0
     assert run_eval.main(argv + ["--label", "whole-articles"]) == 0  # no clash with the unlabelled report
     assert sorted(p.name for p in out.iterdir()) == [
-        "2026-10-16-part-a-retrieval-whole-articles.json",
-        "2026-10-16-part-a-retrieval-whole-articles.md",
-        "2026-10-16-part-a-retrieval.json",
-        "2026-10-16-part-a-retrieval.md",
+        "2026-10-16-part-a-retrieval-kb-v1-whole-articles.json",
+        "2026-10-16-part-a-retrieval-kb-v1-whole-articles.md",
+        "2026-10-16-part-a-retrieval-kb-v1.json",
+        "2026-10-16-part-a-retrieval-kb-v1.md",
     ]
-    data = json.loads((out / "2026-10-16-part-a-retrieval-whole-articles.json").read_text(encoding="utf-8"))
+    data = json.loads((out / "2026-10-16-part-a-retrieval-kb-v1-whole-articles.json").read_text(encoding="utf-8"))
     assert data["label"] == "whole-articles"
     assert run_eval.main(argv + ["--label", "Bad_Label"]) == 1
     assert "label" in capsys.readouterr().err
@@ -374,3 +374,102 @@ def test_evals_import_only_public_parts(repo_root):
                     names = {a.name for a in node.names}
                     assert node.module in ALLOWED_IMPORTS, f"{path.name}: from {node.module}"
                     assert names <= ALLOWED_IMPORTS[node.module], f"{path.name}: {names}"
+
+
+# --- Part A and the KB version (spec 07 step 3) ---------------------------------------
+# The conftest's temporary pointer file ("v1") stands in for data/ACTIVE_KB_VERSION.
+
+
+def spy_open(monkeypatch, fake_retriever):
+    opened = []
+
+    def open_retrieval(kb_version):
+        opened.append(kb_version)
+        return fake_retriever(kb_version=kb_version)
+
+    monkeypatch.setattr(ingestion, "open_retrieval", open_retrieval)
+    return opened
+
+
+def part_a_argv(out, a2, *extra):
+    return ["part-a", "--date", "2026-10-16", "--reports-dir", str(out), "--part-a2-report", str(a2), *extra]
+
+
+def test_part_a_kb_option_evaluates_that_version(tmp_path, monkeypatch, fake_retriever, make_part_a2, capsys):
+    a2 = write_fake_part_a2(tmp_path / "a2.json", fake_retriever, make_part_a2)  # simulated on v1
+    opened = spy_open(monkeypatch, fake_retriever)
+    out = tmp_path / "r"
+    assert run_eval.main(part_a_argv(out, a2, "--kb", "v2")) == 0  # pointer file says v1
+    stdout = capsys.readouterr().out
+    assert opened == ["v2"]
+    assert "Part A on kb v2 (from --kb)" in stdout
+    assert "Not compared with the Part A2 simulation: Part A2 was simulated on kb 'v1'" in stdout
+    assert sorted(p.name for p in out.iterdir()) == [
+        "2026-10-16-part-a-retrieval-kb-v2.json", "2026-10-16-part-a-retrieval-kb-v2.md"]
+    data = json.loads((out / "2026-10-16-part-a-retrieval-kb-v2.json").read_text(encoding="utf-8"))
+    md = (out / "2026-10-16-part-a-retrieval-kb-v2.md").read_text(encoding="utf-8")
+    assert (data["kb_version"], data["kb_version_source"]) == ("v2", "--kb")
+    assert data["against_part_a2"]["compared"] is False
+    assert "kb 'v2'" in data["against_part_a2"]["reason"]
+    assert "- KB version: v2 (from --kb)" in md
+    assert "## Against the Part A2 simulation\n\nNot compared: Part A2 was simulated on kb 'v1'" in md
+    assert "## Retrieval recall" in md and "## Top-score distributions" in md
+
+
+def test_part_a_default_is_the_pointer_file(tmp_path, monkeypatch, fake_retriever, make_part_a2, active_kb_file,
+                                            capsys):
+    a2 = write_fake_part_a2(tmp_path / "a2.json", fake_retriever, make_part_a2)
+    opened = spy_open(monkeypatch, fake_retriever)
+    active_kb_file.write_text("v2\n", encoding="utf-8")
+    out = tmp_path / "r"
+    assert run_eval.main(part_a_argv(out, a2)) == 0
+    assert "Part A on kb v2 (from data/ACTIVE_KB_VERSION)" in capsys.readouterr().out
+    assert opened == ["v2"]
+    data = json.loads((out / "2026-10-16-part-a-retrieval-kb-v2.json").read_text(encoding="utf-8"))
+    assert (data["kb_version"], data["kb_version_source"]) == ("v2", "data/ACTIVE_KB_VERSION")
+
+
+def test_part_a_reports_of_two_versions_never_clash(tmp_path, monkeypatch, fake_retriever, make_part_a2):
+    a2 = write_fake_part_a2(tmp_path / "a2.json", fake_retriever, make_part_a2)
+    opened = spy_open(monkeypatch, fake_retriever)
+    out = tmp_path / "r"
+    assert run_eval.main(part_a_argv(out, a2)) == 0  # active: v1, compared with Part A2
+    assert run_eval.main(part_a_argv(out, a2, "--kb", "v2")) == 0
+    assert opened == ["v1", "v2"]
+    assert sorted(p.name for p in out.iterdir()) == [
+        "2026-10-16-part-a-retrieval-kb-v1.json", "2026-10-16-part-a-retrieval-kb-v1.md",
+        "2026-10-16-part-a-retrieval-kb-v2.json", "2026-10-16-part-a-retrieval-kb-v2.md"]
+    v1 = json.loads((out / "2026-10-16-part-a-retrieval-kb-v1.json").read_text(encoding="utf-8"))
+    assert v1["against_part_a2"]["match"] is True
+
+
+@pytest.mark.parametrize("bad", ["2", "kb_v2", "V2", "v2 ", "v", "../v2"])
+def test_part_a_refuses_a_bad_kb_option(tmp_path, monkeypatch, fake_retriever, make_part_a2, capsys, bad):
+    a2 = write_fake_part_a2(tmp_path / "a2.json", fake_retriever, make_part_a2)
+    opened = spy_open(monkeypatch, fake_retriever)
+    assert run_eval.main(part_a_argv(tmp_path / "r", a2, "--kb", bad)) == 1
+    assert "--kb must be a version such as 'v2'" in capsys.readouterr().err
+    assert opened == [] and not (tmp_path / "r").exists()
+
+
+def test_part_a_after_a_label_review_is_not_compared_with_part_a2(tmp_path, monkeypatch, fake_retriever,
+                                                                 make_part_a2, capsys):
+    def earlier_tickets(a2):
+        a2["ticket_file_sha256"] = "0" * 64
+
+    a2 = write_fake_part_a2(tmp_path / "a2.json", fake_retriever, make_part_a2, earlier_tickets)
+    spy_open(monkeypatch, fake_retriever)
+    out = tmp_path / "r"
+    assert run_eval.main(part_a_argv(out, a2)) == 0
+    assert "Part A2 was made from an earlier ticket file" in capsys.readouterr().out
+    data = json.loads((out / "2026-10-16-part-a-retrieval-kb-v1.json").read_text(encoding="utf-8"))
+    assert data["against_part_a2"]["compared"] is False
+
+
+def test_part_a_kb_option_still_refuses_another_part_a2_problem(tmp_path, monkeypatch, fake_retriever, capsys):
+    bad = tmp_path / "a2.json"
+    bad.write_text(json.dumps({"kind": "part-b"}), encoding="utf-8")
+    spy_open(monkeypatch, fake_retriever)
+    assert run_eval.main(part_a_argv(tmp_path / "r", bad, "--kb", "v2")) == 1
+    assert "is not a Part A2 report" in capsys.readouterr().err
+    assert not (tmp_path / "r").exists()

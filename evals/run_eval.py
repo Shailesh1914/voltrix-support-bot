@@ -18,6 +18,11 @@ simulation of the same 3 runs.
 
 Part A2 is completed (spec 05 v1.5): `part-a2` only refuses and points to
 its committed report.
+
+KB version (spec 07): Part B, `confirm` and the gate evaluate the version in
+data/ACTIVE_KB_VERSION, read once per command as the bot reads it; they
+have no option for it. Only Part A takes `--kb vN` (default: the same
+file), so a new version's retrieval can be checked before it is promoted.
 """
 
 import argparse
@@ -31,7 +36,7 @@ from evals import eval_gate as gate
 from evals import eval_part_b as pb
 from evals import eval_rescore as er
 from evals.eval_aggregate import aggregate, check_runs, load_part_b
-from evals.eval_compare import PART_A2_REPORT, compare_with_part_a2
+from evals.eval_compare import PART_A2_REPORT, compare_with_part_a2, part_a2_not_comparable
 from evals.eval_experiments import BGE_QUERY_PREFIX
 from evals.eval_recorders import EvalError, MemoryHandoffStore, NoCallGenerator, RecordingRetriever
 from evals.eval_report import (
@@ -62,17 +67,30 @@ from evals.eval_tickets import (
     select,
 )
 
-# Spec 05: kb_v1 and the flow's own retrieval (spec 02 step 3), threshold
-# -1.0 so the retrieval check never escalates.
-KB_VERSION = "v1"
+# Spec 05: the flow's own retrieval (spec 02 step 3), threshold -1.0 so the
+# retrieval check never escalates. The KB version is never a constant here
+# (spec 07): see ec.bot_kb_version() and Part A's --kb.
 NO_ESCALATION_THRESHOLD = -1.0
 RUNS_REQUIRED = 3
 
 PART_A_NAME = "part-a-retrieval"
 
+# Where Part B, confirm, the gate and Part A's default take the version from.
+ACTIVE_KB_VERSION_SOURCE = "data/ACTIVE_KB_VERSION"
 
-def part_a_name(label: str | None) -> str:
-    return PART_A_NAME if label is None else f"{PART_A_NAME}-{pb.check_label(label)}"
+
+def part_a_name(kb_version: str, label: str | None) -> str:
+    """part-a-retrieval-kb-<version>[-<label>]: reports of different
+    versions never share a name (spec 07 step 3 compares them)."""
+    name = f"{PART_A_NAME}-kb-{check_kb_option(kb_version)}"
+    return name if label is None else f"{name}-{pb.check_label(label)}"
+
+
+def check_kb_option(kb_version: str) -> str:
+    """A KB version in the form the bot's pointer file must hold, e.g. 'v2'."""
+    if not ec.is_kb_version(kb_version):
+        raise EvalError(f"--kb must be a version such as 'v2', got {kb_version!r}")
+    return kb_version
 
 
 def aggregate_name(label: str) -> str:
@@ -113,20 +131,22 @@ def git_state(repo_root: Path = REPO_ROOT) -> tuple[str | None, bool | None]:
     return commit, bool(status.strip())
 
 
-def build_flow(retriever, generator, handoff_store, threshold: float = NO_ESCALATION_THRESHOLD):
+def build_flow(retriever, generator, handoff_store, kb_version: str, threshold: float = NO_ESCALATION_THRESHOLD):
+    """kb_version is the version the command evaluates; the flow refuses a
+    retriever that serves another one."""
     from query.flow import QueryFlow
 
     return QueryFlow(
-        retriever, generator, threshold=threshold, handoff_store=handoff_store, kb_version=KB_VERSION
+        retriever, generator, threshold=threshold, handoff_store=handoff_store, kb_version=kb_version
     )
 
 
 # --- Part A ----------------------------------------------------------------------------
 
 
-def part_a(tickets: list[Ticket], retriever) -> dict:
+def part_a(tickets: list[Ticket], retriever, kb_version: str) -> dict:
     """Run every ticket through the flow without the model and record its
-    retrieval. retriever is open_retrieval(KB_VERSION) (or a test fake).
+    retrieval. retriever is open_retrieval(kb_version) (or a test fake).
 
     The final retrieved chunks are read from each ticket's handoff record
     (spec 02: it holds all retrieved chunks), so Part A follows whatever
@@ -140,7 +160,7 @@ def part_a(tickets: list[Ticket], retriever) -> dict:
     recorder = RecordingRetriever(retriever)
     generator = NoCallGenerator()
     store = MemoryHandoffStore()
-    flow = build_flow(recorder, generator, store)
+    flow = build_flow(recorder, generator, store, kb_version)
     rows = []
     for ticket in tickets:
         calls_before = generator.calls
@@ -195,7 +215,7 @@ def part_a(tickets: list[Ticket], retriever) -> dict:
     by_id = {r["ticket_id"]: r for r in rows}
     return {
         "kind": "part-a",
-        "kb_version": KB_VERSION,
+        "kb_version": kb_version,
         "retrieval": "the flow's own: spec 02 step 3 (main search, code boost, merge, diversity)",
         "threshold": NO_ESCALATION_THRESHOLD,
         "planned_model_calls": generator.calls,
@@ -207,23 +227,35 @@ def part_a(tickets: list[Ticket], retriever) -> dict:
 def run_part_a(args) -> int:
     from ingestion import open_retrieval
 
-    name = part_a_name(args.label)  # a bad label fails before any work
+    # The version is read once: --kb, or the bot's own (data/ACTIVE_KB_VERSION).
+    if args.kb is not None:
+        kb_version, source = check_kb_option(args.kb), "--kb"
+    else:
+        kb_version, source = ec.bot_kb_version(), ACTIVE_KB_VERSION_SOURCE
+    name = part_a_name(kb_version, args.label)  # a bad label fails before any work
     sha_before = file_sha256(args.tickets)
     tickets = load_tickets(args.tickets)
-    data = part_a(tickets, open_retrieval(KB_VERSION))
+    data = part_a(tickets, open_retrieval(kb_version), kb_version)
     if file_sha256(args.tickets) != sha_before:
         raise EvalError("the ticket file changed during the run")
     commit, dirty = git_state()
-    data = {"date": args.date, "git_commit": commit, "git_dirty": dirty, "ticket_file_sha256": sha_before, **data}
-    comparison = compare_with_part_a2(data, args.part_a2_report)
+    data = {"date": args.date, "git_commit": commit, "git_dirty": dirty, "ticket_file_sha256": sha_before,
+            "kb_version_source": source, **data}
+    # Part A2 was simulated on one KB version and ticket file; on any other
+    # the comparison does not apply and the report says why.
+    skipped = part_a2_not_comparable(data, args.part_a2_report)
+    comparison = {"compared": False, "reason": skipped} if skipped else compare_with_part_a2(data, args.part_a2_report)
     data["against_part_a2"] = comparison
     data["label"] = args.label
     paths = write_report(
         args.reports_dir, args.date, name, data, part_a_markdown(data), args.overwrite
     )
-    print("Part A written (no model calls):")
+    print(f"Part A on kb {kb_version} (from {source}) written (no model calls):")
     for p in paths:
         print(f"  {p}")
+    if skipped:
+        print(f"Not compared with the Part A2 simulation: {skipped}")
+        return 0
     matched = f"{comparison['tickets_matching']}/{comparison['tickets_compared']} tickets"
     if not comparison["match"]:
         print(
@@ -246,23 +278,23 @@ def make_real_generator():
     return AnthropicGenerator.from_environment()
 
 
-def part_b_plan(tickets: list[Ticket], retriever) -> tuple[dict, dict]:
+def part_b_plan(tickets: list[Ticket], retriever, kb_version: str) -> tuple[dict, dict]:
     """Free: no key, no model calls. Returns the plan and each ticket's
     retrieval (step-d chunks with scores)."""
     planner = pb.PlanningGenerator()
     store = MemoryHandoffStore()
-    return pb.plan(tickets, build_flow(retriever, planner, store), planner, store)
+    return pb.plan(tickets, build_flow(retriever, planner, store, kb_version), planner, store)
 
 
-def part_b(tickets: list[Ticket], retriever, generator: pb.UsageRecordingGenerator,
+def part_b(tickets: list[Ticket], retriever, generator: pb.UsageRecordingGenerator, kb_version: str,
            retrieval: dict | None = None) -> pb.RunOutcome:
     """One Part B run. The handoffs stay in memory (never handoffs/).
     retrieval is from part_b_plan() on the same retriever; computed here
     (free) if not given."""
     if retrieval is None:
-        _, retrieval = part_b_plan(tickets, retriever)
+        _, retrieval = part_b_plan(tickets, retriever, kb_version)
     store = MemoryHandoffStore()
-    flow = build_flow(retriever, generator, store)
+    flow = build_flow(retriever, generator, store, kb_version)
     return pb.run_tickets(tickets, flow, generator, store, retrieval)
 
 
@@ -273,9 +305,11 @@ def run_part_b(args) -> int:
     label = pb.check_label(args.label)
     sha_before = file_sha256(args.tickets)
     tickets = load_tickets(args.tickets)
-    retriever = open_retrieval(KB_VERSION)
-    plan, retrieval = part_b_plan(tickets, retriever)
-    print(f"Part B run {args.run} ({label}): plan (free: no key loaded, no model calls)")
+    kb_version = ec.bot_kb_version()  # read once (spec 07); no option for it
+    retriever = open_retrieval(kb_version)
+    plan, retrieval = part_b_plan(tickets, retriever, kb_version)
+    print(f"Part B run {args.run} ({label}) on kb {kb_version} (from {ACTIVE_KB_VERSION_SOURCE}): "
+          "plan (free: no key loaded, no model calls)")
     for line in pb.plan_lines(plan):
         print(f"  {line}")
     if not plan["within_limit"]:
@@ -307,7 +341,7 @@ def run_part_b(args) -> int:
     generator = pb.UsageRecordingGenerator(real)
 
     print(f"Running {plan['planned_model_calls']} model calls ...")
-    outcome = part_b(tickets, retriever, generator, retrieval)
+    outcome = part_b(tickets, retriever, generator, kb_version, retrieval)
     if outcome.stopped is None and file_sha256(args.tickets) != sha_before:
         outcome.stopped = {"reason": "the ticket file changed during the run", "ticket_id": None}
     if outcome.stopped is None and pb.folder_snapshot(HANDOFFS_DIR) != handoffs_before:
@@ -320,7 +354,8 @@ def run_part_b(args) -> int:
         "git_dirty": dirty,
         "code_trees": pb.code_trees(),
         "ticket_file_sha256": sha_before,
-        "kb_version": KB_VERSION,
+        "kb_version": kb_version,
+        "kb_version_source": ACTIVE_KB_VERSION_SOURCE,
         **settings,
         "plan": plan,
         **pb.run_data(tickets, outcome, args.run, label),
@@ -464,12 +499,12 @@ def confirm_invalid_name(reports_dir: Path, date: str, name: str) -> str:
     return f"{name}-invalid-{k}"
 
 
-def confirm_plan(tickets: list[Ticket], retriever, threshold: float) -> tuple[dict, dict, dict]:
+def confirm_plan(tickets: list[Ticket], retriever, threshold: float, kb_version: str) -> tuple[dict, dict, dict]:
     """Free: the flow at the bot's threshold with the planning generator.
     Returns the plan, each ticket's step-d retrieval and the model settings."""
     planner = pb.PlanningGenerator()
     store = MemoryHandoffStore()
-    plan, retrieval = pb.plan(tickets, build_flow(retriever, planner, store, threshold), planner, store)
+    plan, retrieval = pb.plan(tickets, build_flow(retriever, planner, store, kb_version, threshold), planner, store)
     return plan, retrieval, planner.settings
 
 
@@ -502,13 +537,16 @@ def run_confirm(args) -> int:
 
     # Free checks before any money: does the simulation describe today's bot?
     code = ec.check_code(run_files[0]["code_trees"], pb.code_trees())
-    retriever = open_retrieval(KB_VERSION)
-    plan, retrieval, settings = confirm_plan(tickets, retriever, threshold)
+    kb_version = ec.bot_kb_version()  # read once (spec 07); no option for it
+    ec.check_kb_version(kb_version, run_files)
+    retriever = open_retrieval(kb_version)
+    plan, retrieval, settings = confirm_plan(tickets, retriever, threshold, kb_version)
     ec.check_settings(settings, run_files)
     ec.check_retrieval(retrieval, run_files)
     simulated = ec.simulated_summary(tickets, part_b_runs, threshold)
 
-    print(f"Confirmation run ({label}) at threshold {threshold} (read from query/config.py)")
+    print(f"Confirmation run ({label}) at threshold {threshold} (read from query/config.py), "
+          f"kb {kb_version} (from {ACTIVE_KB_VERSION_SOURCE})")
     print("  checks: same model, prompt, tickets, KB and retrieval as the 3 Part B runs; "
           f"query/ files changed since the runs: {', '.join(code['query_files_changed_since_runs']) or 'none'}")
     print("Plan (free: no key loaded, no model calls):")
@@ -547,7 +585,7 @@ def run_confirm(args) -> int:
 
     print(f"Running {plan['planned_model_calls']} model calls ...")
     store = MemoryHandoffStore()
-    flow = build_flow(retriever, generator, store, threshold)
+    flow = build_flow(retriever, generator, store, kb_version, threshold)
     outcome = pb.run_tickets(tickets, flow, generator, store, retrieval)
     if outcome.stopped is None and file_sha256(args.tickets) != sha_before:
         outcome.stopped = {"reason": "the ticket file changed during the run", "ticket_id": None}
@@ -563,7 +601,8 @@ def run_confirm(args) -> int:
         "code_trees": pb.code_trees(),
         "code_since_runs": code,
         "ticket_file_sha256": sha_before,
-        "kb_version": KB_VERSION,
+        "kb_version": kb_version,
+        "kb_version_source": ACTIVE_KB_VERSION_SOURCE,
         **real_settings,
         "threshold_source": "query/config.py",
         "plan": plan,
@@ -597,15 +636,17 @@ def run_confirm(args) -> int:
 # --- Evaluation gate (spec 06, Workflow 2) ----------------------------------------------
 
 
-def open_kb_v1():
-    """kb_v1 through the retrieval contract; a missing or broken index fails
-    clearly before anything else is done."""
+def open_gate_kb(kb_version: str):
+    """The active version's index through the retrieval contract; a missing
+    or broken index fails clearly before anything else is done."""
     from ingestion import RetrievalError, open_retrieval
 
     try:
-        return open_retrieval(KB_VERSION)
+        return open_retrieval(kb_version)
     except RetrievalError as e:
-        raise EvalError(f"the gate needs the kb_{KB_VERSION} index: {e}") from None
+        raise EvalError(
+            f"the gate needs the kb_{kb_version} index (the version in {ACTIVE_KB_VERSION_SOURCE}): {e}"
+        ) from None
 
 
 def run_gate(args) -> int:
@@ -613,12 +654,14 @@ def run_gate(args) -> int:
     threshold = gate.bot_threshold()
     out_dir = gate.check_output_folder(args.out_dir)
     gate.check_not_written(out_dir, args.date)
-    retriever = open_kb_v1()
+    kb_version = gate.bot_kb_version()  # read once (spec 07); no option for it
+    retriever = open_gate_kb(kb_version)
     sha_before = file_sha256(args.tickets)
     tickets = load_tickets(args.tickets)
 
-    plan, retrieval = gate_plan(tickets, retriever, threshold)
-    print(f"Evaluation gate (spec 06) at threshold {threshold} (read from query/config.py), kb_{KB_VERSION}")
+    plan, retrieval = gate_plan(tickets, retriever, threshold, kb_version)
+    print(f"Evaluation gate (spec 06) at threshold {threshold} (read from query/config.py), "
+          f"kb {kb_version} (from {ACTIVE_KB_VERSION_SOURCE})")
     print(f"  passes only if, on the full set, AC1 >= {AC1_TARGET_PCT}% and AC2 >= {AC2_TARGET_PCT}%")
     print("Plan (free: no key loaded, no model calls):")
     for line in pb.plan_lines(plan):
@@ -647,7 +690,7 @@ def run_gate(args) -> int:
 
     print(f"Running {plan['planned_model_calls']} model calls ...")
     store = MemoryHandoffStore()
-    flow = build_flow(retriever, generator, store, threshold)
+    flow = build_flow(retriever, generator, store, kb_version, threshold)
     outcome = pb.run_tickets(tickets, flow, generator, store, retrieval)
     if outcome.stopped is None and file_sha256(args.tickets) != sha_before:
         outcome.stopped = {"reason": "the ticket file changed during the run", "ticket_id": None}
@@ -662,7 +705,8 @@ def run_gate(args) -> int:
         "git_dirty": dirty,
         "code_trees": pb.code_trees(),
         "ticket_file_sha256": sha_before,
-        "kb_version": KB_VERSION,
+        "kb_version": kb_version,
+        "kb_version_source": ACTIVE_KB_VERSION_SOURCE,
         **settings,
         "threshold_source": "query/config.py",
         "plan": plan,
@@ -683,11 +727,11 @@ def run_gate(args) -> int:
     return code
 
 
-def gate_plan(tickets: list[Ticket], retriever, threshold: float) -> tuple[dict, dict]:
+def gate_plan(tickets: list[Ticket], retriever, threshold: float, kb_version: str) -> tuple[dict, dict]:
     """Free: the flow at the bot's threshold with the planning generator."""
     planner = pb.PlanningGenerator()
     store = MemoryHandoffStore()
-    return pb.plan(tickets, build_flow(retriever, planner, store, threshold), planner, store)
+    return pb.plan(tickets, build_flow(retriever, planner, store, kb_version, threshold), planner, store)
 
 
 # --- Command line ------------------------------------------------------------------------
@@ -706,6 +750,9 @@ def parser() -> argparse.ArgumentParser:
     part_a_parser = sub.add_parser("part-a", help="retrieval report (free, no model calls)")
     part_a_parser.add_argument("--part-a2-report", type=Path, default=PART_A2_REPORT, help=argparse.SUPPRESS)
     part_a_parser.add_argument("--label", help="added to the report name, e.g. whole-articles (optional)")
+    part_a_parser.add_argument(
+        "--kb", help="KB version to evaluate, e.g. v2 (default: the bot's, from data/ACTIVE_KB_VERSION; spec 07 step 3)"
+    )
     common(part_a_parser)
     sub.add_parser("part-a2", help="completed 2026-10-17; refuses to run (spec 05 v1.5)")
     part_b_parser = sub.add_parser("part-b", help="full-flow run with the real model (dry run unless --confirm)")

@@ -4,6 +4,7 @@ import json
 
 import pytest
 
+from evals.eval_scoring import Outcome, ac1_pass, counts_for_both_cited, retrieval_row
 from evals.eval_tickets import (
     CALIBRATION,
     FULL,
@@ -72,13 +73,36 @@ def test_real_ticket_file_split():
 
 
 def test_real_ticket_file_any_match_ticket():
-    # T-039 since the Step 10 label review (notes/step10-review.md).
+    # Which tickets use "any" changes with each label review (spec 07 step 2),
+    # so this checks how "any" tickets are parsed and scored, not which ones
+    # they are. The raw file is read independently of load_tickets().
+    raw_rows = [json.loads(line) for line in TICKETS_PATH.read_text(encoding="utf-8").splitlines() if line.strip()]
     by_id = {t.ticket_id: t for t in load_tickets()}
-    assert by_id["T-101"].article_match == "any"
-    assert by_id["T-101"].split == CALIBRATION
-    assert by_id["T-039"].article_match == "any"
-    assert by_id["T-039"].expected_article_ids == ("KB-034", "KB-036")
-    assert [t.ticket_id for t in load_tickets() if t.article_match == "any"] == ["T-039", "T-101"]
+    assert set(by_id) == {r["ticket_id"] for r in raw_rows}
+    any_ids = []
+    for r in raw_rows:
+        t = by_id[r["ticket_id"]]
+        assert t.article_match == r.get("article_match", "all")  # absent means "all"
+        assert t.expected_article_ids == tuple(r["expected_article_ids"])
+        if t.article_match == "any":
+            any_ids.append(t.ticket_id)
+    assert any_ids, "the ticket file has no article_match 'any' ticket to check"
+
+    for ticket_id in any_ids:
+        t = by_id[ticket_id]
+        # "any" widens an answer label: at least two accepted articles.
+        assert t.expected == "answer" and len(t.expected_article_ids) >= 2, ticket_id
+        # Never counted as needing both articles (clarification 2) ...
+        assert not counts_for_both_cited(t), ticket_id
+        for article in t.expected_article_ids:
+            # ... and any ONE accepted article is enough, for retrieval recall
+            # and for AC1 ...
+            assert retrieval_row(t, [article, "KB-999"]) == {"recall_hit": True, "both_hit": None}, ticket_id
+            assert ac1_pass(t, Outcome("answered", cited_article_ids=(article,))), ticket_id
+        # ... but none of them is a miss.
+        assert retrieval_row(t, ["KB-999"])["recall_hit"] is False, ticket_id
+        assert not ac1_pass(t, Outcome("answered", cited_article_ids=("KB-999",))), ticket_id
+        assert not ac1_pass(t, Outcome("escalated", "insufficient_context", t.expected_article_ids)), ticket_id
 
 
 def test_loading_never_changes_the_ticket_file():

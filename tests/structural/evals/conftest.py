@@ -40,6 +40,23 @@ def no_network(monkeypatch):
         monkeypatch.delenv(name, raising=False)
 
 
+@pytest.fixture(autouse=True)
+def active_kb_file(tmp_path, monkeypatch):
+    """Spec 07: the bot's KB version comes from data/ACTIVE_KB_VERSION. Tests
+    never read (or edit) the real file: query.config is pointed at a
+    temporary pointer file holding "v1", and at a missing .env. A test that
+    needs another version writes it: active_kb_file.write_text("v2\n")."""
+    from query import config
+
+    pointer = tmp_path / "pointer" / "ACTIVE_KB_VERSION"
+    pointer.parent.mkdir()
+    pointer.write_text("v1\n", encoding="utf-8")
+    monkeypatch.setattr(config, "ACTIVE_KB_VERSION_FILE", pointer)
+    monkeypatch.setattr(config, "ENV_FILE", tmp_path / "pointer" / "no.env")
+    monkeypatch.delenv(config.KB_VERSION_NAME, raising=False)
+    return pointer
+
+
 class FakeRetriever:
     """Returns scripted chunks: scores(query) -> [(article_id, score), ...].
 

@@ -20,7 +20,7 @@ def part_a(make_ticket, fake_retriever):
         make_ticket("T-002", ids=("KB-001", "KB-020"), category="parameters", question="how do i set the ramp"),
         make_ticket("T-003", expected="escalate", question="display shows E-21, what is it"),
     ]
-    data = run_eval.part_a(tickets, fake_retriever())
+    data = run_eval.part_a(tickets, fake_retriever(), "v1")
     return {"date": "2026-10-17", "git_commit": "abc", "git_dirty": False, "ticket_file_sha256": SHA, **data}
 
 

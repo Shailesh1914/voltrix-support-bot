@@ -1,7 +1,9 @@
 """Evaluation gate for CI (spec 06, Workflow 2).
 
 One full-flow run of every ticket with the real model, at the threshold in
-query/config.py (read as the real bot reads it; there is no other source).
+query/config.py, on the KB version in data/ACTIVE_KB_VERSION (spec 07).
+Both are read as the real bot reads them; there is no other source and no
+command-line option for either.
 The gate passes only if, on the FULL ticket set, AC1 >= 85% and AC2 >= 95%
 (spec 02 acceptance criteria 1 and 2, scored by eval_scoring).
 
@@ -13,8 +15,8 @@ Exit codes are chosen so that CI can never mistake one failure for another:
 - EXIT_QUALITY_FAILED: a valid run, and AC1 or AC2 is below target.
 - EXIT_SERVICE_ERROR: the model API failed (an outage). The run is invalid
   and says nothing about quality; re-run it.
-- EXIT_ERROR (from run_eval): anything else, e.g. the kb_v1 index is
-  missing, a refused output folder, or a run aborted for another reason.
+- EXIT_ERROR (from run_eval): anything else, e.g. the active
+  version's index is missing, a refused output folder, or a run aborted for another reason.
 - EXIT_DRY_RUN: the free dry run. Deliberately not 0, so a workflow that
   forgets --confirm can never show a passing gate.
 """
@@ -49,6 +51,17 @@ def bot_threshold() -> float:
     single place in evals/ that touches the setting."""
     try:
         return ec.bot_threshold()
+    except EvalError as e:
+        raise EvalError(f"the gate cannot run: {e}") from None
+
+
+def bot_kb_version() -> str:
+    """The KB version the real bot serves, through the evaluation's ONE
+    reader (eval_confirm.bot_kb_version: data/ACTIVE_KB_VERSION, as
+    query/config.py reads it). The gate reads it once and evaluates only
+    that version (spec 07)."""
+    try:
+        return ec.bot_kb_version()
     except EvalError as e:
         raise EvalError(f"the gate cannot run: {e}") from None
 

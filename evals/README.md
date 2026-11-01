@@ -5,6 +5,7 @@ Labelled question set for the evaluation suite.
 Run from the repository root with the project virtual environment:
 
     .venv/bin/python -m evals.run_eval part-a --label LABEL                    # label optional
+    .venv/bin/python -m evals.run_eval part-a --kb v2                          # another KB version (spec 07 step 3)
     .venv/bin/python -m evals.run_eval part-b --label LABEL --run 1            # free dry run
     .venv/bin/python -m evals.run_eval part-b --label LABEL --run 1 --confirm  # PAID, Shailesh only
     .venv/bin/python -m evals.run_eval aggregate --runs RUN1.json RUN2.json RUN3.json
@@ -13,9 +14,24 @@ Run from the repository root with the project virtual environment:
     .venv/bin/python -m evals.run_eval confirm --runs RUN1.json RUN2.json RUN3.json --confirm  # PAID, Shailesh only
     .venv/bin/python -m evals.run_eval rescore --runs RUN1.json RUN2.json RUN3.json
 
-Only `part-b --confirm` and `confirm --confirm` call the model. Reports go to
+Only `part-b --confirm`, `confirm --confirm` and `gate --confirm` call the model. Reports go to
 `evals/reports/<date>-<name>.json` and `.md`; an existing report is never
 replaced unless `--overwrite` is given (Part B files are never replaced).
+
+## KB version (spec 07)
+
+The bot serves the version in `data/ACTIVE_KB_VERSION` (one line, e.g. `v1`).
+The evaluation reads it the same way, through one reader
+(`eval_confirm.bot_kb_version()` -> `query/config.py`): an `ACTIVE_KB_VERSION`
+setting in `.env` or the environment is refused, and a missing or malformed
+file is an error. Each command reads it once and uses that one value for the
+index, the flow and the report (`kb_version`, `kb_version_source`).
+
+- Part B, `confirm` and the gate always evaluate that version. They have no
+  option for it, and the code has no fixed version.
+- Part A evaluates it by default; `--kb vN` evaluates another version, for
+  the free retrieval check before a promotion (spec 07 step 3).
+- `eval_diagnosis.py` is history (the old run 1, kb v1) and keeps its fixed v1.
 
 ## Part A: retrieval report
 
@@ -36,11 +52,21 @@ simulation. Spec 05 v1.6: article ids (in order), recall, both-articles
 recall and top score decide the match; chunk ids, the query and the texts
 searched are listed as information only.
 
-`--label` adds a suffix to the report name (`<date>-part-a-retrieval-<label>`),
-so a report of new code never replaces one of old code.
+Reports are named `<date>-part-a-retrieval-kb-<version>[-<label>]`, so
+reports of two versions never clash, and `--label` keeps a report of new code
+from replacing one of old code. The report names its version and where it
+came from (`--kb` or `data/ACTIVE_KB_VERSION`).
 
-Exit codes: 0 = report written and it matches Part A2; 3 = report written but
-it differs from Part A2 (see "Against the Part A2 simulation"); 1 = error,
+    .venv/bin/python -m evals.run_eval part-a --kb v2    # needs the kb_v2 index
+
+The Part A2 simulation was made once, on kb v1 with the ticket file of that
+day. If this Part A used another KB version or a later ticket file (after a
+label review), the comparison does not apply: the report says "Not compared"
+and why, and the exit code is 0. Spec 07 step 3 compares the recall of the
+two Part A reports (new version and active version), not Part A2.
+
+Exit codes: 0 = report written and it matches Part A2 (or Part A2 does not
+apply, see above); 3 = report written but it differs from Part A2 (see "Against the Part A2 simulation"); 1 = error,
 nothing written.
 
 ## Part A2: retrieval experiments (completed)
@@ -152,8 +178,9 @@ the same 3 Part B run files as the sweep.
 - Free checks before any money is spent (also in the dry run): the 3 runs
   belong together (same rule as the sweep); the model settings and system
   prompt equal the runs'; `ingestion/` is the same tree and in `query/` only
-  `config.py` differs; every ticket retrieves exactly the runs' step-d chunks
-  and scores.
+  `config.py` differs; the bot's KB version (`data/ACTIVE_KB_VERSION`) is the
+  one the runs were made on; every ticket retrieves exactly the runs' step-d
+  chunks and scores.
 - Same safeguards as Part B: dry run by default (no key, nothing written),
   `--confirm` to pay, 100-call limit (planned and during the run), refuses
   uncommitted changes, never replaces a valid result (no `--overwrite`),
@@ -173,12 +200,14 @@ from the simulation; 4 = service_error, invalid run written, re-run it;
     .venv/bin/python -m evals.run_eval gate --out-dir DIR --confirm  # PAID: what CI runs
 
 One full-flow run of every ticket with the real model, at the threshold in
-`query/config.py` (read through the same single reader as `confirm`; there is
-no option for it). It passes only if, on the FULL ticket set, AC1 >= 85% and
+`query/config.py`, on the KB version in `data/ACTIVE_KB_VERSION` (spec 07; both
+read through the same single readers as `confirm`; there is no option for
+either). It passes only if, on the FULL ticket set, AC1 >= 85% and
 AC2 >= 95% (spec 02). One run, not three (spec 06).
 
-- Needs the kb_v1 index (`python -m ingestion.build data/kb_v1`); without it
-  the gate stops before anything else with a clear error.
+- Needs the index of the active version (e.g. `python -m ingestion.build
+  data/kb_v1`); without it the gate stops before anything else with a clear
+  error naming the version.
 - Writes `<date>-gate.json`, `.md` and `-handoffs.jsonl` to `--out-dir`
   (created if needed), for CI to keep as an artifact. Never to `handoffs/`
   (the run fails if `handoffs/` changes). An existing report is never replaced.
@@ -200,7 +229,7 @@ Exit codes (each means one thing only):
 | 3 | FAILED: a valid run, and AC1 and/or AC2 is below target (the message names which) |
 | 4 | service_error: the model API failed (an outage, never a quality result); re-run |
 | 5 | dry run: the gate was NOT evaluated (never 0, so a missing `--confirm` cannot pass) |
-| 1 | error: no index, threshold unset, refused output folder, uncommitted changes, other invalid run |
+| 1 | error: no index, threshold unset, bad or missing data/ACTIVE_KB_VERSION (or ACTIVE_KB_VERSION set in .env), refused output folder, uncommitted changes, other invalid run |
 | 2 | wrong command-line arguments (argparse) |
 
 ## Files
@@ -213,10 +242,11 @@ Exit codes (each means one thing only):
 - `eval_aggregate.py`: worst of the 3 Part B runs, unstable tickets
 - `eval_rescore.py`: rescoring the 3 runs after a label review (BEFORE and AFTER)
 - `eval_scoring.py`: AC1, AC2, metrics, retrieval recall
-- `eval_compare.py`: Part A against the Part A2 simulation
+- `eval_compare.py`: Part A against the Part A2 simulation (and when it does not apply)
 - `eval_experiments.py`: Part A2 experiments (history)
 - `eval_sweep.py`: Part C threshold sweep
-- `eval_confirm.py`: Part C confirmation run against the sweep's simulation
+- `eval_confirm.py`: Part C confirmation run against the sweep's simulation; the
+  evaluation's only readers of the bot's threshold and KB version
 - `eval_gate.py`: CI evaluation gate (spec 06): verdict on the full set, exit codes, output folder rules
 - `eval_report.py`: report files and Markdown
 - `uncovered-topics.md`: topics deliberately not in the knowledge base (used to write escalate tickets)
