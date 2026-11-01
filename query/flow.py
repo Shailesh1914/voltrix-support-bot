@@ -67,7 +67,8 @@ class QueryFlow:
         info = retriever.kb_info()
         if info.kb_version != kb_version:
             raise ConfigError(
-                f"retriever serves {info.kb_version!r} but ACTIVE_KB_VERSION is {kb_version!r}"
+                f"retriever serves {info.kb_version!r} but ACTIVE_KB_VERSION "
+                f"(data/ACTIVE_KB_VERSION) is {kb_version!r}"
             )
         self._retriever = retriever
         self._generator = generator

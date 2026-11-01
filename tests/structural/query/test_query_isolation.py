@@ -26,7 +26,11 @@ def contract_public_names() -> set[str]:
 ALLOWED_FROM_INGESTION = contract_public_names()
 
 # Index, metadata, manifest and knowledge-base file and folder names.
-FORBIDDEN = re.compile(r"indexes|chunks\.jsonl|vectors\.npy|manifest\.json|kb_v[0-9]|data/")
+# The one exception is the active-version pointer data/ACTIVE_KB_VERSION,
+# which spec 07 tells the query side to read (it is not an index,
+# metadata or manifest file).
+FORBIDDEN = re.compile(r"indexes|chunks\.jsonl|vectors\.npy|manifest\.json|kb_v[0-9]|data/(?!ACTIVE_KB_VERSION(?![\w.]))")
+POINTER_NAME = "ACTIVE_KB_VERSION"
 
 
 def test_contract_names_read_from_spec_03():
@@ -56,3 +60,20 @@ def test_no_index_or_kb_file_names(path):
         if isinstance(node, ast.Constant) and isinstance(node.value, str):
             found = FORBIDDEN.search(node.value)
             assert not found, f"{path.name}:{node.lineno} mentions {found.group(0)!r}"
+
+
+@pytest.mark.parametrize("text", ["indexes/v1", "data/kb_v1", "data/", "data/ACTIVE_KB_VERSION.bak", "manifest.json"])
+def test_forbidden_names_still_caught(text):
+    assert FORBIDDEN.search(text)
+
+
+def test_pointer_mention_allowed():
+    assert not FORBIDDEN.search("read from data/ACTIVE_KB_VERSION (spec 07)")
+
+
+def test_only_config_names_the_pointer_file():
+    # Spec 07: the pointer path is built in query/config.py only.
+    for path in MODULES:
+        for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
+            if isinstance(node, ast.Constant) and node.value == POINTER_NAME:
+                assert path.name == "config.py", f"{path.name}:{node.lineno} names {POINTER_NAME!r}"

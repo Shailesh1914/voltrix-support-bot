@@ -3,7 +3,8 @@
     python -m query.smoke
 
 Sends ONE fixed question, with real chunks retrieved and read as the flow
-does (spec 02, steps 3a-3e: query/retrieval.py) on KB version v1,
+does (spec 02, steps 3a-3e: query/retrieval.py) on the active KB version
+(data/ACTIVE_KB_VERSION, spec 07),
 to the Anthropic generator ONLY: no flow, no threshold, no handoff.
 Prints the decision, used_article_ids, the start of the answer and the
 token usage. Never prints the API key.
@@ -19,7 +20,7 @@ from typing import TextIO
 
 from ingestion import RetrievalError, open_retrieval
 from query.anthropic_api import AnthropicGenerator
-from query.config import ConfigError
+from query.config import ConfigError, active_kb_version
 from query.fault_codes import code_titles
 from query.generator import GeneratorServiceError, MalformedOutput
 from query.masking import mask_personal_data
@@ -27,7 +28,6 @@ from query.normalise import normalise_codes
 from query.retrieval import read_articles, retrieve
 
 SMOKE_QUESTION = "E-01 when the motor ramps up, what do I check?"
-SMOKE_KB_VERSION = "v1"
 ANSWER_PREVIEW_CHARS = 200
 
 EXIT_CALL_FAILED = 1
@@ -38,13 +38,15 @@ def main(
     open_index: Callable = open_retrieval,
     make_generator: Callable[[], AnthropicGenerator] = AnthropicGenerator.from_environment,
     out: TextIO = sys.stdout,
+    kb_version: Callable[[], str] = active_kb_version,
 ) -> int:
     def say(line: str = "") -> None:
         print(line, file=out)
 
     try:
         generator = make_generator()
-        retriever = open_index(SMOKE_KB_VERSION)
+        version = kb_version()
+        retriever = open_index(version)
         titles = code_titles(retriever.kb_info())
     except (ConfigError, RetrievalError) as e:
         say(f"error: {e}")
@@ -56,7 +58,7 @@ def main(
     chunks = retrieve(retriever, question, titles)
     read = read_articles(retriever, chunks)
     say(f"question:   {question}")
-    say(f"kb_version: {SMOKE_KB_VERSION}")
+    say(f"kb_version: {version}")
     say(f"model:      {generator.model_id}")
     say("chunks:     " + ", ".join(f"{c.chunk_id} ({c.similarity_score:.3f})" for c in chunks))
     say("reading:    " + ", ".join(c.chunk_id for c in read))
