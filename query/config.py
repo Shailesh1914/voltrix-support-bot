@@ -8,6 +8,9 @@ Two kinds of setting:
 - Local settings: read from .env (or the process environment) by
   load_settings(). These say where things are, never how the bot
   decides.
+- The active KB version: read ONLY from the committed one-line file
+  data/ACTIVE_KB_VERSION (spec 07). Setting ACTIVE_KB_VERSION in .env
+  or the environment is refused, so there is one source only.
 """
 
 import os
@@ -52,12 +55,15 @@ UNITS = (
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 ENV_FILE = REPO_ROOT / ".env"
-DEFAULT_KB_VERSION = "v1"
+ACTIVE_KB_VERSION_FILE = REPO_ROOT / "data" / "ACTIVE_KB_VERSION"
 DEFAULT_HANDOFF_PATH = REPO_ROOT / "handoffs" / "handoffs.jsonl"
 KB_VERSION_PATTERN = re.compile(r"v[0-9]+")
 
 # Spec values that must never come from .env (one place only).
 SPEC_ONLY_NAMES = ("ESCALATION_THRESHOLD", "MODEL_ID")
+
+# Spec 07: the served version comes only from ACTIVE_KB_VERSION_FILE.
+KB_VERSION_NAME = "ACTIVE_KB_VERSION"
 
 
 class ConfigError(Exception):
@@ -74,20 +80,72 @@ class Settings:
     aws_region: str | None = None
 
 
+def _env_values(env_file: Path | str | None, environ: dict[str, str] | None) -> dict[str, str]:
+    """env_file's values, overridden by environ (default os.environ)."""
+    values: dict[str, str] = {}
+    if env_file is not None and Path(env_file).is_file():
+        values.update({k: v for k, v in dotenv_values(env_file).items() if v is not None})
+    values.update(os.environ if environ is None else environ)
+    return values
+
+
+def _refuse_kb_version_setting(values: dict[str, str]) -> None:
+    if KB_VERSION_NAME in values:
+        raise ConfigError(
+            f"{KB_VERSION_NAME} must not be set in .env or the environment; the "
+            f"active KB version is read only from {ACTIVE_KB_VERSION_FILE} (spec 07)"
+        )
+
+
+def read_active_kb_version(path: Path | str = ACTIVE_KB_VERSION_FILE) -> str:
+    """The KB version in the one-line pointer file (spec 07).
+
+    Surrounding whitespace is ignored; the value must look like 'v1'.
+    A missing, unreadable or invalid file fails loudly.
+    """
+    path = Path(path)
+    try:
+        text = path.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        raise ConfigError(
+            f"the active KB version file {path} does not exist (spec 07); "
+            "it must contain one line such as 'v1'"
+        ) from None
+    except (OSError, UnicodeDecodeError) as e:
+        raise ConfigError(f"cannot read the active KB version file {path}: {e}") from None
+    version = text.strip()
+    if not KB_VERSION_PATTERN.fullmatch(version):
+        raise ConfigError(
+            f"the active KB version file {path} must contain one version such "
+            f"as 'v1', got {version!r}"
+        )
+    return version
+
+
+def active_kb_version(
+    env_file: Path | str | None = ENV_FILE,
+    environ: dict[str, str] | None = None,
+    kb_version_file: Path | str = ACTIVE_KB_VERSION_FILE,
+) -> str:
+    """The served KB version: refuses an .env/environment setting for it,
+    then reads kb_version_file (spec 07)."""
+    _refuse_kb_version_setting(_env_values(env_file, environ))
+    return read_active_kb_version(kb_version_file)
+
+
 def load_settings(
     env_file: Path | str | None = ENV_FILE,
     environ: dict[str, str] | None = None,
+    kb_version_file: Path | str = ACTIVE_KB_VERSION_FILE,
 ) -> Settings:
-    """Read local settings from env_file, overridden by environ.
+    """Read local settings from env_file, overridden by environ, and the
+    active KB version from kb_version_file (spec 07).
 
     environ defaults to os.environ. Neither is modified. AWS keys are
     never read: boto3 finds them through AWS_PROFILE. The Anthropic API
     key is never read here either (query/anthropic_api.py).
     """
-    values: dict[str, str] = {}
-    if env_file is not None and Path(env_file).is_file():
-        values.update({k: v for k, v in dotenv_values(env_file).items() if v is not None})
-    values.update(os.environ if environ is None else environ)
+    values = _env_values(env_file, environ)
 
     for name in SPEC_ONLY_NAMES:
         if name in values:
@@ -95,15 +153,12 @@ def load_settings(
                 f"{name} must not be set in .env or the environment; it is a "
                 "constant in query/config.py, checked against spec 02"
             )
+    _refuse_kb_version_setting(values)
 
     def optional(name: str) -> str | None:
         return values.get(name, "").strip() or None
 
-    kb_version = values.get("ACTIVE_KB_VERSION", "").strip() or DEFAULT_KB_VERSION
-    if not KB_VERSION_PATTERN.fullmatch(kb_version):
-        raise ConfigError(
-            f"ACTIVE_KB_VERSION must look like 'v1', got {kb_version!r}"
-        )
+    kb_version = read_active_kb_version(kb_version_file)
 
     handoff_path = Path(values.get("HANDOFF_PATH", "").strip() or DEFAULT_HANDOFF_PATH)
     if not handoff_path.is_absolute():

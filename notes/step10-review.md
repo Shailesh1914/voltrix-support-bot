@@ -95,7 +95,6 @@ Only T-039 changed (fail -> pass in all 3 runs).
 4. kb_v3: symptoms (T-102), wording (T-101), WARNING lines.
 5. New "statement without a question" tickets.
 
-- CI: first structural-tests run passed on GitHub (2026-10-18).
 
 ## Step 11: CI (completed 2026-10-31)
 - Structural tests and evaluation gate run on GitHub Actions (spec 06).
@@ -114,3 +113,4 @@ Only T-039 changed (fail -> pass in all 3 runs).
   on a different machine two weeks later.
 - Security check before going public: history searched for keys;
   all matches were test fixtures. Unused AWS access key deactivated.
+- CI: first structural-tests run passed on GitHub (2026-10-18).

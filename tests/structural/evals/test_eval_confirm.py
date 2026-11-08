@@ -228,8 +228,8 @@ def test_threshold_is_read_when_the_command_runs(monkeypatch):
 def test_mutation_real_run_ignoring_the_threshold_is_caught(bench, monkeypatch, capsys):
     real_build = run_eval.build_flow
 
-    def ignores_threshold(retriever, generator, store, threshold=run_eval.NO_ESCALATION_THRESHOLD):
-        return real_build(retriever, generator, store)  # -1.0 instead of the config value
+    def ignores_threshold(retriever, generator, store, kb_version, threshold=run_eval.NO_ESCALATION_THRESHOLD):
+        return real_build(retriever, generator, store, kb_version)  # -1.0 instead of the config value
 
     monkeypatch.setattr(run_eval, "build_flow", ignores_threshold)
     assert bench.run("--confirm") == run_eval.EXIT_MISMATCH == 3
@@ -443,3 +443,28 @@ def test_names():
     assert ec.confirm_name("whole-articles", 0.605) == "part-c-whole-articles-confirm-t0.605"
     with pytest.raises(EvalError):
         pb.check_label("confirm")
+
+
+# --- KB version (spec 07) ------------------------------------------------------------
+
+
+def test_confirm_refuses_when_the_bot_serves_another_version_than_the_runs(bench, active_kb_file, capsys):
+    # The 3 runs were made on v1 (the conftest's pointer file); the bot now serves v2.
+    active_kb_file.write_text("v2\n", encoding="utf-8")
+    assert bench.run() == 1
+    err = capsys.readouterr().err
+    assert "the Part B runs used kb v1, but the bot serves 'v2'" in err
+    assert bench.generators == 0 and bench.new_files() == []
+
+
+def test_confirm_on_the_runs_version_names_it(bench, capsys):
+    assert bench.run("--confirm") == 0
+    assert "kb v1 (from data/ACTIVE_KB_VERSION)" in capsys.readouterr().out
+    data = bench.data()
+    assert (data["kb_version"], data["kb_version_source"]) == ("v1", "data/ACTIVE_KB_VERSION")
+
+
+def test_confirm_has_no_kb_option(bench):
+    with pytest.raises(SystemExit) as e:
+        bench.run("--kb", "v1")
+    assert e.value.code == 2

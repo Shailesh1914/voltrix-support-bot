@@ -88,6 +88,24 @@ def ticket_differences(row_a: dict, row_a2: dict) -> tuple[list[dict], float, li
     return diffs, score_diff, info
 
 
+def part_a2_not_comparable(part_a: dict, a2_path: Path | str = PART_A2_REPORT) -> str | None:
+    """Why the Part A2 comparison does not apply to this Part A, or None.
+
+    Part A2 was simulated once, on one KB version and one ticket file. Part
+    A on another version (spec 07 step 3: --kb) or after a label review
+    (spec 05 v1.8) has nothing to compare with, so the report says why
+    instead of refusing. Everything else that makes the reports
+    incomparable (an unreadable report, other tickets) still refuses in
+    compare_with_part_a2()."""
+    a2 = load_part_a2(a2_path)
+    reasons = []
+    if a2.get("kb_version") != part_a["kb_version"]:
+        reasons.append(f"Part A2 was simulated on kb {a2.get('kb_version')!r}, this Part A used kb {part_a['kb_version']!r}")
+    if a2.get("ticket_file_sha256") != part_a["ticket_file_sha256"]:
+        reasons.append("Part A2 was made from an earlier ticket file (SHA-256 differs; labels were reviewed since)")
+    return "; ".join(reasons) or None
+
+
 def compare_with_part_a2(part_a: dict, a2_path: Path | str = PART_A2_REPORT) -> dict:
     """part_a is the Part A data including ticket_file_sha256.
 

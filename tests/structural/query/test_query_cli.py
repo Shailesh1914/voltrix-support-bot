@@ -12,7 +12,7 @@ import sys
 import pytest
 
 from query import ask, config
-from query.config import ConfigError, Settings
+from query.config import ConfigError, Settings, load_settings
 from query.flow import QueryFlow
 from query.generator import FakeGenerator
 from query.handoff import JsonlHandoffStore, missing_fields
@@ -132,6 +132,70 @@ def test_build_flow_wires_config_settings_index_and_anthropic(monkeypatch, tmp_p
     assert flow._generator is fake_generator
     assert flow._handoff_store.path == settings.handoff_path
     assert flow._kb_version == "v2"
+
+
+# --- Spec 07: build_flow serves the version in data/ACTIVE_KB_VERSION ----------------
+
+
+def test_build_flow_reads_the_pointer_file_by_default():
+    assert ask.load_settings is load_settings
+    assert load_settings.__defaults__[-1] == config.ACTIVE_KB_VERSION_FILE
+
+
+@pytest.fixture
+def pointer_flow(monkeypatch, tmp_path, fake_retriever, memory_store):
+    """build_flow() with real load_settings() over a temporary pointer file
+    and .env; returns (build, opened versions)."""
+
+    def _setup(pointer_text, env_text="AWS_PROFILE=p\n", environ=None):
+        pointer = tmp_path / "data" / "ACTIVE_KB_VERSION"
+        pointer.parent.mkdir(exist_ok=True)
+        pointer.write_text(pointer_text, encoding="utf-8")
+        env_file = tmp_path / ".env"
+        env_file.write_text(env_text, encoding="utf-8")
+        opened = []
+
+        def fake_open(version):
+            opened.append(version)
+            return fake_retriever(kb_version=version)
+
+        monkeypatch.setattr(config, "ESCALATION_THRESHOLD", 0.42)  # test value only
+        monkeypatch.setattr(
+            ask, "load_settings",
+            lambda: load_settings(env_file=env_file, environ=environ or {}, kb_version_file=pointer),
+        )
+        monkeypatch.setattr(ask, "open_retrieval", fake_open)
+        monkeypatch.setattr(ask.AnthropicGenerator, "from_environment", lambda: FakeGenerator(ANSWER))
+        monkeypatch.setattr(ask, "JsonlHandoffStore", lambda path: memory_store)
+        return ask.build_flow, opened
+
+    return _setup
+
+
+def test_build_flow_and_handoff_use_the_pointer_version(pointer_flow, memory_store):
+    build, opened = pointer_flow("\n v2 \n")
+    flow = build()
+    assert opened == ["v2"] and flow._kb_version == "v2"
+    flow.ask("E-33 on start")  # unknown code: escalates, records a handoff
+    (record,) = memory_store.records
+    assert record.kb_version == "v2"
+
+
+@pytest.mark.parametrize(
+    "pointer_text, env_text, environ",
+    [
+        ("v9.1\n", "", None),
+        ("v2\n", "ACTIVE_KB_VERSION=v2\n", None),
+        ("v2\n", "", {"ACTIVE_KB_VERSION": "v1"}),
+    ],
+    ids=["invalid pointer", "set in .env", "set in environment"],
+)
+def test_main_refuses_to_start_on_bad_version_source(pointer_flow, capsys, pointer_text, env_text, environ):
+    build, opened = pointer_flow(pointer_text, env_text, environ)
+    assert ask.main(["q"], build=build) == ask.EXIT_STARTUP_FAILED
+    captured = capsys.readouterr()
+    assert captured.out == "" and "ACTIVE_KB_VERSION" in captured.err
+    assert opened == []
 
 
 def test_api_key_checked_before_index_is_opened(monkeypatch, tmp_path):

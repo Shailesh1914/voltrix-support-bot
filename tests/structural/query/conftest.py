@@ -49,6 +49,23 @@ def clean_sdk_environment(monkeypatch):
         monkeypatch.delenv(name, raising=False)
 
 
+REAL_KB_VERSION_FILE = REPO_ROOT / "data" / "ACTIVE_KB_VERSION"
+
+
+@pytest.fixture(autouse=True)
+def no_real_kb_version_file(monkeypatch):
+    """Spec 07 tests use temporary pointer files: reading the real
+    data/ACTIVE_KB_VERSION from a query test fails."""
+    real_read_text = Path.read_text
+
+    def guarded(self, *args, **kwargs):
+        if Path(self).resolve() == REAL_KB_VERSION_FILE.resolve():
+            raise AssertionError("a query test read the real data/ACTIVE_KB_VERSION")
+        return real_read_text(self, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "read_text", guarded)
+
+
 @pytest.fixture
 def no_network(monkeypatch):
     """Every socket connection fails (generator tests use it)."""

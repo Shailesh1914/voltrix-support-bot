@@ -27,7 +27,8 @@ EXIT_STARTUP_FAILED = 2
 
 
 def build_flow() -> QueryFlow:
-    """The real bot: config threshold, ACTIVE_KB_VERSION index, Anthropic API.
+    """The real bot: config threshold, the index of the version in
+    data/ACTIVE_KB_VERSION (spec 07), Anthropic API.
 
     The threshold is checked first, so nothing is loaded while it is unset.
     The API key is checked before the (slower) index is opened.

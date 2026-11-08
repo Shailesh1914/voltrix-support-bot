@@ -1,6 +1,6 @@
 # Query and Escalation Spec — Voltrix VX-200 Support Bot
 
-Status: Version 1.15, approved by Shailesh on 2026-10-18
+Status: Version 1.16, approved by Shailesh on 2026-11-01
 
 ## Goal
 Given one user question, retrieve relevant chunks, generate an answer
@@ -13,8 +13,11 @@ ONLY place an escalation decision is made.
 - One question as text. No conversation memory (one question at a time).
 
 ## Configuration
-- ACTIVE_KB_VERSION: the KB version served (default v1). The handoff
-  records it. Index promotion (Step 12) changes it.
+- Active KB version: read ONLY from the committed file
+  data/ACTIVE_KB_VERSION (spec 07). Not a .env setting; the bot
+  refuses to start if ACTIVE_KB_VERSION is set in .env or the
+  environment. The handoff records it. Promotion and rollback
+  change this file through a pull request (spec 07).
 - ESCALATION_THRESHOLD: see below.
 - AWS_PROFILE and AWS_REGION are optional. They are needed only if
   the (currently unused) Bedrock generator is selected.
@@ -141,7 +144,7 @@ Every escalation creates a handoff record for the human queue with:
 - the question (as received, and after normalisation), masked
 - all retrieved chunks: chunk_id, article_id, text, similarity_score
 - the escalation_reason
-- the kb_version used (ACTIVE_KB_VERSION)
+- the kb_version used (from data/ACTIVE_KB_VERSION, spec 07)
 - rejected_answer and failed_check (filled only when a check stops
   an answer; see Implementation decision 11)
 So the human agent never starts cold.

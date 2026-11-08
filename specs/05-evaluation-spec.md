@@ -1,6 +1,6 @@
 # Evaluation Spec — Voltrix VX-200 Support Bot
 
-Status: Version 1.9, approved by Shailesh on 2026-10-18
+Status: Version 1.10, approved by Shailesh on 2026-11-01
 
 ## Purpose
 Measure spec 02 acceptance criteria 1-2 and metrics, and produce
@@ -40,6 +40,14 @@ diversity):
   3d). The comparison with the Part A2 simulation compares article
   ids, recall and top score, not chunk ids (since spec 02 v1.14 the
   model reads whole articles).
+- Version (spec 07): Part A evaluates the active version from
+  data/ACTIVE_KB_VERSION, or a version given with --kb (for example
+  --kb v2, to compare a new version before promoting it). The report
+  names the version and where it came from, and its file name
+  includes it (<date>-part-a-retrieval-kb-vN).
+- The comparison with the Part A2 simulation applies only when the
+  KB version and the ticket file match Part A2's. Otherwise the report states that it was not compared with the Part A2 simulation, and why (for example a different KB version
+  or reviewed labels), and Part A exits 0. Other differences (such as different ticket ids) still refuse.
 
 ## Part A2: Retrieval experiments (no model calls)
 Status: completed 2026-10-17; E1+E2+E3 adopted (spec 02 v1.12-v1.13,
@@ -61,6 +69,7 @@ and full sets, compared with the baseline. Choose using the
 calibration set; the holdout set must confirm the improvement.
 Adopting an experiment is a spec 02 change, approved by Shailesh.
 
+
 ## Part B: Full-flow run (real model)
 - Every ticket goes through QueryFlow with threshold -1.0, so the
   retrieval check never escalates and every model decision is
@@ -72,6 +81,9 @@ Adopting an experiment is a spec 02 change, approved by Shailesh.
 - Part B runs 3 times. The WORST result is used (spec 02).
   Tickets whose outcome differs between runs are listed as unstable.
 - Any service_error makes that run invalid; it must be re-run.
+- Version (spec 07): Part B and the CI gate evaluate the version in
+  data/ACTIVE_KB_VERSION, read once through the bot's own reader.
+  There is no option to choose another version.
 
 ## Part C: Threshold sweep (no extra model calls)
 - For each candidate threshold t from 0.50 to 0.90 in steps of
@@ -83,6 +95,8 @@ Adopting an experiment is a spec 02 change, approved by Shailesh.
   choose the threshold; Shailesh does.
 - After the threshold is chosen, one confirmation run of the real
   flow at that threshold checks the simulation matched.
+- The confirmation refuses if the active version differs from the
+  version its Part B runs were made on.
 
 ## Scoring
 - AC1 (target 85%): an "answer" ticket counts if the response is

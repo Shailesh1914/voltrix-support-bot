@@ -12,7 +12,7 @@ import pytest
 
 from query import smoke
 from query.anthropic_api import AnthropicGenerator, make_client
-from query.config import ConfigError, MODEL_ID
+from query.config import ConfigError, MODEL_ID, active_kb_version
 
 pytestmark = pytest.mark.usefixtures("no_network")
 
@@ -40,7 +40,7 @@ def run(fake_retriever, make_chunk):
     """smoke.main() over a fake index and a faked API; returns
     (exit code, printed text, API requests, opened versions, search calls)."""
 
-    def _run(api_reply=None, make_generator=None):
+    def _run(api_reply=None, make_generator=None, kb_version=lambda: "v1"):
         requests, opened = [], []
         status, body = api_reply or reply()
 
@@ -61,15 +61,50 @@ def run(fake_retriever, make_chunk):
             return AnthropicGenerator(make_client(KEY, httpx2.Client(transport=httpx2.MockTransport(handler))))
 
         out = io.StringIO()
-        code = smoke.main(open_index=open_index, make_generator=make_generator or default_generator, out=out)
+        code = smoke.main(
+            open_index=open_index, make_generator=make_generator or default_generator, out=out, kb_version=kb_version
+        )
         return code, out.getvalue(), requests, opened, retriever.queries
 
     return _run
 
 
-def test_fixed_question_and_kb_version():
+def test_fixed_question():
     assert smoke.SMOKE_QUESTION == "E-01 when the motor ramps up, what do I check?"
-    assert smoke.SMOKE_KB_VERSION == "v1"
+
+
+# --- Spec 07: the smoke test uses the version in data/ACTIVE_KB_VERSION ----------
+
+
+def test_kb_version_default_is_the_pointer_file():
+    assert smoke.main.__defaults__[3] is active_kb_version
+    assert not hasattr(smoke, "SMOKE_KB_VERSION")
+
+
+def test_opens_and_prints_the_pointer_files_version(run, tmp_path):
+    pointer = tmp_path / "ACTIVE_KB_VERSION"
+    pointer.write_text(" v2\n", encoding="utf-8")
+    code, text, _, opened, _ = run(kb_version=lambda: active_kb_version(env_file=None, environ={}, kb_version_file=pointer))
+    assert code == 0
+    assert opened == ["v2"]
+    assert "kb_version: v2\n" in text
+
+
+@pytest.mark.parametrize("setup", ["missing", "invalid", "env"])
+def test_bad_kb_version_exits_2_before_index_or_call(run, tmp_path, setup):
+    pointer = tmp_path / "ACTIVE_KB_VERSION"
+    environ = {}
+    if setup == "invalid":
+        pointer.write_text("kb_v2\n", encoding="utf-8")
+    elif setup == "env":
+        pointer.write_text("v1\n", encoding="utf-8")
+        environ = {"ACTIVE_KB_VERSION": "v1"}
+    code, text, requests, opened, _ = run(
+        kb_version=lambda: active_kb_version(env_file=None, environ=environ, kb_version_file=pointer)
+    )
+    assert code == smoke.EXIT_STARTUP_FAILED
+    assert text.startswith("error: ") and "ACTIVE_KB_VERSION" in text
+    assert (requests, opened) == ([], [])
 
 
 def test_one_call_to_the_generator_with_real_shaped_chunks(run, spec_retrieval):

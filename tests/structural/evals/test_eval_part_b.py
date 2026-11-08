@@ -99,7 +99,7 @@ DEFAULT_SCRIPT = dict(
 def run_with(tickets, fake_retriever, script=None, max_calls=pb.MAX_MODEL_CALLS):
     client = FakeClient(script or by_question(**DEFAULT_SCRIPT))
     generator = pb.UsageRecordingGenerator(AnthropicGenerator(client), max_calls=max_calls)
-    outcome = run_eval.part_b(tickets, fake_retriever(), generator)
+    outcome = run_eval.part_b(tickets, fake_retriever(), generator, "v1")
     return outcome, client, generator
 
 
@@ -201,7 +201,7 @@ def test_part_b_handoffs_stay_in_memory_and_are_complete(tickets, fake_retriever
 def test_part_b_threshold_minus_one_reaches_the_model(make_ticket, fake_retriever):
     client = FakeClient(by_question())
     generator = pb.UsageRecordingGenerator(AnthropicGenerator(client))
-    outcome = run_eval.part_b([make_ticket("T-001")], fake_retriever(lambda q: [("KB-001", -0.5)]), generator)
+    outcome = run_eval.part_b([make_ticket("T-001")], fake_retriever(lambda q: [("KB-001", -0.5)]), generator, "v1")
     assert outcome.rows[0]["model_called"] is True and outcome.rows[0]["status"] == "answered"
 
 
@@ -268,7 +268,7 @@ def test_request_settings_come_from_the_generator():
 
 
 def test_plan_counts_calls_and_estimates_cost(tickets, fake_retriever):
-    plan, _ = run_eval.part_b_plan(tickets, fake_retriever())
+    plan, _ = run_eval.part_b_plan(tickets, fake_retriever(), "v1")
     assert plan["tickets"] == 4 and plan["planned_model_calls"] == 3  # T-003 stops before the model
     assert plan["within_limit"] is True
     assert plan["estimated_input_tokens"] > 3 * pb.ESTIMATE_TOOL_OVERHEAD_TOKENS
@@ -558,7 +558,7 @@ def test_answered_ticket_keeps_the_step_d_top_score_not_the_read_chunks(tickets,
 
 
 def test_planning_pass_holds_every_tickets_step_d_chunks(tickets, fake_retriever):
-    _, retrieval = run_eval.part_b_plan(tickets, fake_retriever())
+    _, retrieval = run_eval.part_b_plan(tickets, fake_retriever(), "v1")
     assert set(retrieval) == {"T-001", "T-002", "T-003", "T-004"}
     assert retrieval["T-001"].chunks == (("KB-001#c1", "KB-001", 0.80), ("KB-020#c2", "KB-020", 0.60))
     assert "E-01" in retrieval["T-001"].question_normalised
@@ -589,10 +589,10 @@ class DriftingRetriever:
 def test_a_paid_handoff_that_differs_from_the_planning_pass_makes_the_run_invalid(tickets, fake_retriever):
     # 5 searches in the planning pass (T-001 has a code boost); then drift.
     retriever = DriftingRetriever(fake_retriever, after_searches=5)
-    _, retrieval = run_eval.part_b_plan(tickets, retriever)
+    _, retrieval = run_eval.part_b_plan(tickets, retriever, "v1")
     client = FakeClient(by_question(**DEFAULT_SCRIPT))
     generator = pb.UsageRecordingGenerator(AnthropicGenerator(client))
-    outcome = run_eval.part_b(tickets, retriever, generator, retrieval)
+    outcome = run_eval.part_b(tickets, retriever, generator, "v1", retrieval)
     # T-001 is answered: its scores are not in a handoff, so it cannot be
     # compared; T-002 escalates and its handoff shows the drift.
     assert outcome.stopped["ticket_id"] == "T-002"
@@ -619,8 +619,8 @@ def test_the_model_must_read_exactly_the_step_d_articles(make_ticket, make_chunk
 
 
 def test_dry_run_estimate_grows_with_the_articles_read(tickets, fake_retriever):
-    small, _ = run_eval.part_b_plan(tickets, fake_retriever(chunks_per_article=1))
-    large, _ = run_eval.part_b_plan(tickets, fake_retriever(chunks_per_article=6))
+    small, _ = run_eval.part_b_plan(tickets, fake_retriever(chunks_per_article=1), "v1")
+    large, _ = run_eval.part_b_plan(tickets, fake_retriever(chunks_per_article=6), "v1")
     assert (small["chunks_read"], large["chunks_read"]) == (6, 36)
     assert small["articles_read"] == large["articles_read"] == 6
     assert large["estimated_input_tokens"] > small["estimated_input_tokens"] + 30 * 40 // pb.ESTIMATE_CHARS_PER_TOKEN
@@ -629,7 +629,7 @@ def test_dry_run_estimate_grows_with_the_articles_read(tickets, fake_retriever):
 
 
 def test_plan_lines_show_what_the_model_reads(tickets, fake_retriever):
-    plan, _ = run_eval.part_b_plan(tickets, fake_retriever())
+    plan, _ = run_eval.part_b_plan(tickets, fake_retriever(), "v1")
     lines = "\n".join(pb.plan_lines(plan))
     assert "model reads (total):  6 whole articles, 18 chunks (avg 6.0 chunks per call)" in lines
     assert f"(largest call {plan['max_estimated_input_tokens_per_call']:,})" in lines
@@ -710,3 +710,53 @@ def test_evals_code_id_changes_with_evals_py_only(tmp_path):
     second = pb.code_trees(tmp_path)
     assert second["evals/*.py"] != first["evals/*.py"]
     assert (second["query"], second["ingestion"]) == (first["query"], first["ingestion"])
+
+
+# --- KB version: data/ACTIVE_KB_VERSION only (spec 07) ------------------------------
+# The conftest's temporary pointer file stands in for data/ACTIVE_KB_VERSION.
+
+
+def spy_open(monkeypatch, fake_retriever):
+    opened = []
+
+    def open_retrieval(kb_version):
+        opened.append(kb_version)
+        return fake_retriever(kb_version=kb_version)
+
+    monkeypatch.setattr(ingestion, "open_retrieval", open_retrieval)
+    return opened
+
+
+def test_part_b_evaluates_the_version_in_the_pointer_file(command, active_kb_file, monkeypatch, fake_retriever,
+                                                          capsys):
+    opened = spy_open(monkeypatch, fake_retriever)
+    active_kb_file.write_text("v2\n", encoding="utf-8")
+    assert command.run("--confirm") == 0
+    assert "on kb v2 (from data/ACTIVE_KB_VERSION)" in capsys.readouterr().out
+    assert opened == ["v2"]
+    data = json.loads((command.reports / "2026-10-18-part-b-whole-articles-run1.json").read_text(encoding="utf-8"))
+    assert (data["kb_version"], data["kb_version_source"]) == ("v2", "data/ACTIVE_KB_VERSION")
+    handoffs = (command.reports / data["handoffs_file"]).read_text(encoding="utf-8").splitlines()
+    assert handoffs and {json.loads(line)["kb_version"] for line in handoffs} == {"v2"}
+
+
+def test_part_b_dry_run_follows_the_pointer_file(command, active_kb_file, monkeypatch, fake_retriever, capsys):
+    opened = spy_open(monkeypatch, fake_retriever)
+    active_kb_file.write_text("v3", encoding="utf-8")
+    assert command.run() == 0
+    assert "on kb v3 (from data/ACTIVE_KB_VERSION)" in capsys.readouterr().out
+    assert opened == ["v3"]
+
+
+def test_part_b_has_no_kb_option(command):
+    with pytest.raises(SystemExit) as e:
+        command.run("--kb", "v2")
+    assert e.value.code == 2
+
+
+def test_part_b_refuses_an_active_kb_version_setting(command, monkeypatch, fake_retriever, capsys):
+    opened = spy_open(monkeypatch, fake_retriever)
+    monkeypatch.setenv("ACTIVE_KB_VERSION", "v2")
+    assert command.run() == 1
+    assert "ACTIVE_KB_VERSION must not be set" in capsys.readouterr().err
+    assert opened == []

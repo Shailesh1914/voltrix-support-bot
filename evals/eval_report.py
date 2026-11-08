@@ -83,8 +83,16 @@ def histogram(scores: list[float], low: float = 0.50, high: float = 1.00, step: 
     return lines
 
 
+def kb_text(data: dict) -> str:
+    """'v2 (from --kb)'; older reports have no kb_version_source."""
+    source = data.get("kb_version_source")
+    return data["kb_version"] + (f" (from {source})" if source else "")
+
+
 def part_a2_comparison_lines(c: dict) -> list[str]:
     """Part A (real flow) against the committed Part A2 simulation."""
+    if c.get("compared") is False:
+        return ["", "## Against the Part A2 simulation", "", f"Not compared: {c['reason']}."]
     commit = c.get("part_a2_git_commit") or "unknown"
     if c.get("part_a2_git_dirty"):
         commit += " (with uncommitted changes)"
@@ -158,7 +166,7 @@ def part_a_markdown(data: dict) -> str:
         "score among them. Before a model call the flow reads every chunk of",
         "those articles (step 3e); Part A checks it reads exactly those articles.",
         "",
-        f"- KB version: {data['kb_version']}",
+        f"- KB version: {kb_text(data)}",
         f"- Retrieval: {data['retrieval']}",
         *provenance_lines(data),
         f"- Model calls a full-flow run would make: {data['planned_model_calls']} of {len(data['tickets'])} tickets",
@@ -458,7 +466,7 @@ def part_b_provenance_lines(data: dict) -> list[str]:
         f"- Code trees at HEAD: {trees}",
         f"- Model: {data['model_id']}, temperature {data['temperature']}, max output tokens {data['max_output_tokens']}",
         f"- System prompt SHA-256: `{data['system_prompt_sha256']}`",
-        f"- KB version: {data['kb_version']}; threshold {data['threshold']} (evaluation only, passed to the flow)",
+        f"- KB version: {kb_text(data)}; threshold {data['threshold']} (evaluation only, passed to the flow)",
     ]
 
 
@@ -708,7 +716,7 @@ def confirm_markdown(data: dict) -> str:
         + "; evals/*.py changed: " + ("yes (this command)" if code["evals_code_changed_since_runs"] else "no"),
         f"- Model: {data['model_id']}, temperature {data['temperature']}, max output tokens {data['max_output_tokens']}",
         f"- System prompt SHA-256: `{data['system_prompt_sha256']}`",
-        f"- KB version: {data['kb_version']}; threshold {data['threshold']} from {data['threshold_source']}",
+        f"- KB version: {kb_text(data)}; threshold {data['threshold']} from {data['threshold_source']}",
         f"- Handoffs: `{data['handoffs_file']}` ({data['handoff_records']} records)",
         "- Part B runs simulated:",
         *[f"  - `{r['file']}` (SHA-256 `{r['sha256'][:16]}…`)" for r in data["part_b_runs"]],
@@ -865,7 +873,7 @@ def gate_markdown(data: dict) -> str:
         f"- Code trees at HEAD: {trees}",
         f"- Model: {data['model_id']}, temperature {data['temperature']}, max output tokens {data['max_output_tokens']}",
         f"- System prompt SHA-256: `{data['system_prompt_sha256']}`",
-        f"- KB version: {data['kb_version']}; threshold {data['threshold']} from {data['threshold_source']}",
+        f"- KB version: {kb_text(data)}; threshold {data['threshold']} from {data['threshold_source']}",
         f"- Handoffs: `{data['handoffs_file']}` ({data['handoff_records']} records)",
         *usage_lines(data),
     ]

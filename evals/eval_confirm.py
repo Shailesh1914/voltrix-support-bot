@@ -22,6 +22,7 @@ simulation applies to today's bot:
 - the model settings and the system prompt equal the runs';
 - ingestion/ is the same tree, and in query/ only config.py differs
   (the threshold was set after the runs);
+- the bot's KB version (data/ACTIVE_KB_VERSION, spec 07) is the runs';
 - every ticket retrieves exactly the step-d chunks and scores of the runs.
 """
 
@@ -54,6 +55,41 @@ def bot_threshold() -> float:
         return config.require_threshold(config.ESCALATION_THRESHOLD)
     except config.ConfigError as e:
         raise EvalError(f"the bot's threshold is not usable: {e}") from None
+
+
+def bot_kb_version() -> str:
+    """The KB version the real bot serves (spec 07), read as the bot reads
+    it: query/config.py refuses an ACTIVE_KB_VERSION setting in .env or the
+    environment, then reads the one-line file data/ACTIVE_KB_VERSION.
+    Read when called (never cached); callers read it once per command and
+    use that one value throughout. The only KB version reader in evals/:
+    Part B, the confirmation run and the gate use it, and it is Part A's
+    default. The paths are looked up when called, so tests can point them
+    at temporary files."""
+    from query import config
+
+    try:
+        return config.active_kb_version(env_file=config.ENV_FILE, kb_version_file=config.ACTIVE_KB_VERSION_FILE)
+    except config.ConfigError as e:
+        raise EvalError(f"the bot's KB version is not usable: {e}") from None
+
+
+def is_kb_version(text: str) -> bool:
+    """True if text has the form data/ACTIVE_KB_VERSION must hold (e.g. 'v2')."""
+    from query import config
+
+    return bool(config.KB_VERSION_PATTERN.fullmatch(text))
+
+
+def check_kb_version(kb_version: str, run_files: list[dict]) -> None:
+    """The confirmation checks today's bot: its KB version must be the one
+    the Part B runs were made on."""
+    used = {r.get("kb_version") for r in run_files}
+    if used != {kb_version}:
+        raise EvalError(
+            f"the Part B runs used kb {', '.join(sorted(map(str, used)))}, but the bot serves {kb_version!r} "
+            "(data/ACTIVE_KB_VERSION); the sweep does not describe today's bot"
+        )
 
 
 def threshold_text(threshold: float) -> str:

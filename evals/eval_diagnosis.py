@@ -25,6 +25,10 @@ from pathlib import Path
 from evals.eval_experiments import WIDE_K, boost_queries, code_titles, diversify, merge
 from evals.eval_tickets import REPO_ROOT, TICKETS_PATH
 
+# History: this diagnosis was written for the old Part B run 1
+# (2026-10-17-part-b-run1, on kb v1) and is kept as the record of how it
+# was made. v1 is fixed here on purpose and does NOT follow
+# data/ACTIVE_KB_VERSION (spec 07); do not use it to evaluate other versions.
 KB_DIR = REPO_ROOT / "data" / "kb_v1"
 KB_VERSION = "v1"
 TITLE_SEPARATOR = " — "

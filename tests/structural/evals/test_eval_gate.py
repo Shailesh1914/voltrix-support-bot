@@ -116,7 +116,7 @@ def bench(tmp_path, monkeypatch, tickets, fake_retriever):
     ticket_file = write_tickets(tmp_path / "tickets.jsonl", tickets)
     state = SimpleNamespace(script=by_question(**SCRIPT), scores=scores, generators=0, changes=[],
                             out=tmp_path / "gate-report", handoffs=tmp_path / "handoffs", trees=dict(TREES),
-                            flow_thresholds=[], ticket_file=ticket_file)
+                            flow_thresholds=[], flow_kb_versions=[], opened=[], ticket_file=ticket_file)
 
     def make_real_generator():
         state.generators += 1
@@ -127,12 +127,16 @@ def bench(tmp_path, monkeypatch, tickets, fake_retriever):
 
     real_build_flow = run_eval.build_flow
 
-    def spy_build_flow(retriever, generator, store, threshold=run_eval.NO_ESCALATION_THRESHOLD):
+    def spy_build_flow(retriever, generator, store, kb_version, threshold=run_eval.NO_ESCALATION_THRESHOLD):
         state.flow_thresholds.append(threshold)
-        return real_build_flow(retriever, generator, store, threshold)
+        state.flow_kb_versions.append(kb_version)
+        return real_build_flow(retriever, generator, store, kb_version, threshold)
 
-    monkeypatch.setattr(ingestion, "open_retrieval",
-                        lambda kb_version: fake_retriever(scores=lambda q: state.scores(q), kb_version=kb_version))
+    def open_retrieval(kb_version):
+        state.opened.append(kb_version)
+        return fake_retriever(scores=lambda q: state.scores(q), kb_version=kb_version)
+
+    monkeypatch.setattr(ingestion, "open_retrieval", open_retrieval)
     monkeypatch.setattr(run_eval, "make_real_generator", make_real_generator)
     monkeypatch.setattr(run_eval, "HANDOFFS_DIR", state.handoffs)
     monkeypatch.setattr(run_eval, "build_flow", spy_build_flow)
@@ -336,7 +340,7 @@ def test_gate_code_never_names_the_threshold_setting(repo_root):
     assert "ec.bot_threshold" in calls
 
 
-# --- kb_v1 index ------------------------------------------------------------------
+# --- Index of the active version ------------------------------------------------
 
 
 def test_missing_kb_v1_index_fails_clearly(bench, monkeypatch, tmp_path, capsys):
@@ -595,3 +599,95 @@ def test_mutation_split_instead_of_full_set_is_caught(monkeypatch):
     monkeypatch.setattr(gate, "FULL", "calibration")
     with pytest.raises(AssertionError):
         assert gate.decide(data)[0] == 0
+
+
+# --- The KB version comes from data/ACTIVE_KB_VERSION only (spec 07) --------------
+# The conftest points query.config at a temporary pointer file ("v1"); the
+# real data/ACTIVE_KB_VERSION is never read or changed.
+
+
+def test_gate_evaluates_the_version_in_the_pointer_file(bench, active_kb_file, capsys):
+    active_kb_file.write_text("v2\n", encoding="utf-8")
+    assert bench.run("--confirm") == 0
+    assert "kb v2 (from data/ACTIVE_KB_VERSION)" in capsys.readouterr().out
+    assert bench.opened == ["v2"]  # opened once, only that version
+    assert set(bench.flow_kb_versions) == {"v2"}  # planning pass and paid run
+    data = bench.data()
+    assert (data["kb_version"], data["kb_version_source"]) == ("v2", "data/ACTIVE_KB_VERSION")
+    assert "- KB version: v2 (from data/ACTIVE_KB_VERSION)" in bench.md()
+
+
+def test_gate_dry_run_also_follows_the_pointer_file(bench, active_kb_file, capsys):
+    active_kb_file.write_text("v7", encoding="utf-8")
+    assert bench.run() == gate.EXIT_DRY_RUN
+    assert "kb v7 (from data/ACTIVE_KB_VERSION)" in capsys.readouterr().out
+    assert bench.opened == ["v7"] and set(bench.flow_kb_versions) == {"v7"}
+
+
+def test_gate_reads_the_pointer_file_once(bench, monkeypatch):
+    reads = []
+    real = query.config.read_active_kb_version
+    monkeypatch.setattr(query.config, "read_active_kb_version", lambda *a, **k: reads.append(1) or real(*a, **k))
+    assert bench.run("--confirm") == 0
+    assert len(reads) == 1
+
+
+@pytest.mark.parametrize("option", ["--kb", "--kb-version", "--version"])
+def test_gate_has_no_kb_option(bench, option):
+    with pytest.raises(SystemExit) as e:
+        bench.run(option, "v2")
+    assert e.value.code == 2
+    assert bench.opened == []
+
+
+@pytest.mark.parametrize("content, message", [
+    (None, "does not exist"),
+    ("", "must contain one version"),
+    ("v1\nv2\n", "must contain one version"),
+    ("kb_v2", "must contain one version"),
+])
+def test_bad_pointer_file_refuses_before_anything(bench, active_kb_file, capsys, content, message):
+    if content is None:
+        active_kb_file.unlink()
+    else:
+        active_kb_file.write_text(content, encoding="utf-8")
+    assert bench.run("--confirm") == 1
+    err = capsys.readouterr().err
+    assert "the gate cannot run" in err and message in err
+    assert bench.opened == [] and bench.generators == 0 and not bench.out.exists()
+
+
+@pytest.mark.parametrize("where", ["environment", ".env"])
+def test_an_active_kb_version_setting_is_refused_as_by_the_bot(bench, monkeypatch, tmp_path, capsys, where):
+    if where == "environment":
+        monkeypatch.setenv("ACTIVE_KB_VERSION", "v1")
+    else:
+        env = tmp_path / "with-setting.env"
+        env.write_text("ACTIVE_KB_VERSION=v1\n", encoding="utf-8")
+        monkeypatch.setattr(query.config, "ENV_FILE", env)
+    assert bench.run("--confirm") == 1
+    assert "ACTIVE_KB_VERSION must not be set" in capsys.readouterr().err
+    assert bench.opened == [] and bench.generators == 0
+
+
+def test_missing_index_names_the_active_version(bench, active_kb_file, monkeypatch, tmp_path, capsys):
+    from ingestion.retrieval import open_retrieval as real_open
+
+    active_kb_file.write_text("v2\n", encoding="utf-8")
+    monkeypatch.setattr(ingestion, "open_retrieval", lambda v: real_open(v, index_root=tmp_path / "no-indexes"))
+    assert bench.run() == 1
+    err = capsys.readouterr().err
+    assert "the gate needs the kb_v2 index (the version in data/ACTIVE_KB_VERSION)" in err
+    assert "no index for kb_version 'v2'" in err
+
+
+def test_gate_code_has_no_fixed_kb_version(repo_root):
+    """The gate, Part B and confirm get the version only from the one reader
+    (eval_confirm.bot_kb_version); run_eval.py and eval_gate.py name no
+    version literal such as "v1"."""
+    for name in ("eval_gate.py", "run_eval.py"):
+        tree = ast.parse((repo_root / "evals" / name).read_text(encoding="utf-8"))
+        literals = [n.value for n in ast.walk(tree) if isinstance(n, ast.Constant) and isinstance(n.value, str)]
+        assert not [v for v in literals if re.fullmatch(r"(kb_)?v[0-9]+", v)], name
+    tree = ast.parse((repo_root / "evals" / "eval_gate.py").read_text(encoding="utf-8"))
+    assert "ec.bot_kb_version" in [ast.unparse(n.func) for n in ast.walk(tree) if isinstance(n, ast.Call)]
