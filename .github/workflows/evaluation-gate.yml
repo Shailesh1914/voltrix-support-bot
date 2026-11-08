@@ -54,11 +54,13 @@ jobs:
           echo "Gate not needed."
           echo "Evaluation gate: **not needed** (no gate paths changed)." >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Set up Python, model and kb_v1 index
+      # Spec 07: the index of the version in data/ACTIVE_KB_VERSION (as in this
+      # pull request's merge commit), the same version the gate evaluates.
+      - name: Set up Python, model and the active KB version's index
         if: steps.decide.outputs.run == 'true'
         uses: ./.github/actions/setup-bot
         with:
-          kb-folders: data/kb_v1
+          active-kb: "true"
 
       # The bot also refuses these itself (query/anthropic_api.py). This
       # step prints variable names only, never values.

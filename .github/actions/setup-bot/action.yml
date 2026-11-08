@@ -7,7 +7,14 @@ description: >
 inputs:
   kb-folders:
     description: Space-separated knowledge base folders to index, e.g. "data/kb_v1 data/kb_v2"
-    required: true
+    required: false
+    default: ""
+  active-kb:
+    description: >
+      "true" to also index the active version named in data/ACTIVE_KB_VERSION
+      (spec 07), read with the bot's own reader.
+    required: false
+    default: "false"
 
 runs:
   using: composite
@@ -36,12 +43,26 @@ runs:
         path: ~/.cache/huggingface/hub
         key: hf-${{ steps.model.outputs.slug }}-${{ steps.model.outputs.revision }}
 
+    # The active version is read here, after the requirements are installed,
+    # because the reader is the bot's own (query/config.py).
     - name: Build the indexes
       shell: bash
       env:
         KB_FOLDERS: ${{ inputs.kb-folders }}
+        ACTIVE_KB: ${{ inputs.active-kb }}
       run: |
-        for folder in $KB_FOLDERS; do
+        folders="$KB_FOLDERS"
+        if [ "$ACTIVE_KB" = "true" ]; then
+          active=$(python .github/scripts/active_kb_version.py)
+          echo "Active KB (data/ACTIVE_KB_VERSION): $active"
+          echo "Active KB: \`$active\` (data/ACTIVE_KB_VERSION)" >> "$GITHUB_STEP_SUMMARY"
+          folders="$folders $active"
+        fi
+        if [ -z "${folders// /}" ]; then
+          echo "::error::No knowledge base to index: set kb-folders or active-kb"
+          exit 1
+        fi
+        for folder in $folders; do
           echo "Building the index for $folder"
           python -m ingestion.build "$folder"
         done
