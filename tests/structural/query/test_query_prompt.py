@@ -53,6 +53,21 @@ def test_system_prompt_states_the_spec_rules(phrase):
     assert phrase in SYSTEM_PROMPT
 
 
+@pytest.mark.parametrize(
+    "phrase",
+    [
+        # Wording copied from spec 02 v1.17, Implementation decision 15 (revised).
+        "values written in the documents or given by the user",
+        '"double the deceleration time"',
+        '"increase it in steps"',
+        "the instruction as the document states it",
+        "example values the documents do not contain",
+    ],
+)
+def test_decision_15_values_are_never_calculated_or_suggested(phrase):
+    assert phrase in SYSTEM_PROMPT
+
+
 def test_user_message_has_every_chunk_verbatim_in_order(make_chunk):
     chunks = [
         make_chunk("KB-002", n=3, text="Lengthen P-06.\n\nWARNING: wait 5 min."),
@@ -99,12 +114,12 @@ def test_chunk_text_is_not_escaped(make_chunk):
 
 # --- Decision 12: the system prompt is product behaviour -------------------------------
 
-# SHA-256 of SYSTEM_PROMPT (UTF-8) as approved by Shailesh (spec 02 v1.6,
-# commit 5c546dd, with the "Put safety precautions at the start" line).
-# Any change to the
-# prompt fails this test until Shailesh approves it and this value is
-# updated in the same commit.
-APPROVED_SYSTEM_PROMPT_SHA256 = "57a9ae57e9648952a933b60d9785122fb3e5d356b2445ce97bca4da1b09f2ac8"
+# SHA-256 of SYSTEM_PROMPT (UTF-8) as approved by Shailesh (spec 02 v1.17,
+# decision 15 revised: the "Never calculate or suggest values" rule). Previous value
+# (spec 02 v1.6, commit 5c546dd): 57a9ae57e964...2ac8.
+# Any change to the prompt fails this test until Shailesh approves it and
+# this value is updated in the same commit.
+APPROVED_SYSTEM_PROMPT_SHA256 = "3b30bd18c52b2acedb358db658d20dd774306d62eaf0078e73bf4bb3b531c2ec"
 
 
 def test_decision_12_system_prompt_fingerprint():

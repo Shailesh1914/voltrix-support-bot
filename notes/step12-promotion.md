@@ -42,3 +42,17 @@ Both articles: 7/9 on both. No regression.
 - Lowest found-answer score: v1 0.6435, v2 0.6439. The 0.60
   threshold keeps its margin on v2; no flag needed.
 - Chunks read per full run: v1 1,547, v2 1,561 (about 1% more).
+
+## Promotion attempt 1 (PR #5, 2026-11-08): BLOCKED by the gate
+- Gate on kb v2: AC1 40/48 (83.3%), AC2 22/22; on v1: AC1 41/48.
+- Regressed ticket: T-002 (E-02 on deceleration). Failed grounding:
+  the draft said "3 seconds to 6 seconds"; KB-002 says to double the
+  deceleration time. Claude calculated "6 seconds", which is in no
+  article. Citations (KB-002, KB-025) were correct.
+- Cause: a fragile bot habit (same as T-005 since Step 9), exposed by
+  slightly different reading on v2. Not a v2 content error.
+- Fix: prompt rule against calculated values (spec 02 decision 15),
+  tested on v1 first, then the promotion is retried.
+- Cost of the blocked attempt: $0.3861.
+- First rule wording missed suggested example values (local T-005
+  check: "try 15 s or 20 s"). Revised rule: T-005 answered locally.
