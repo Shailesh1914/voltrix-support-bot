@@ -56,3 +56,36 @@ Both articles: 7/9 on both. No regression.
 - Cost of the blocked attempt: $0.3861.
 - First rule wording missed suggested example values (local T-005
   check: "try 15 s or 20 s"). Revised rule: T-005 answered locally.
+
+## Fix and successful promotion (2026-11-09)
+- Prompt rule added (spec 02 decision 15, PR #6): never calculate or
+  suggest values. The first wording missed suggested example values
+  ("try 15 s or 20 s", local T-005 check); the revised wording works.
+- Gate on v1 after the fix (PR #6): AC1 43/48 (89.6%), AC2 22/22
+  (was 41/48). The rule also fixed T-005, failing since Step 9.
+- Promotion retried (PR #5, updated with main): gate on kb v2
+  PASSED, AC1 43/48, AC2 22/22, same as v1. Merged: the bot now
+  serves v2 (data/ACTIVE_KB_VERSION = v2).
+
+## Rollback drill (2026-11-09)
+- Revert of PR #5 opened as PR #7: gate on kb v1 PASSED, AC1 43/48,
+  AC2 22/22 ($0.3838). Closed WITHOUT merging; the bot still serves v2.
+- Rollback = one click on "Revert" + a green gate.
+
+## Spec 07 acceptance criteria: all met
+1. Version read only from data/ACTIVE_KB_VERSION; .env refused.
+2. Gate and Part B evaluate that version (logs show the version).
+3. Changing the file runs the gate (PR #5, PR #7).
+4. Promotion to v2 passed the gate and was merged (PR #5).
+5. Rollback drill passed on v1 and was closed unmerged (PR #7).
+
+## Lessons
+- The paid gate caught a regression (T-002) that the free retrieval
+  check could not see: retrieval was fine, the model's wording
+  changed. Both checks are needed.
+- The regression was not a v2 content error but an existing bot
+  habit (inventing values) exposed by slightly different reading.
+  Fixing the root cause improved v1 too (41 -> 43/48).
+- A cheap local check (one question, under 1 rupee) caught that the
+  first rule wording was too narrow, before a paid gate run.
+- Step 12 model cost: about $1.94 (5 gate runs).
