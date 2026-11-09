@@ -1,6 +1,6 @@
 # Query and Escalation Spec — Voltrix VX-200 Support Bot
 
-Status: Version 1.16, approved by Shailesh on 2026-11-01
+Status: Version 1.17, approved by Shailesh on 2026-11-09
 
 ## Goal
 Given one user question, retrieve relevant chunks, generate an answer
@@ -282,3 +282,13 @@ will be measured by an evaluation designed at Step 9.
     T-027) were wrong because sections were missing; reading whole
     articles addresses that root cause. Content correctness beyond
     criterion 7 is checked in the Step 10 human review.
+15. Values are never calculated (Version 1.17, after the blocked
+    promotion to kb v2, PR #5). When an article tells the reader to
+    change a value by a factor or an amount (for example "double the
+    deceleration time"), the answer gives the instruction as the
+    article states it, and does not work out a new value (for example
+    "3 s to 6 s"). Cause: T-002 failed the grounding check on kb v2
+    with a calculated "6 seconds"; T-005 fails the same way since
+    Step 9 ("15 s or 20 s"). Approved by Shailesh as a prompt change
+    (decision 10); the prompt fingerprint is updated in the same
+    commit.
