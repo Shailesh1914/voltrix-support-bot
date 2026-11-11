@@ -1,7 +1,6 @@
 # Spec 08: Deployment
 
-Version: 1.0
-Status: Draft for review
+Status: Version 1.1, approved by Shailesh on 2026-11-11
 Owner: Shailesh (only the owner changes this file)
 Implemented by: Session Q (web interface), Session D (container, AWS deployment)
 
@@ -25,7 +24,7 @@ This is a learning project. Cost must stay close to zero, and everything must be
 | D1 | Web framework | FastAPI, served by uvicorn |
 | D2 | Endpoints | `GET /`, `GET /health`, `POST /ask` (section 4) |
 | D3 | Access control | Access code in a request header; wrong or missing code is refused before any retrieval or Claude call |
-| D4 | Anthropic key | A new key used only by the deployed bot. Laptop: read from the secrets file outside the project. AWS: read from Parameter Store, Standard tier, SecureString |
+| D4 | Anthropic key | A new key used only by the deployed bot. Laptop: read from the secrets file outside the project, mounted read-only into the container. AWS: read from Parameter Store, Standard tier, SecureString |
 | D5 | Spending limits | Lambda reserved concurrency 2; monthly spend limit on the new Anthropic key set in the Anthropic console (USD 5); AWS budget USD 5 (email warning only) |
 | D6 | AWS credentials | A new IAM user for deployment with only the permissions in section 8. The admin login is not used for deployment |
 | D7 | Container | Python 3.14 (same minor version as the project), CPU-only torch, embedding model and active KB index inside the image |
@@ -46,13 +45,24 @@ This is a learning project. Cost must stay close to zero, and everything must be
 ### 4.2 `POST /ask`
 
 - Header `X-Access-Code` is required.
-- Body JSON: `{"question": "<text>"}`.
+- Body JSON: `{"question": "<text>"}`. Extra fields are ignored.
 - Checks, in this order, before anything else happens:
-  1. Access code missing or wrong → HTTP 401, JSON `{"error": "access denied"}`. The comparison uses a constant-time compare.
-  2. Body not valid JSON, `question` missing, empty after trimming, or longer than 1000 characters → HTTP 400 with a short `error` message.
+  1. Access code missing or wrong → HTTP 401, JSON `{"error": "access denied"}`. The comparison uses a constant-time compare. This check runs before the body is read, so a bad code with a bad body gives 401.
+  2. Body problems → HTTP 400 with exactly these `error` texts:
+
+| Case | `error` |
+|---|---|
+| Body is not valid JSON, or not a JSON object | `invalid request body` |
+| `question` missing | `question is required` |
+| `question` is not a string | `question must be text` |
+| `question` empty after trimming spaces | `question is empty` |
+| `question` longer than 1000 characters (counted as sent, before trimming) | `question is longer than 1000 characters` |
+
 - Then the question goes through the existing query flow (`query/flow.py`), unchanged. The web layer adds no new prompt text, no new checks and no changes to the threshold.
-- Success → HTTP 200 with the same fields the existing flow returns (decision answer or escalate, answer text, citations, handoff id when escalated). Field names are listed in Session Q's tests and must match the flow's result.
-- If the Anthropic call fails after the configured retries → HTTP 503, JSON `{"error": "service temporarily unavailable"}`. No stack trace is returned.
+- Success → HTTP 200 with the flow's result unchanged: `status`, `answer`, `citations`, `escalation_reason`, `handoff_id` (the field names of spec 02 "Output").
+- Anthropic failures are handled by the flow as spec 02 decision 6 says: the result is an escalation with reason `service_error` and a handoff id, returned with HTTP 200. The web layer does not turn this into another status code.
+- Any other unexpected error → HTTP 500, JSON `{"error": "internal error"}`. No stack trace is returned.
+- Every `/ask` response carries an `X-Request-Id` header (a uuid4 made by the app), the same id as in the log line.
 
 ### 4.3 `GET /`
 
@@ -63,34 +73,43 @@ This is a learning project. Cost must stay close to zero, and everything must be
 
 ### 4.4 Logging
 
-- One log line per `/ask` request: request id, decision, latency in milliseconds, HTTP status.
+- One request log line per `/ask` request: request id, decision (`-` for 400, 401 and 500), latency in milliseconds, HTTP status.
+- Uvicorn's own access log is turned off (it would add a second line and the client IP).
+- The existing warning from `query/anthropic_api.py` on an API failure (error class and HTTP status only) is allowed in addition.
 - The question text, the answer text, the access code and the Anthropic key are never logged.
 
 ### 4.5 Handoff records
 
-- Written to the folder named by the environment variable `HANDOFF_DIR` (laptop default: `handoffs/`, already gitignored).
+- When the environment variable `HANDOFF_DIR` is set, handoff records go to the file `handoffs.jsonl` inside that folder. When it is not set, spec 02 decision 8 applies unchanged (`HANDOFF_PATH`, default `handoffs/handoffs.jsonl`). Setting both stops the start-up.
 - On Lambda, `HANDOFF_DIR=/tmp/handoffs`. These files disappear when Lambda recycles the environment. This is accepted for this iteration (section 2).
 
 ### 4.6 Tests (Session Q)
 
 - Use a fake Claude client. No paid calls in structural tests.
 - Expected values (status codes, limits such as 1000 characters, error messages, field names) are taken from this spec, not from the code.
-- Must prove: `/health` works without a code and never calls Claude; a wrong or missing code gives 401 and makes zero Claude calls and zero retrieval calls; the 400 cases; a correct request returns the flow's result unchanged; the 503 case; no secret appears in any response or log line.
+- Must prove: `/health` works without a code and never calls Claude; a wrong or missing code gives 401 and makes zero Claude calls and zero retrieval calls; each 400 case with its exact text; a correct request returns the flow's result unchanged; a service error comes back as a 200 escalation; the 500 case; the start-up rules of section 5; no secret appears in any response or log line.
+- These tests live in `tests/structural/web/` and run in CI (spec 06).
 
 ## 5. Secrets and settings
 
+The setting `VOLTRIX_SECRETS_SOURCE` (not a secret) says where secrets come from: `file` (default) or `parameter_store`. Any other value stops the start-up.
+
 | Setting | Laptop (Stage A) | Lambda (Stage B) |
 |---|---|---|
-| Anthropic key | Secrets file outside the project, passed to the container at run time | Parameter Store SecureString `/voltrix/anthropic-key` |
-| Access code | Secrets file outside the project, passed at run time | Parameter Store SecureString `/voltrix/access-code` |
+| `VOLTRIX_SECRETS_SOURCE` | `file` (or not set) | `parameter_store` |
+| Anthropic key | `VOLTRIX_ANTHROPIC_API_KEY` in the secrets file outside the project, mounted read-only into the container | Parameter Store SecureString `/voltrix/anthropic-key` |
+| Access code | `VOLTRIX_ACCESS_CODE` in the same secrets file | Parameter Store SecureString `/voltrix/access-code` |
 | `IMAGE_TAG` | not set | the image tag |
-| `HANDOFF_DIR` | `handoffs/` | `/tmp/handoffs` |
+| `HANDOFF_DIR` | not set (spec 02 default) | `/tmp/handoffs` |
 
 Rules:
-- The key variable keeps the name the project already uses (never `ANTHROPIC_API_KEY`).
+- The key keeps the project's existing name `VOLTRIX_ANTHROPIC_API_KEY`. Variables starting with `ANTHROPIC_` are refused, in both modes.
+- The laptop container gets the secrets file as a read-only mount, not with `--env-file`, so the values do not show in `docker inspect`.
+- In `parameter_store` mode, the app reads the two parameters once at start-up (with decryption) and keeps them in memory. If the key or the access code is also set as an environment variable, the start-up stops, so secrets never sit in Lambda's environment settings.
 - No secret is written into the image, the Dockerfile, GitHub, CI settings, notes or screenshots.
-- On Lambda, the app reads the two parameters once at start-up (with decryption) and keeps them in memory.
-- The access code is at least 12 characters, chosen by the owner, and changed after the demo.
+- The access code must be at least 12 characters. A shorter code stops the start-up.
+- Start-up errors name the setting that is wrong, never its value.
+- The access code is chosen by the owner and changed after the demo.
 
 ## 6. Container image (Session D)
 
@@ -145,7 +164,7 @@ Stage A, laptop container:
 - AC-D3: `POST /ask` with a wrong code returns 401.
 - AC-D4: For 3 tickets from `evals/support_questions.jsonl` (2 answer, 1 escalate), the container gives the same decision and the same cited articles as `query/ask.py` on the laptop.
 - AC-D5: The container works with the network blocked for the model (no model download at run time).
-- AC-D6: Session Q's structural tests pass in CI, with no skipped tests.
+- AC-D6: The tests in `tests/structural/web/` pass in CI, with no skipped tests (spec 06 v1.2).
 
 Stage B, Lambda:
 - AC-D7: AC-D2, AC-D3 and AC-D4 pass again through the Function URL.
@@ -170,3 +189,4 @@ Expected cost while running: Lambda and Parameter Store Standard stay within fre
 ## 12. Change log
 
 - 1.0 (2026-11-11): first version.
+- 1.1 (2026-11-11): answers to Session Q's Round 1 questions. 503 removed (service errors stay 200 escalations, spec 02 decision 6); exact 400 texts; 500 case; X-Request-Id; logging details; HANDOFF_DIR rule; VOLTRIX_SECRETS_SOURCE; secret names; read-only mount; minimum code length enforced; web tests run in CI.
