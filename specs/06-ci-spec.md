@@ -1,6 +1,6 @@
 # CI Spec — Voltrix VX-200 Support Bot
 
-Status: Version 1.1, approved by Shailesh on 2026-10-18
+Status: Version 1.2, approved by Shailesh on 2026-11-11
 
 ## Goal (Section 2.3)
 Structural tests run on every push. The evaluation gate runs on pull
@@ -18,7 +18,8 @@ requests to main. Nothing reaches main unless both pass.
 - The pinned embedding model is cached between runs.
 - Builds the kb_v1 and kb_v2 indexes, then runs each test folder
   separately: tests/structural/ingestion, tests/structural/query,
-  tests/structural/evals. All must pass; no test may call the model.
+  tests/structural/web, tests/structural/evals. All must pass; no test
+  may call the model.
 
 ## Workflow 2: evaluation gate
 - Runs on pull requests to main ONLY when the pull request changes
