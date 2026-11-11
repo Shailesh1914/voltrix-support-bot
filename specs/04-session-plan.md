@@ -12,9 +12,9 @@ belong to the query side and the human approver only.
 | Session | Owns (may edit) | Implements |
 |---|---|---|
 | I: Ingestion | ingestion/, tests/structural/ingestion/ (incl. its conftest.py), tests/fixtures/ | specs 01 and 03 |
-| Q: Query | query/, tests/structural/query/ (incl. its conftest.py) | spec 02, using spec 03; spec 07 (reading the active version) |
+| Q: Query | query/, web/, tests/structural/query/ (incl. its conftest.py), tests/structural/web/ | spec 02, using spec 03; spec 07 (reading the active version); spec 08 (web interface) |
 | E: Evaluation | evals/*.py, evals/README.md, evals/reports/, tests/structural/evals/ (incl. its conftest.py) | spec 05 (eval runner, threshold calibration report); spec 07 (evaluating the active version) |
-| D: Delivery | .github/, deployment files | spec 06 (CI); spec 07 (CI part); later: deployment |
+| D: Delivery | .github/, Dockerfile, .dockerignore, deploy/ | spec 06 (CI); spec 07 (CI part); spec 08 (container and AWS deployment) |
 
 Shared files (requirements.txt, config): changed only with the
 human's approval, and noted in the session summary.
