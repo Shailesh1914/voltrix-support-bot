@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Voltrix VX-200 support bot</title>
+<style>
+  :root { color-scheme: light dark; --fg: #1d1d1f; --bg: #ffffff; --muted: #5f6368; --line: #d0d4d9; --accent: #1a56db; --warn-bg: #fff4e5; }
+  @media (prefers-color-scheme: dark) {
+    :root { --fg: #e8eaed; --bg: #17181a; --muted: #a0a4a8; --line: #3c4043; --accent: #8ab4f8; --warn-bg: #3a2e1a; }
+  }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 720px; margin: 0 auto; padding: 24px 16px 48px; }
+  h1 { font-size: 1.4rem; margin: 0 0 4px; }
+  .note { color: var(--muted); font-size: 0.9rem; margin: 0 0 24px; }
+  label { display: block; font-weight: 600; margin: 16px 0 4px; }
+  input, textarea { box-sizing: border-box; width: 100%; padding: 8px 10px; font: inherit; color: inherit; background: transparent; border: 1px solid var(--line); border-radius: 6px; }
+  textarea { min-height: 120px; resize: vertical; }
+  .count { color: var(--muted); font-size: 0.85rem; text-align: right; }
+  button { margin-top: 12px; padding: 8px 20px; font: inherit; font-weight: 600; color: #fff; background: var(--accent); border: 0; border-radius: 6px; cursor: pointer; }
+  button:disabled { opacity: 0.6; cursor: wait; }
+  #result { margin-top: 24px; }
+  #answer { white-space: pre-wrap; border-left: 3px solid var(--line); padding: 4px 0 4px 12px; }
+  #result.escalated #answer { border-left-color: #e8a33d; background: var(--warn-bg); padding: 8px 12px; }
+  #status { font-size: 0.85rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+  #citations { padding-left: 20px; }
+  .error { color: #d93025; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Voltrix VX-200 support bot</h1>
+  <p class="note" id="demo-note">Demo bot for a fictional product (Voltrix VX-200). Synthetic data only.</p>
+
+  <label for="access-code">Access code</label>
+  <input id="access-code" type="password" autocomplete="off" spellcheck="false">
+
+  <label for="question">Question</label>
+  <textarea id="question" maxlength="1000"></textarea>
+  <div class="count"><span id="count">0</span> / 1000</div>
+
+  <button id="ask" type="button">Ask</button>
+
+  <section id="result" aria-live="polite" hidden>
+    <div id="status"></div>
+    <div id="answer"></div>
+    <div id="citations-block" hidden>
+      <p><strong>Sources</strong></p>
+      <ul id="citations"></ul>
+    </div>
+  </section>
+</main>
+<script>
+  // The access code is read from the field when Ask is pressed and sent
+  // in a header. It is never stored by the browser: no storage, no cookies.
+  (function () {
+    var codeField = document.getElementById("access-code");
+    var questionField = document.getElementById("question");
+    var button = document.getElementById("ask");
+    var result = document.getElementById("result");
+    var statusEl = document.getElementById("status");
+    var answerEl = document.getElementById("answer");
+    var citationsBlock = document.getElementById("citations-block");
+    var citationsList = document.getElementById("citations");
+
+    questionField.addEventListener("input", function () {
+      document.getElementById("count").textContent = questionField.value.length;
+    });
+
+    function show(statusText, text, citations, escalated, isError) {
+      result.hidden = false;
+      result.className = escalated ? "escalated" : "";
+      statusEl.textContent = statusText;
+      answerEl.textContent = text;
+      answerEl.className = isError ? "error" : "";
+      citationsList.textContent = "";
+      (citations || []).forEach(function (c) {
+        var item = document.createElement("li");
+        item.textContent = c.article_id + " — " + c.title;
+        citationsList.appendChild(item);
+      });
+      citationsBlock.hidden = !(citations && citations.length);
+    }
+
+    button.addEventListener("click", function () {
+      button.disabled = true;
+      show("Asking…", "", [], false, false);
+      fetch("/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Access-Code": codeField.value },
+        body: JSON.stringify({ question: questionField.value }),
+        credentials: "omit",
+        cache: "no-store"
+      }).then(function (response) {
+        return response.json().then(function (data) {
+          if (response.ok) {
+            var escalated = data.status === "escalated";
+            show(escalated ? "Passed to a support engineer" : "Answer", data.answer, data.citations, escalated, false);
+          } else {
+            show("Error " + response.status, data.error || "request failed", [], false, true);
+          }
+        });
+      }).catch(function () {
+        show("Error", "the bot could not be reached", [], false, true);
+      }).then(function () {
+        button.disabled = false;
+      });
+    });
+  })();
+</script>
+</body>
+</html>

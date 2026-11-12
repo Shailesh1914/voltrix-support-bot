@@ -19,23 +19,33 @@ from dataclasses import asdict
 from ingestion import RetrievalError, open_retrieval
 from query import config
 from query.anthropic_api import AnthropicGenerator
-from query.config import ConfigError, load_settings, require_threshold
+from query.config import ConfigError, Settings, load_settings, require_threshold
 from query.flow import QueryFlow
+from query.generator import Generator
 from query.handoff import JsonlHandoffStore
 
 EXIT_STARTUP_FAILED = 2
 
 
-def build_flow() -> QueryFlow:
+def _anthropic_from_environment(settings: Settings) -> Generator:
+    return AnthropicGenerator.from_environment()
+
+
+def build_flow(make_generator: Callable[[Settings], Generator] | None = None) -> QueryFlow:
     """The real bot: config threshold, the index of the version in
     data/ACTIVE_KB_VERSION (spec 07), Anthropic API.
 
     The threshold is checked first, so nothing is loaded while it is unset.
     The API key is checked before the (slower) index is opened.
+
+    make_generator(settings) builds the generator; by default it reads the
+    key as spec 02 says. The web app (spec 08) passes its own, which reads
+    the key from where VOLTRIX_SECRETS_SOURCE says. Everything else is the
+    same for both, so the deployed bot is built exactly like this command.
     """
     threshold = require_threshold(config.ESCALATION_THRESHOLD)
     settings = load_settings()
-    generator = AnthropicGenerator.from_environment()
+    generator = (make_generator or _anthropic_from_environment)(settings)
     return QueryFlow(
         open_retrieval(settings.active_kb_version),
         generator,
