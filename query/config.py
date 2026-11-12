@@ -57,6 +57,9 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 ENV_FILE = REPO_ROOT / ".env"
 ACTIVE_KB_VERSION_FILE = REPO_ROOT / "data" / "ACTIVE_KB_VERSION"
 DEFAULT_HANDOFF_PATH = REPO_ROOT / "handoffs" / "handoffs.jsonl"
+# Spec 08 section 4.5: HANDOFF_DIR names a folder; records go to this file
+# inside it. Without HANDOFF_DIR, HANDOFF_PATH applies (spec 02 decision 8).
+HANDOFF_FILE_NAME = "handoffs.jsonl"
 KB_VERSION_PATTERN = re.compile(r"v[0-9]+")
 
 # Spec values that must never come from .env (one place only).
@@ -160,7 +163,7 @@ def load_settings(
 
     kb_version = read_active_kb_version(kb_version_file)
 
-    handoff_path = Path(values.get("HANDOFF_PATH", "").strip() or DEFAULT_HANDOFF_PATH)
+    handoff_path = _handoff_path(optional("HANDOFF_DIR"), optional("HANDOFF_PATH"))
     if not handoff_path.is_absolute():
         handoff_path = REPO_ROOT / handoff_path
 
@@ -170,6 +173,17 @@ def load_settings(
         aws_profile=optional("AWS_PROFILE"),
         aws_region=optional("AWS_REGION"),
     )
+
+
+def _handoff_path(handoff_dir: str | None, handoff_path: str | None) -> Path:
+    """Where handoff records go (spec 02 decision 8; spec 08 section 4.5)."""
+    if handoff_dir and handoff_path:
+        raise ConfigError(
+            "HANDOFF_DIR and HANDOFF_PATH must not both be set (spec 08 section 4.5)"
+        )
+    if handoff_dir:
+        return Path(handoff_dir) / HANDOFF_FILE_NAME
+    return Path(handoff_path or DEFAULT_HANDOFF_PATH)
 
 
 def require_threshold(threshold: float | None = ESCALATION_THRESHOLD) -> float:

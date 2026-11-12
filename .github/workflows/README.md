@@ -1,8 +1,8 @@
 CI pipeline workflow definitions (spec 06, Session D).
 
 - structural-tests.yml (Workflow 1): every push and pull request. Builds
-  kb_v1 and kb_v2, then runs tests/structural/{ingestion,query,evals}
-  separately. A skipped test fails CI (../scripts/check_no_skips.py).
+  kb_v1 and kb_v2, then runs tests/structural/{ingestion,query,web,evals}
+  separately (spec 06 v1.2). A skipped test fails CI (../scripts/check_no_skips.py).
 - evaluation-gate.yml (Workflow 2): pull requests to main, and manual start.
   Always reports a result. It runs the paid gate only when the PR changes
   query/, ingestion/, data/, evals/, specs/02-query-escalation-spec.md,
