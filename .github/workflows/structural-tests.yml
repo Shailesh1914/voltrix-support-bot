@@ -47,6 +47,12 @@ jobs:
           python -m pytest tests/structural/query -rs --junitxml="$RUNNER_TEMP/junit-query.xml"
           python .github/scripts/check_no_skips.py "$RUNNER_TEMP/junit-query.xml"
 
+      - name: Tests - web
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        run: |
+          python -m pytest tests/structural/web -rs --junitxml="$RUNNER_TEMP/junit-web.xml"
+          python .github/scripts/check_no_skips.py "$RUNNER_TEMP/junit-web.xml"
+
       - name: Tests - evals
         if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
         run: |
