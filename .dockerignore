@@ -1,0 +1,29 @@
+# Build context for the Dockerfile (spec 08 section 6).
+# Everything is left out, then only what the build needs is let back in
+# (Round 2 Q4: nothing that is not needed at run time).
+*
+
+!requirements.txt
+!ingestion/
+!query/
+!web/
+!data/
+!.github/scripts/active_kb_version.py
+!deploy/check_pins.py
+!deploy/check_manifest.py
+
+# Never in the image, even if a rule above is widened later
+# (spec 08 section 6 names the first six).
+.env
+.env.*
+.venv/
+.git/
+handoffs/
+evals/
+notes/
+indexes/
+tests/
+specs/
+**/__pycache__/
+**/*.pyc
+**/.pytest_cache/

@@ -1,6 +1,6 @@
 # Spec 08: Deployment
 
-Status: Version 1.1, approved by Shailesh on 2026-11-11
+Status: Version 1.2, approved by Shailesh on 2026-11-13
 Owner: Shailesh (only the owner changes this file)
 Implemented by: Session Q (web interface), Session D (container, AWS deployment)
 
@@ -24,7 +24,7 @@ This is a learning project. Cost must stay close to zero, and everything must be
 | D1 | Web framework | FastAPI, served by uvicorn |
 | D2 | Endpoints | `GET /`, `GET /health`, `POST /ask` (section 4) |
 | D3 | Access control | Access code in a request header; wrong or missing code is refused before any retrieval or Claude call |
-| D4 | Anthropic key | A new key used only by the deployed bot. Laptop: read from the secrets file outside the project, mounted read-only into the container. AWS: read from Parameter Store, Standard tier, SecureString |
+| D4 | Anthropic key | Stage A (laptop container) uses the existing project key from the secrets file outside the project, mounted read-only into the container. Stage B uses a new key used only by the deployed bot, read from Parameter Store, Standard tier, SecureString |
 | D5 | Spending limits | Lambda reserved concurrency 2; monthly spend limit on the new Anthropic key set in the Anthropic console (USD 5); AWS budget USD 5 (email warning only) |
 | D6 | AWS credentials | A new IAM user for deployment with only the permissions in section 8. The admin login is not used for deployment |
 | D7 | Container | Python 3.14 (same minor version as the project), CPU-only torch, embedding model and active KB index inside the image |
@@ -58,6 +58,8 @@ This is a learning project. Cost must stay close to zero, and everything must be
 | `question` empty after trimming spaces | `question is empty` |
 | `question` longer than 1000 characters (counted as sent, before trimming) | `question is longer than 1000 characters` |
 
+  The checks run in the order of this table; the first one that fails gives the error. So a question of only spaces that is longer than 1000 characters gives `question is empty`.
+
 - Then the question goes through the existing query flow (`query/flow.py`), unchanged. The web layer adds no new prompt text, no new checks and no changes to the threshold.
 - Success → HTTP 200 with the flow's result unchanged: `status`, `answer`, `citations`, `escalation_reason`, `handoff_id` (the field names of spec 02 "Output").
 - Anthropic failures are handled by the flow as spec 02 decision 6 says: the result is an escalation with reason `service_error` and a handoff id, returned with HTTP 200. The web layer does not turn this into another status code.
@@ -70,10 +72,14 @@ This is a learning project. Cost must stay close to zero, and everything must be
 - Plain HTML, CSS and a little JavaScript inside the page. No external scripts or fonts.
 - The page shows a note: "Demo bot for a fictional product (Voltrix VX-200). Synthetic data only."
 - The access code typed in the page is kept only in the page's memory, not stored in the browser.
+- The question box accepts at most 1000 characters.
+- The page is sent with a Content-Security-Policy header that allows nothing from other sites.
+- FastAPI's automatic pages (`/docs`, `/redoc`, `/openapi.json`) are switched off, and so is FastAPI's telemetry.
 
 ### 4.4 Logging
 
 - One request log line per `/ask` request: request id, decision (`-` for 400, 401 and 500), latency in milliseconds, HTTP status.
+- Libraries log at WARNING or above only (the Anthropic library writes the whole question at DEBUG level).
 - Uvicorn's own access log is turned off (it would add a second line and the client IP).
 - The existing warning from `query/anthropic_api.py` on an API failure (error class and HTTP status only) is allowed in addition.
 - The question text, the answer text, the access code and the Anthropic key are never logged.
@@ -81,6 +87,7 @@ This is a learning project. Cost must stay close to zero, and everything must be
 ### 4.5 Handoff records
 
 - When the environment variable `HANDOFF_DIR` is set, handoff records go to the file `handoffs.jsonl` inside that folder. When it is not set, spec 02 decision 8 applies unchanged (`HANDOFF_PATH`, default `handoffs/handoffs.jsonl`). Setting both stops the start-up.
+- The laptop container mounts the project's `handoffs/` folder (gitignored) at `/app/handoffs`, so records stay on the laptop.
 - On Lambda, `HANDOFF_DIR=/tmp/handoffs`. These files disappear when Lambda recycles the environment. This is accepted for this iteration (section 2).
 
 ### 4.6 Tests (Session Q)
@@ -113,14 +120,16 @@ Rules:
 
 ## 6. Container image (Session D)
 
-- Base: an official Python 3.14 slim image, version pinned.
-- Installs the project's pinned dependencies, CPU-only torch, FastAPI, uvicorn and boto3 (pinned versions).
+- Base: `python:3.14.10-slim-trixie`, pinned by digest (the same Python patch version as CI at the time of writing).
+- Installs `requirements.txt` exactly as CI does (CPU-only torch comes from the file itself). Packages that the file does not pin are not pinned separately in this iteration.
+- The image contains `/app/BUILD_INFO.txt`: the output of `pip freeze`, the git commit, whether the working tree was clean, and the build date.
 - The embedding model (BAAI/bge-small-en-v1.5, the pinned revision from spec 01) is downloaded during the image build. At run time the model is loaded from the image only (`HF_HUB_OFFLINE=1`). No downloads at run time.
-- The index for the active KB version is built during the image build with the same command CI uses, and its manifest is checked. Only the active KB version goes into the image.
-- Runs as a non-root user. Listens on port 8080.
-- Contains the AWS Lambda Web Adapter (D11), with its readiness check pointed at `/health`. On the laptop the adapter does nothing, so the same image runs in both places.
-- A `.dockerignore` keeps out `.env`, `.venv/`, `.git/`, `handoffs/`, `evals/` results and `notes/`.
+- The index for the active KB version is built during the image build with the same command CI uses, with the model hub already offline, and its manifest is checked (KB version, model name and revision, library versions, file hashes, article and chunk counts, then `open_retrieval`). Only the active KB version goes into the image. No reference hash from another machine is required.
+- Runs as a non-root user (uid 1000). Listens on port 8080. Everything except `/app/handoffs` is read-only for that user.
+- Contains the AWS Lambda Web Adapter (D11), version 1.1.0, pinned by digest, with its readiness check pointed at `/health`. On the laptop the adapter does not run, so the same image runs in both places.
+- `.dockerignore` lets in only what the build needs. `.env`, `.venv/`, `.git/`, `handoffs/`, `evals/`, `notes/`, `tests/`, `specs/` and `indexes/` stay out.
 - Architecture: x86_64.
+- Start command: `python -m web`.
 
 ## 7. Lambda settings (Stage B)
 
@@ -136,6 +145,8 @@ Rules:
 | Region | the region already used for Task 13.1 checks |
 
 A cold start (first request after a quiet period) is allowed to take longer than normal. This is accepted for a demo.
+
+On the laptop, start-up until `/health` answers took 9.5–12.9 seconds (Stage A). Lambda limits its start-up phase, so the adapter's start-up setting (for example asynchronous init) is decided at the start of Stage B, based on a measurement there.
 
 ## 8. AWS permissions
 
@@ -155,6 +166,7 @@ Nothing else. Session D lists the exact policy JSON in `deploy/` and the owner r
 - A KB promotion (spec 07) or a code change means a new image with a new tag. Lambda is pointed at the new tag. Requests already running finish on the old version.
 - Rollback: point Lambda back at the previous tag. Because tags are immutable, the previous tag is exactly the image that was tested.
 - Only images built from a commit on `main` that passed CI are deployed.
+- Stage A images are for the laptop only and carry the suffix `-local`, for example `v2-20261112-d98f7e5-local`. Stage B rebuilds the image from `main`.
 
 ## 10. Acceptance criteria
 
@@ -162,8 +174,8 @@ Stage A, laptop container:
 - AC-D1: The image builds from a clean checkout with one documented command.
 - AC-D2: `GET /health` returns 200 with `kb_version` equal to `data/ACTIVE_KB_VERSION`.
 - AC-D3: `POST /ask` with a wrong code returns 401.
-- AC-D4: For 3 tickets from `evals/support_questions.jsonl` (2 answer, 1 escalate), the container gives the same decision and the same cited articles as `query/ask.py` on the laptop.
-- AC-D5: The container works with the network blocked for the model (no model download at run time).
+- AC-D4: For tickets T-001 and T-002 (answer) and T-043 (escalate) from `evals/support_questions.jsonl`, the container gives the same decision and the same set of cited article ids (order ignored) as `query/ask.py` on the laptop.
+- AC-D5: With the whole network blocked (`docker run --network none`), `/health` answers 200, and `/ask` with a correct code returns a 200 escalation with reason `service_error`. This shows the model and retrieval run with no downloads; only the blocked Claude call fails.
 - AC-D6: The tests in `tests/structural/web/` pass in CI, with no skipped tests (spec 06 v1.2).
 
 Stage B, Lambda:
@@ -190,3 +202,4 @@ Expected cost while running: Lambda and Parameter Store Standard stay within fre
 
 - 1.0 (2026-11-11): first version.
 - 1.1 (2026-11-11): answers to Session Q's Round 1 questions. 503 removed (service errors stay 200 escalations, spec 02 decision 6); exact 400 texts; 500 case; X-Request-Id; logging details; HANDOFF_DIR rule; VOLTRIX_SECRETS_SOURCE; secret names; read-only mount; minimum code length enforced; web tests run in CI.
+- 1.2 (2026-11-13): Session Q's open items (check order, page extras, library log level) and Session D's Stage A answers (key per stage, laptop handoffs mount, base image and adapter pins, BUILD_INFO.txt, .dockerignore allow-list, -local tag, AC-D4 tickets, AC-D5 meaning, start-up time for Stage B).

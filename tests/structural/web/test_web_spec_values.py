@@ -2,7 +2,7 @@
 
 
 def test_values_read_from_spec_08(spec_08):
-    assert "Status: Version 1.1" in spec_08.text
+    assert "Status: Version 1.2" in spec_08.text
     assert spec_08.bad_request_texts == {
         "Body is not valid JSON, or not a JSON object": "invalid request body",
         "`question` missing": "question is required",
@@ -11,6 +11,8 @@ def test_values_read_from_spec_08(spec_08):
         "`question` longer than 1000 characters (counted as sent, before trimming)": "question is longer than 1000 characters",
     }
     assert spec_08.max_question_chars == 1000
+    assert spec_08.page_max_question_chars == 1000
+    assert spec_08.blank_and_too_long_error == "question is empty"
     assert spec_08.success_fields == ("status", "answer", "citations", "escalation_reason", "handoff_id")
     assert spec_08.access_denied == "access denied"
     assert spec_08.internal_error == "internal error"

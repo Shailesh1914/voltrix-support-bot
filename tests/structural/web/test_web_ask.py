@@ -162,6 +162,18 @@ def test_limit_counted_as_sent_before_trimming(make_bot, spec_08):
     assert response.json() == {"error": spec_08.bad_request_texts[too_long_case(spec_08)]}
 
 
+def test_checks_run_in_table_order_blank_beats_too_long(make_bot, spec_08):
+    # Spec 08 v1.2: only spaces and over the limit -> the "empty" error, the
+    # earlier row of the table, not the "longer than" error.
+    bot = make_bot()
+    question = " " * (spec_08.max_question_chars + 1)
+    response = bot.ask({"question": question})
+    assert response.status_code == 400
+    assert response.json() == {"error": spec_08.blank_and_too_long_error}
+    assert spec_08.blank_and_too_long_error == spec_08.bad_request_texts["`question` empty after trimming spaces"]
+    assert_nothing_ran(bot)
+
+
 def test_limit_counts_characters_not_bytes(make_bot, spec_08):
     # 1000 characters of 2-3 bytes each in UTF-8 are still 1000 characters.
     bot = make_bot()
@@ -311,6 +323,38 @@ def test_request_ids_differ(make_bot):
 @pytest.mark.parametrize("path", ["/docs", "/redoc", "/openapi.json"])
 def test_no_framework_pages(make_bot, path):
     assert make_bot().client.get(path).status_code == 404
+
+
+class RecordingProvider:
+    """Stands in for a globally configured OpenTelemetry provider (as a
+    Lambda OTel layer would set). Any use by FastAPI is recorded."""
+
+    def __init__(self, kind, used):
+        self.kind, self.used = kind, used
+
+    def __getattr__(self, name):
+        def record(*args, **kwargs):
+            self.used.append(f"{self.kind}.{name}")
+            raise AssertionError("telemetry used")
+
+        return record
+
+
+def test_fastapi_telemetry_is_off(make_bot, monkeypatch):
+    # Spec 08 v1.2 section 4.3: FastAPI's telemetry is switched off. With
+    # providers that look configured, FastAPI would trace, meter and log
+    # every request unless the app turns that off.
+    import fastapi.telemetry._asgi as native
+
+    used: list[str] = []
+    monkeypatch.setattr(native, "_unconfigured", lambda provider: False)
+    monkeypatch.setattr(native.trace, "get_tracer_provider", lambda: RecordingProvider("trace", used))
+    monkeypatch.setattr(native.metrics, "get_meter_provider", lambda: RecordingProvider("metrics", used))
+    monkeypatch.setattr(native._logs, "get_logger_provider", lambda: RecordingProvider("logs", used))
+    bot = make_bot()
+    statuses = [bot.client.get("/health").status_code, bot.ask().status_code]
+    assert used == []
+    assert statuses == [200, 200]
 
 
 def test_get_ask_is_not_allowed(make_bot):

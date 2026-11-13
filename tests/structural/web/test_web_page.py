@@ -47,6 +47,11 @@ def test_page_has_code_field_question_box_button_and_result_area(page):
     assert re.search(r">\s*Ask\s*<", page.text)
 
 
+def test_question_box_accepts_at_most_the_spec_limit(page, spec_08):
+    (box,) = [a for t, a in elements(page.text) if t == "textarea" and a.get("id") == "question"]
+    assert box.get("maxlength") == str(spec_08.page_max_question_chars)
+
+
 def test_page_loads_nothing_from_elsewhere(page):
     for tag, attrs in elements(page.text):
         assert tag != "link", "a <link> element"
