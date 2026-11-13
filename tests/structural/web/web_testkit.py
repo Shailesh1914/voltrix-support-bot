@@ -117,6 +117,8 @@ class Spec08:
     text: str
     bad_request_texts: dict[str, str]  # case -> error text
     max_question_chars: int
+    page_max_question_chars: int  # the page's question box (section 4.3)
+    blank_and_too_long_error: str  # the worked example after the 400 table
     success_fields: tuple[str, ...]
     health_fields: tuple[str, ...]
     access_denied: str
@@ -143,6 +145,8 @@ def parse_spec_08(text: str) -> Spec08:
         text=text,
         bad_request_texts={case: error for case, error in rows if case != "Case"},
         max_question_chars=int(one(r"`question` longer than ([0-9]+) characters")),
+        page_max_question_chars=int(one(r"The question box accepts at most ([0-9]+) characters")),
+        blank_and_too_long_error=one(r"a question of only spaces that is longer than [0-9]+ characters gives `([^`]+)`"),
         success_fields=tuple(re.findall(r"`(\w+)`", one(r"result unchanged: ((?:`\w+`(?:, )?)+)"))),
         health_fields=tuple(re.findall(r"`(\w+)` \(", health_line)),
         access_denied=one(r'HTTP 401, JSON `\{"error": "([^"]+)"\}`'),
