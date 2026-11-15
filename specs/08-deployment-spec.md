@@ -1,6 +1,6 @@
 # Spec 08: Deployment
 
-Status: Version 1.2, approved by Shailesh on 2026-11-13
+Status: Version 1.3, approved by Shailesh on 2026-11-15
 Owner: Shailesh (only the owner changes this file)
 Implemented by: Session Q (web interface), Session D (container, AWS deployment)
 
@@ -25,13 +25,14 @@ This is a learning project. Cost must stay close to zero, and everything must be
 | D2 | Endpoints | `GET /`, `GET /health`, `POST /ask` (section 4) |
 | D3 | Access control | Access code in a request header; wrong or missing code is refused before any retrieval or Claude call |
 | D4 | Anthropic key | Stage A (laptop container) uses the existing project key from the secrets file outside the project, mounted read-only into the container. Stage B uses a new key used only by the deployed bot, read from Parameter Store, Standard tier, SecureString |
-| D5 | Spending limits | Lambda reserved concurrency 2; monthly spend limit on the new Anthropic key set in the Anthropic console (USD 5); AWS budget USD 5 (email warning only) |
+| D5 | Spending limits | No reserved concurrency: the account's concurrency limit (10) is the cap, because AWS keeps 10 unreserved and so nothing can be reserved. The new Anthropic key lives alone in the workspace `voltrix-deployed`, whose monthly spend limit is USD 5 (Anthropic sets limits per workspace, not per key). AWS budget USD 5 (email warning only) |
 | D6 | AWS credentials | A new IAM user for deployment with only the permissions in section 8. The admin login is not used for deployment |
 | D7 | Container | Python 3.14 (same minor version as the project), CPU-only torch, embedding model and active KB index inside the image |
 | D8 | Image tags | ECR tag immutability: Immutable. Tag format `<kb-version>-<yyyymmdd>-<git-short-sha>`, for example `v2-20261112-a1b2c3d`. The tag `latest` is not used |
 | D9 | Order | Stage A (laptop container) must pass section 10 before Stage B (Lambda) starts |
 | D10 | Switching off | Section 11; done after the demo |
-| D11 | Lambda adapter | AWS Lambda Web Adapter (awslabs), copied into the image. Exact version pinned by Session D, after checking its current documentation |
+| D11 | Lambda adapter | AWS Lambda Web Adapter 1.1.0, copied into the image, pinned by digest. On Lambda, `AWS_LWA_ASYNC_INIT=true` (section 7) |
+| D12 | Function | A classic Lambda function ("Event Function" in the console) named `voltrix-support-bot`, region ap-south-1 (Mumbai). The newer Lambda Web Functions are not used in this iteration |
 
 ## 4. Web interface (Session Q)
 
@@ -139,33 +140,48 @@ Rules:
 | Architecture | x86_64 |
 | Memory | 2048 MB |
 | Timeout | 60 seconds |
-| Reserved concurrency | 2 |
-| Function URL | Auth type NONE (protection is the access code) |
+| Reserved concurrency | none (the account limit of 10 is the cap, D5) |
+| Function URL | Auth type NONE (protection is the access code), invoke mode BUFFERED, CORS off |
+| Execution role | `voltrix-support-bot-lambda` (section 8) |
+| Environment variables | exactly four: `VOLTRIX_SECRETS_SOURCE=parameter_store`, `HANDOFF_DIR=/tmp/handoffs`, `IMAGE_TAG=<the deployed tag>`, `AWS_LWA_ASYNC_INIT=true`. Never the key or the access code |
 | Log retention | CloudWatch log group kept 7 days |
-| Region | the region already used for Task 13.1 checks |
+| Region | ap-south-1 (Mumbai) |
 
 A cold start (first request after a quiet period) is allowed to take longer than normal. This is accepted for a demo.
 
-On the laptop, start-up until `/health` answers took 9.5–12.9 seconds (Stage A). Lambda limits its start-up phase, so the adapter's start-up setting (for example asynchronous init) is decided at the start of Stage B, based on a measurement there.
+Start-up and `AWS_LWA_ASYNC_INIT`: Lambda limits its start-up (Init) phase to 10 seconds, and the bot needs about 12. Measured on Lambda on 2026-11-15, three cold starts each:
+
+| Setting | Time until `/health` answers | Init timeout |
+|---|---|---|
+| `false` | about 20 s | yes, every run (Lambda restarts the start-up inside the first request) |
+| `true` | about 12.5 s (21 s on the first start after a change, while the image is pulled) | no |
+
+Decision: `AWS_LWA_ASYNC_INIT=true`. It is a Lambda environment variable, not part of the image, so it can be changed without a new image.
 
 ## 8. AWS permissions
 
-Deployment IAM user (new, used only from the laptop):
-- push images to the ECR repository `voltrix-support-bot` only;
-- create and update the Lambda function for this bot only;
-- pass the bot's execution role only.
+One-time setup is done by the owner in the AWS console: the execution role, the Lambda function, its Function URL, the log group and the deployment IAM user. Repeatable steps (build, push, point the function at a tag, checks) are Session D's scripts in `deploy/`.
 
-Lambda execution role:
-- read the two parameters `/voltrix/anthropic-key` and `/voltrix/access-code` only (with decryption);
-- write its own CloudWatch logs.
+Lambda execution role `voltrix-support-bot-lambda`:
+- read the two parameters `/voltrix/anthropic-key` and `/voltrix/access-code` only;
+- write log events to its own log group `/aws/lambda/voltrix-support-bot` only (it cannot create log groups, so the 7-day retention cannot be lost);
+- no KMS statement: the parameters use the AWS managed key `aws/ssm`, and reading them worked without one;
+- no other permissions (in particular not `AWSLambdaBasicExecutionRole`).
 
-Nothing else. Session D lists the exact policy JSON in `deploy/` and the owner reviews it before creating it.
+Deployment IAM user `voltrix-deploy` (no console access, used only from the laptop through the AWS CLI profile `voltrix-deploy`):
+- log in to ECR, and push to and read from the repository `voltrix-support-bot` only;
+- read and update (code and configuration) the function `voltrix-support-bot` only, and read its Function URL and concurrency;
+- read log events of the bot's log group only (for AC-D9 and the start-up measurement).
+- It cannot create functions, pass roles, delete images or change concurrency.
+- Its access key is long-lived, so it is deactivated and deleted at switch-off (section 11).
+
+The exact policy JSON is in Session D's report for Stage B, reviewed by the owner before creating it. The account id is never written into the repository.
 
 ## 9. Updating and rolling back
 
 - A KB promotion (spec 07) or a code change means a new image with a new tag. Lambda is pointed at the new tag. Requests already running finish on the old version.
 - Rollback: point Lambda back at the previous tag. Because tags are immutable, the previous tag is exactly the image that was tested.
-- Only images built from a commit on `main` that passed CI are deployed.
+- Only images built from a commit on `main` that passed CI are deployed. `deploy/build_release.sh` builds from a fresh clone of `main` and checks CI first; `deploy/push_image.py` pushes; `deploy/point_lambda.py` points the function at a tag (and is also the rollback).
 - Stage A images are for the laptop only and carry the suffix `-local`, for example `v2-20261112-d98f7e5-local`. Stage B rebuilds the image from `main`.
 
 ## 10. Acceptance criteria
@@ -174,19 +190,19 @@ Stage A, laptop container:
 - AC-D1: The image builds from a clean checkout with one documented command.
 - AC-D2: `GET /health` returns 200 with `kb_version` equal to `data/ACTIVE_KB_VERSION`.
 - AC-D3: `POST /ask` with a wrong code returns 401.
-- AC-D4: For tickets T-001 and T-002 (answer) and T-043 (escalate) from `evals/support_questions.jsonl`, the container gives the same decision and the same set of cited article ids (order ignored) as `query/ask.py` on the laptop.
+- AC-D4: For tickets T-001 and T-002 (answer) and T-043 (escalate) from `evals/support_questions.jsonl`, the container gives the same decision as `query/ask.py` on the laptop, and each side's citations are acceptable for the ticket's label under the spec 05 rules. A different citation set where both are acceptable is reported as "differs (both valid)" and passes: Claude does not always cite the same optional extra article. A service error on either side makes the run inconclusive (re-run).
 - AC-D5: With the whole network blocked (`docker run --network none`), `/health` answers 200, and `/ask` with a correct code returns a 200 escalation with reason `service_error`. This shows the model and retrieval run with no downloads; only the blocked Claude call fails.
 - AC-D6: The tests in `tests/structural/web/` pass in CI, with no skipped tests (spec 06 v1.2).
 
 Stage B, Lambda:
 - AC-D7: AC-D2, AC-D3 and AC-D4 pass again through the Function URL.
-- AC-D8: Reserved concurrency is 2, and the Anthropic spend limit is set (checked by the owner in the consoles).
-- AC-D9: No secret appears in the image, the repository, or the CloudWatch logs (checked by a search).
+- AC-D8: The function has no reserved concurrency (D5), and the `voltrix-deployed` workspace's spend limit is USD 5 (checked by the owner in the consoles).
+- AC-D9: No secret appears in the image, the repository, the Lambda settings or the CloudWatch logs, and the logs hold no question text (checked by `deploy/check_secrets_stage_b.py`). AWS's own published documentation example key ids inside the AWS libraries (a short list of exact values in the script) are reported as examples, not secrets.
 - AC-D10: The switch-off steps in section 11 were run once after the demo and recorded in `notes/`.
 
 ## 11. Switching off
 
-Pause (keeps everything, costs about nothing): set the Lambda reserved concurrency to 0. The Function URL then refuses all requests.
+Pause (keeps everything, costs about nothing): Lambda's Throttle (function concurrency 0). The Function URL then refuses all requests. To resume: Edit concurrency, use unreserved account concurrency.
 
 Full removal, in this order:
 1. Delete the Function URL and the Lambda function.
@@ -196,10 +212,13 @@ Full removal, in this order:
 5. Deactivate and delete the deployment IAM user's access key.
 6. Disable the bot's Anthropic key in the Anthropic console.
 
-Expected cost while running: Lambda and Parameter Store Standard stay within free limits for demo use. ECR storage for a ~1–2 GB image may cost a few cents to about USD 0.20 per month, so old images are deleted.
+Anthropic keys have an expiry date. The deployed key's expiry date is recorded in `notes/`, and the demo happens before it. An expired key makes every question escalate with `service_error`.
+
+Expected cost while running: Lambda and Parameter Store Standard stay within free limits for demo use. ECR storage for the 537 MB (compressed) image costs about USD 0.05 per month, so old images are deleted. Each answered question costs about USD 0.006 in Claude calls.
 
 ## 12. Change log
 
 - 1.0 (2026-11-11): first version.
 - 1.1 (2026-11-11): answers to Session Q's Round 1 questions. 503 removed (service errors stay 200 escalations, spec 02 decision 6); exact 400 texts; 500 case; X-Request-Id; logging details; HANDOFF_DIR rule; VOLTRIX_SECRETS_SOURCE; secret names; read-only mount; minimum code length enforced; web tests run in CI.
 - 1.2 (2026-11-13): Session Q's open items (check order, page extras, library log level) and Session D's Stage A answers (key per stage, laptop handoffs mount, base image and adapter pins, BUILD_INFO.txt, .dockerignore allow-list, -local tag, AC-D4 tickets, AC-D5 meaning, start-up time for Stage B).
+- 1.3 (2026-11-15): Stage B results. No reserved concurrency (account limit 10); spend limit per Anthropic workspace; function name, region and settings; AWS_LWA_ASYNC_INIT=true from the measurement; narrower deploy permissions plus log read, no KMS statement; AC-D4 judged by the spec 05 label rules; AC-D9 documentation-example allow-list; pause = Throttle; key expiry dates; measured costs.

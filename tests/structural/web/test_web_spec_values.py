@@ -2,7 +2,7 @@
 
 
 def test_values_read_from_spec_08(spec_08):
-    assert "Status: Version 1.2" in spec_08.text
+    assert "Status: Version 1.3" in spec_08.text
     assert spec_08.bad_request_texts == {
         "Body is not valid JSON, or not a JSON object": "invalid request body",
         "`question` missing": "question is required",
