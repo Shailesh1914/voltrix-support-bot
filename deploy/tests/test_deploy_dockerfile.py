@@ -44,7 +44,7 @@ def test_python_base_is_official_3_14_slim_same_minor_as_project():
     python_froms = [f for f in FROMS if " python:" in f]
     assert len(python_froms) == 2
     assert all(PYTHON_BASE in f for f in python_froms)
-    assert "Python 3.14" in spec_section(6) and "slim" in spec_section(6)
+    assert "`python:3.14." in spec_section(6) and "slim" in spec_section(6)  # spec 08 v1.2 wording
 
 
 def test_lambda_web_adapter_pinned_and_copied_to_extensions():
@@ -141,7 +141,7 @@ def test_dockerignore_keeps_out_what_spec_08_names(entry):
 
 
 def test_dockerignore_keeps_out_evals_and_starts_from_nothing():
-    assert "`evals/` results" in spec_section(6)
+    assert "`evals/`" in spec_section(6)  # spec 08 v1.2 wording
     assert "evals/" in IGNORE_LINES
     assert IGNORE_LINES[0] == "*"
 
